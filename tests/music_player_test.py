@@ -1,6 +1,7 @@
 import sys
 
 from PySide6 import QtWidgets
+from PySide6.QtWidgets import QHBoxLayout
 
 from constants import *
 
@@ -11,11 +12,20 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self._setup_ui()
 
-        self.setWindowTitle("music player v0.0.1")
+        self.setWindowTitle("music player test")
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
 
     def _setup_ui(self):
-        ...
+        self.central_widget = QtWidgets.QWidget()
+        self.central_widget_layout = QHBoxLayout()
+
+        self.play_button = QtWidgets.QPushButton("Play")
+        self.next_button = QtWidgets.QPushButton("Next")
+        self.prev_button = QtWidgets.QPushButton("Previous")
+
+
+
+        self.setCentralWidget(self.central_widget)
 
 
 if __name__ == "__main__":
