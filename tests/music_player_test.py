@@ -23,8 +23,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.next_button = QtWidgets.QPushButton("Next")
         self.prev_button = QtWidgets.QPushButton("Previous")
 
-
-
         self.setCentralWidget(self.central_widget)
 
 
