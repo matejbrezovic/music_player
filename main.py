@@ -41,6 +41,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.horizontal_splitter.addWidget(self.navigation_panel)
         self.horizontal_splitter.addWidget(self.main_panel)
         self.horizontal_splitter.addWidget(self.information_panel)
+        self.horizontal_splitter.setSizes([int(PANEL_MIN_WIDTH * 1.5), MAIN_PANEL_MIN_WIDTH * 2, int(PANEL_MIN_WIDTH * 1.5)])
         # self.vertical_splitter.addWidget(self.horizontal_splitter)
         # self.vertical_splitter.addWidget(self.audio_controller)
 
