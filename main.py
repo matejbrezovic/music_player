@@ -1,9 +1,9 @@
 import sys
 
-from PySide6 import *
-from PySide6 import QtWidgets
-from PySide6.QtCore import *
-from PySide6.QtWidgets import *
+from PyQt6 import *
+from PyQt6 import QtWidgets
+from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import *
 
 from audio_controller import AudioController
 from constants import *
@@ -35,8 +35,8 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.information_panel = InformationPanel()
         self.audio_controller = AudioController()
 
-        self.horizontal_splitter = QSplitter(Qt.Horizontal)
-        self.vertical_splitter = QSplitter(Qt.Vertical)
+        self.horizontal_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.vertical_splitter = QSplitter(Qt.Orientation.Vertical)
 
         self.horizontal_splitter.addWidget(self.navigation_panel)
         self.horizontal_splitter.addWidget(self.main_panel)

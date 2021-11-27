@@ -1,10 +1,8 @@
-import PySide6
-import pygame
-from PySide6 import QtWidgets
-from PySide6.QtGui import QIcon, Qt
-from PySide6.QtMultimedia import QMediaPlayer
-from PySide6.QtWidgets import QStyle, QHBoxLayout
-from pygame import mixer
+from PyQt6 import QtWidgets
+from PyQt6.QtCore import Qt, QUrl, QThread
+from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PyQt6.QtWidgets import QStyle, QHBoxLayout
+from time import sleep
 
 from constants import *
 
@@ -13,15 +11,15 @@ class AudioController(QtWidgets.QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        pygame.init()
-        pygame.mixer.init()
-        self.setStyleSheet("background-color: rgba(0, 0, 88, 0.3)")
+        self.setStyleSheet("QFrame {background-color: rgba(0, 0, 88, 0.3)}")
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
-        # self.player = AudioPlayer()
         self.current_playlist = ['/home/matey/Music/Remembrance.ogg']
         self.playlist_index = -1
-        self.user_action_index = -1  # 0 - stopped, 1 - playing 2 - paused
+        self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
+        self.audio_output = QAudioOutput()
+        self.player = QMediaPlayer()
+        self.player.setAudioOutput(self.audio_output)
 
         self.play_button = QtWidgets.QPushButton()
         self.prev_button = QtWidgets.QPushButton()
@@ -31,25 +29,59 @@ class AudioController(QtWidgets.QFrame):
         self.prev_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.next_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
 
-        style = self.style()
-        play_icon = QIcon.fromTheme("media-playback-start.png", style.standardIcon(QStyle.SP_MediaPlay))
-        pause_icon = QIcon.fromTheme("media-playback-start.png", style.standardIcon(QStyle.SP_MediaPause))
-        prev_icon = QIcon.fromTheme("media-playback-start.png", style.standardIcon(QStyle.SP_MediaSkipBackward))
-        next_icon = QIcon.fromTheme("media-playback-start.png", style.standardIcon(QStyle.SP_MediaSkipForward))
-        self.play_button.setIcon(play_icon)
-        self.prev_button.setIcon(prev_icon)
-        self.next_button.setIcon(next_icon)
+        self.play_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
+        self.pause_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPause)
+        self.prev_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaSkipBackward)
+        self.next_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaSkipForward)
+        self.play_button.setIcon(self.play_icon)
+        self.prev_button.setIcon(self.prev_icon)
+        self.next_button.setIcon(self.next_icon)
 
         self.play_button.clicked.connect(self.play_pause_button_clicked)
 
         self.horizontal_layer = QHBoxLayout(self)
-        self.horizontal_layer.setAlignment(Qt.AlignLeft)
+        self.horizontal_layer.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.horizontal_layer.addWidget(self.prev_button)
         self.horizontal_layer.addWidget(self.play_button)
         self.horizontal_layer.addWidget(self.next_button)
 
+
+
+    def _fade_out(self, fade_time=2):
+        self.current_volume = self.audio_output.volume()
+        self.audio_output.setVolume(0)
+
+        iterations = 100
+        fade_interval = fade_time / iterations
+        for i in range(1, iterations + 1):
+            self.audio_output.setVolume(self.current_volume - i / iterations * self.current_volume)
+            print(self.audio_output.volume())
+            sleep(fade_interval)
+
+    def _start_fade_out(self, fade_time=2):
+        self.thread = QThread(self)
+        self.thread.started.connect(lambda: self._fade_out(fade_time))
+        self.thread.start()
+
     def play_pause_button_clicked(self):
-        if self.user_action_index <= 1:
-            print(self.current_playlist[0], "mp3")
-            mixer.music.load(self.current_playlist[0])
-            mixer.music.play(-1)
+        if self.user_action <= 0:
+            print("Play")
+            self.play_button.setIcon(self.pause_icon)
+            self.user_action = 1
+            self.player.setSource(QUrl(self.current_playlist[0]))
+            self.player.play()
+            self._start_fade_in()
+
+        elif self.user_action == 1:
+            print("Pause")
+            self.user_action = 2
+            self.play_button.setIcon(self.play_icon)
+            self._start_fade_out()
+            self.player.pause()
+
+        elif self.user_action == 2:
+            print("Play")
+            self.play_button.setIcon(self.pause_icon)
+            self.user_action = 1
+            self.player.play()
+            self._start_fade_in()
