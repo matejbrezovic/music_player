@@ -5,7 +5,11 @@ from PySide6 import QtWidgets
 from PySide6.QtCore import *
 from PySide6.QtWidgets import *
 
+from audio_controller import AudioController
 from constants import *
+from information_panel import InformationPanel
+from main_panel import MainPanel
+from navigation_panel import NavigationPanel
 
 
 class MainWindowUi(QtWidgets.QMainWindow):
@@ -26,11 +30,10 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self._setup_panels()
 
     def _setup_panels(self):
-        self.navigation_panel = QFrame()
-        self.navigation_panel.setStyleSheet("background-color: red")
-        self.main_panel = QFrame()
-        self.information_panel = QFrame()
-        self.audio_controller = QFrame()
+        self.navigation_panel = NavigationPanel()
+        self.main_panel = MainPanel()
+        self.information_panel = InformationPanel()
+        self.audio_controller = AudioController()
 
         self.horizontal_splitter = QSplitter(Qt.Horizontal)
         self.vertical_splitter = QSplitter(Qt.Vertical)
