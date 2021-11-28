@@ -41,17 +41,18 @@ class AudioController(QtWidgets.QFrame):
         self.next_button.clicked.connect(self.next_button_clicked)
         self.prev_button.clicked.connect(self.prev_button_clicked)
 
-        self.volume_button = QtWidgets.QPushButton()
-        self.volume_button.setIcon(self.volume_on_icon)
-        self.volume_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
-        self.volume_button.clicked.connect(self.volume_button_clicked)
-
         self.volume_slider = QSlider(Qt.Orientation.Horizontal)
         self.volume_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.volume_slider.setMaximumWidth(100)
         self.volume_slider_position = STARTING_AUDIO_VOLUME
+        self.volume_slider_position_backup = STARTING_AUDIO_VOLUME
         self.volume_slider.setSliderPosition(self.volume_slider_position)
-        self.volume_slider.valueChanged.connect(lambda: self.volume_changed(False))
+        self.volume_slider.valueChanged.connect(self.volume_changed)
+
+        self.volume_button = QtWidgets.QPushButton()
+        self.volume_button.setIcon(self.volume_on_icon)
+        self.volume_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
+        self.volume_button.clicked.connect(self.volume_button_clicked)
 
         self.horizontal_layer = QHBoxLayout(self)
         self.horizontal_layer.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -101,23 +102,19 @@ class AudioController(QtWidgets.QFrame):
             self.playlist_index = len(self.current_playlist) - 1
         self.play()
 
-    def volume_changed(self, volume_value: int, is_button_triggered: bool = True):
+    def volume_changed(self, volume_value: int):
         self.player.audio_output.setVolume(volume_value / 100)
-        if not is_button_triggered:
-            print(volume_value)
-            self.volume_slider_position = volume_value
+        self.volume_slider.setSliderPosition(volume_value)
+        self.volume_slider_position = volume_value
         if volume_value == 0:
             self.volume_button.setIcon(self.volume_off_icon)
         else:
             self.volume_button.setIcon(self.volume_on_icon)
 
     def volume_button_clicked(self):
-        print(self.player.audio_output.volume())
         if self.player.audio_output.volume():
-            self.volume_button.setIcon(self.volume_off_icon)
-            self.player.audio_output.setVolume(0)
+            self.volume_slider_position_backup = self.volume_slider_position
             self.volume_slider.setSliderPosition(0)
         else:
-            self.volume_button.setIcon(self.volume_on_icon)
-            self.player.audio_output.setVolume(self.volume_slider_position / 100)
+            self.volume_slider_position = self.volume_slider_position_backup
             self.volume_slider.setSliderPosition(self.volume_slider_position)
