@@ -67,6 +67,8 @@ class AudioController(QtWidgets.QFrame):
         self.seek_slider_time_label = QLabel("0:00/0:00")
         self.audio_file_name_label = QLabel()
         self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum))
+        self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.audio_file_name_label.setContentsMargins(0, 0, 0, 0)
 
         self.equalizer_button = QPushButton("Eq")
         self.audio_order_button = QPushButton("Au")
@@ -95,6 +97,7 @@ class AudioController(QtWidgets.QFrame):
         self.middle_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.middle_layout.addWidget(self.audio_file_name_label)
         self.middle_layout.addWidget(self.seek_slider)
+        self.middle_layout.setContentsMargins(0, 4, 0, 2)
 
         self.right_layout = QHBoxLayout(self.right_part)
         self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -116,6 +119,7 @@ class AudioController(QtWidgets.QFrame):
         print("Play")
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
+        self.audio_file_name_label.setText(self.current_playlist[self.playlist_index].rsplit("/", 1)[-1])
         self.player.setSource(QUrl(self.current_playlist[self.playlist_index]))
         self.player.play()
 
