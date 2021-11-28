@@ -1,6 +1,7 @@
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt, QUrl
-from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider
+from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QWidget, QLabel, QVBoxLayout, QSizePolicy, QLayout, \
+    QPushButton
 
 from audio_player import AudioPlayer
 from constants import *
@@ -19,9 +20,9 @@ class AudioController(QtWidgets.QFrame):
 
         self.player = AudioPlayer()
 
-        self.play_button = QtWidgets.QPushButton()
-        self.prev_button = QtWidgets.QPushButton()
-        self.next_button = QtWidgets.QPushButton()
+        self.play_button = QPushButton()
+        self.prev_button = QPushButton()
+        self.next_button = QPushButton()
 
         self.play_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.prev_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
@@ -54,13 +55,61 @@ class AudioController(QtWidgets.QFrame):
         self.volume_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.volume_button.clicked.connect(self.volume_button_clicked)
 
-        self.horizontal_layer = QHBoxLayout(self)
-        self.horizontal_layer.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.horizontal_layer.addWidget(self.prev_button)
-        self.horizontal_layer.addWidget(self.play_button)
-        self.horizontal_layer.addWidget(self.next_button)
-        self.horizontal_layer.addWidget(self.volume_button)
-        self.horizontal_layer.addWidget(self.volume_slider)
+        self.seek_slider = QSlider()
+        self.seek_slider.setMinimum(0)
+        self.seek_slider.setMaximum(100)
+        self.seek_slider.setOrientation(Qt.Orientation.Horizontal)
+        self.seek_slider.setTracking(False)
+        self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.seek_slider.sliderMoved.connect(self.seekPosition)
+
+        self.seek_slider_time_label = QLabel("0:00/0:00")
+        self.audio_file_name_label = QLabel()
+        self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum))
+
+        self.equalizer_button = QPushButton()
+        self.audio_order_button = QPushButton()
+        self.equalizer_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
+        self.audio_order_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
+
+        # Layout logic
+        self.left_part = QWidget()
+        self.middle_part = QWidget()
+        self.right_part = QWidget()
+
+        self.left_layout = QHBoxLayout(self.left_part)
+        self.left_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.left_layout.addWidget(self.prev_button)
+        self.left_layout.addWidget(self.play_button)
+        self.left_layout.addWidget(self.next_button)
+        self.left_layout.addWidget(self.volume_button)
+        self.left_layout.addWidget(self.volume_slider)
+        self.left_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+
+        self.left_part.setStyleSheet("background-color: green")
+        self.left_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        self.left_part.setFixedSize(self.left_layout.sizeHint())
+
+        self.middle_layout = QVBoxLayout(self.middle_part)
+        self.middle_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.middle_layout.addWidget(self.audio_file_name_label)
+        self.middle_layout.addWidget(self.seek_slider)
+
+        self.right_layout = QHBoxLayout(self.right_part)
+        self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.right_layout.addWidget(self.equalizer_button)
+        self.right_layout.addWidget(self.audio_order_button)
+
+        self.right_part.setStyleSheet("background-color: red")
+        self.right_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        self.right_part.setFixedSize(self.left_layout.sizeHint())
+
+        self.main_layout = QHBoxLayout(self)
+        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.addWidget(self.left_part)
+        self.main_layout.addWidget(self.middle_part)
+        self.main_layout.addWidget(self.right_part)
+        # self.main_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
     def play(self):
         print("Play")
@@ -118,3 +167,9 @@ class AudioController(QtWidgets.QFrame):
         else:
             self.volume_slider_position = self.volume_slider_position_backup
             self.volume_slider.setSliderPosition(self.volume_slider_position)
+
+    def seekPosition(self, position):
+        sender = self.sender()
+        if isinstance(sender, QSlider):
+            if self.player.isSeekable():
+                self.player.setPosition(position)

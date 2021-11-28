@@ -1,187 +1,280 @@
-"""PyQt6 Multimedia player example"""
-
 import sys
-
-from PySide6.QtCore import QStandardPaths, Qt, Slot
-from PySide6.QtGui import QAction, QIcon, QKeySequence
-from PySide6.QtMultimedia import QAudioOutput, QMediaFormat, QMediaPlayer
-from PySide6.QtMultimediaWidgets import QVideoWidget
-from PySide6.QtWidgets import QApplication, QDialog, QFileDialog, QMainWindow, QSlider, QStyle, QToolBar
-
-AVI = "video/x-msvideo"  # AVI
-
-
-MP4 = 'video/mp4'
-
-
-def get_supported_mime_types():
-    result = []
-    for f in QMediaFormat().supportedFileFormats(QMediaFormat.Decode):
-        mime_type = QMediaFormat(f).mimeType()
-        result.append(mime_type.name())
-    return result
-
+from os.path import expanduser
+from PyQt5.QtWidgets import *
+from PyQt5.QtMultimedia import *
+from PyQt5.QtCore import *
 
 class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
+	def __init__(self):
+		super().__init__()
 
-        self._playlist = []  # FIXME 6.3: Replace by QMediaPlaylist?
-        self._playlist_index = -1
-        self._audio_output = QAudioOutput()
-        self._player = QMediaPlayer()
-        self._player.setAudioOutput(self._audio_output)
+		#self.currentFile = '/'
+		self.currentPlaylist = QMediaPlaylist()
+		self.player = QMediaPlayer()
+		self.userAction = -1			#0- stopped, 1- playing 2-paused
+		self.player.mediaStatusChanged.connect(self.qmp_mediaStatusChanged)
+		self.player.stateChanged.connect(self.qmp_stateChanged)
+		self.player.positionChanged.connect(self.qmp_positionChanged)
+		self.player.volumeChanged.connect(self.qmp_volumeChanged)
+		self.player.setVolume(60)
+		#Add Status bar
+		self.statusBar().showMessage('No Media :: %d'%self.player.volume())
+		self.homeScreen()
 
-        self._player.errorOccurred.connect(self._player_error)
+	def homeScreen(self):
+		#Set title of the MainWindow
+		self.setWindowTitle('Music Player by deathholes')
 
-        tool_bar = QToolBar()
-        self.addToolBar(tool_bar)
+		#Create Menubar
+		self.createMenubar()
 
-        file_menu = self.menuBar().addMenu("&File")
-        icon = QIcon.fromTheme("document-open")
-        open_action = QAction(icon, "&Open...", self,
-                              shortcut=QKeySequence.Open, triggered=self.open)
-        file_menu.addAction(open_action)
-        tool_bar.addAction(open_action)
-        icon = QIcon.fromTheme("application-exit")
-        exit_action = QAction(icon, "E&xit", self,
-                              shortcut="Ctrl+Q", triggered=self.close)
-        file_menu.addAction(exit_action)
+		#Create Toolbar
+		self.createToolbar()
 
-        play_menu = self.menuBar().addMenu("&Play")
-        style = self.style()
-        icon = QIcon.fromTheme("media-playback-start.png",
-                               style.standardIcon(QStyle.SP_MediaPlay))
-        self._play_action = tool_bar.addAction(icon, "Play")
-        self._play_action.triggered.connect(self._player.play)
-        play_menu.addAction(self._play_action)
+		#Add info screen
+		#infoscreen = self.createInfoScreen()
 
-        icon = QIcon.fromTheme("media-skip-backward-symbolic.svg",
-                               style.standardIcon(QStyle.SP_MediaSkipBackward))
-        self._previous_action = tool_bar.addAction(icon, "Previous")
-        self._previous_action.triggered.connect(self.previous_clicked)
-        play_menu.addAction(self._previous_action)
+		#Add Control Bar
+		controlBar = self.addControls()
 
-        icon = QIcon.fromTheme("media-playback-pause.png",
-                               style.standardIcon(QStyle.SP_MediaPause))
-        self._pause_action = tool_bar.addAction(icon, "Pause")
-        self._pause_action.triggered.connect(self._player.pause)
-        play_menu.addAction(self._pause_action)
+		#need to add both infoscreen and control bar to the central widget.
+		centralWidget = QWidget()
+		centralWidget.setLayout(controlBar)
+		self.setCentralWidget(centralWidget)
 
-        icon = QIcon.fromTheme("media-skip-forward-symbolic.svg",
-                               style.standardIcon(QStyle.SP_MediaSkipForward))
-        self._next_action = tool_bar.addAction(icon, "Next")
-        self._next_action.triggered.connect(self.next_clicked)
-        play_menu.addAction(self._next_action)
+		#Set Dimensions of the MainWindow
+		self.resize(200,100)
 
-        icon = QIcon.fromTheme("media-playback-stop.png",
-                               style.standardIcon(QStyle.SP_MediaStop))
-        self._stop_action = tool_bar.addAction(icon, "Stop")
-        self._stop_action.triggered.connect(self._ensure_stopped)
-        play_menu.addAction(self._stop_action)
+		#show everything.
+		self.show()
 
-        self._volume_slider = QSlider()
-        self._volume_slider.setOrientation(Qt.Horizontal)
-        self._volume_slider.setMinimum(0)
-        self._volume_slider.setMaximum(100)
-        available_width = self.screen().availableGeometry().width()
-        self._volume_slider.setFixedWidth(available_width / 10)
-        self._volume_slider.setValue(self._audio_output.volume())
-        self._volume_slider.setTickInterval(10)
-        self._volume_slider.setTickPosition(QSlider.TicksBelow)
-        self._volume_slider.setToolTip("Volume")
-        self._volume_slider.valueChanged.connect(self._audio_output.setVolume)
-        tool_bar.addWidget(self._volume_slider)
+	def createMenubar(self):
+		menubar = self.menuBar()
+		filemenu = menubar.addMenu('File')
+		filemenu.addAction(self.fileOpen())
+		filemenu.addAction(self.songInfo())
+		filemenu.addAction(self.folderOpen())
+		filemenu.addAction(self.exitAction())
 
-        about_menu = self.menuBar().addMenu("&About")
-        about_qt_act = QAction("About &Qt", self, triggered=qApp.aboutQt)
-        about_menu.addAction(about_qt_act)
+	def createToolbar(self):
+		pass
 
-        self._video_widget = QVideoWidget()
-        self.setCentralWidget(self._video_widget)
-        self._player.playbackStateChanged.connect(self.update_buttons)
-        self._player.setVideoOutput(self._video_widget)
+	def addControls(self):
+		controlArea = QVBoxLayout()		#centralWidget
+		seekSliderLayout = QHBoxLayout()
+		controls = QHBoxLayout()
+		playlistCtrlLayout = QHBoxLayout()
 
-        self.update_buttons(self._player.playbackState())
-        self._mime_types = []
+		#creating buttons
+		playBtn = QPushButton('Play')		#play button
+		pauseBtn = QPushButton('Pause')		#pause button
+		stopBtn = QPushButton('Stop')		#stop button
+		volumeDescBtn = QPushButton('V (-)')#Decrease Volume
+		volumeIncBtn = QPushButton('V (+)')	#Increase Volume
 
-    def closeEvent(self, event):
-        self._ensure_stopped()
-        event.accept()
+		#creating playlist controls
+		prevBtn = QPushButton('Prev Song')
+		nextBtn = QPushButton('Next Song')
 
-    @Slot()
-    def open(self):
-        self._ensure_stopped()
-        file_dialog = QFileDialog(self)
+		#creating seek slider
+		seekSlider = QSlider()
+		seekSlider.setMinimum(0)
+		seekSlider.setMaximum(100)
+		seekSlider.setOrientation(Qt.Horizontal)
+		seekSlider.setTracking(False)
+		seekSlider.sliderMoved.connect(self.seekPosition)
+		#seekSlider.valueChanged.connect(self.seekPosition)
 
-        is_windows = sys.platform == 'win32'
-        if not self._mime_types:
-            self._mime_types = get_supported_mime_types()
-            if (is_windows and AVI not in self._mime_types):
-                self._mime_types.append(AVI)
-            elif MP4 not in self._mime_types:
-                self._mime_types.append(MP4)
+		seekSliderLabel1 = QLabel('0.00')
+		seekSliderLabel2 = QLabel('0.00')
+		seekSliderLayout.addWidget(seekSliderLabel1)
+		seekSliderLayout.addWidget(seekSlider)
+		seekSliderLayout.addWidget(seekSliderLabel2)
 
-        file_dialog.setMimeTypeFilters(self._mime_types)
+		#Add handler for each button. Not using the default slots.
+		playBtn.clicked.connect(self.playHandler)
+		pauseBtn.clicked.connect(self.pauseHandler)
+		stopBtn.clicked.connect(self.stopHandler)
+		volumeDescBtn.clicked.connect(self.decreaseVolume)
+		volumeIncBtn.clicked.connect(self.increaseVolume)
 
-        default_mimetype = AVI if is_windows else MP4
-        if default_mimetype in self._mime_types:
-            file_dialog.selectMimeTypeFilter(default_mimetype)
+		#Adding to the horizontal layout
+		controls.addWidget(volumeDescBtn)
+		controls.addWidget(playBtn)
+		controls.addWidget(pauseBtn)
+		controls.addWidget(stopBtn)
+		controls.addWidget(volumeIncBtn)
 
-        movies_location = QStandardPaths.writableLocation(QStandardPaths.MoviesLocation)
-        file_dialog.setDirectory(movies_location)
-        if file_dialog.exec() == QDialog.Accepted:
-            url = file_dialog.selectedUrls()[0]
-            self._playlist.append(url)
-            self._playlist_index = len(self._playlist) - 1
-            self._player.setSource(url)
-            self._player.play()
+		#playlist control button handlers
+		prevBtn.clicked.connect(self.prevItemPlaylist)
+		nextBtn.clicked.connect(self.nextItemPlaylist)
+		playlistCtrlLayout.addWidget(prevBtn)
+		playlistCtrlLayout.addWidget(nextBtn)
 
-    @Slot()
-    def _ensure_stopped(self):
-        if self._player.playbackState() != QMediaPlayer.StoppedState:
-            self._player.stop()
+		#Adding to the vertical layout
+		controlArea.addLayout(seekSliderLayout)
+		controlArea.addLayout(controls)
+		controlArea.addLayout(playlistCtrlLayout)
+		return controlArea
 
-    @Slot()
-    def previous_clicked(self):
-        # Go to previous track if we are within the first 5 seconds of playback
-        # Otherwise, seek to the beginning.
-        if self._player.position() <= 5000 and self._playlist_index > 0:
-            self._playlist_index -= 1
-            self._playlist.previous()
-            self._player.setSource(self._playlist[self._playlist_index])
-        else:
-            self._player.setPosition(0)
+	def playHandler(self):
+		self.userAction = 1
+		self.statusBar().showMessage('Playing at Volume %d'%self.player.volume())
+		if self.player.state() == QMediaPlayer.StoppedState :
+			if self.player.mediaStatus() == QMediaPlayer.NoMedia:
+				#self.player.setMedia(QMediaContent(QUrl.fromLocalFile(self.currentFile)))
+				print(self.currentPlaylist.mediaCount())
+				if self.currentPlaylist.mediaCount() == 0:
+					self.openFile()
+				if self.currentPlaylist.mediaCount() != 0:
+					self.player.setPlaylist(self.currentPlaylist)
+			elif self.player.mediaStatus() == QMediaPlayer.LoadedMedia:
+				self.player.play()
+			elif self.player.mediaStatus() == QMediaPlayer.BufferedMedia:
+				self.player.play()
+		elif self.player.state() == QMediaPlayer.PlayingState:
+			pass
+		elif self.player.state() == QMediaPlayer.PausedState:
+			self.player.play()
 
-    @Slot()
-    def next_clicked(self):
-        if self._playlist_index < len(self._playlist) - 1:
-            self._playlist_index += 1
-            self._player.setSource(self._playlist[self._playlist_index])
+	def pauseHandler(self):
+		self.userAction = 2
+		self.statusBar().showMessage('Paused %s at position %s at Volume %d'%\
+			(self.player.metaData(QMediaMetaData.Title),\
+				self.centralWidget().layout().itemAt(0).layout().itemAt(0).widget().text(),\
+					self.player.volume()))
+		self.player.pause()
 
-    def update_buttons(self, state):
-        media_count = len(self._playlist)
-        self._play_action.setEnabled(media_count > 0
-            and state != QMediaPlayer.PlayingState)
-        self._pause_action.setEnabled(state == QMediaPlayer.PlayingState)
-        self._stop_action.setEnabled(state != QMediaPlayer.StoppedState)
-        self._previous_action.setEnabled(self._player.position() > 0)
-        self._next_action.setEnabled(media_count > 1)
+	def stopHandler(self):
+		self.userAction = 0
+		self.statusBar().showMessage('Stopped at Volume %d'%(self.player.volume()))
+		if self.player.state() == QMediaPlayer.PlayingState:
+			self.stopState = True
+			self.player.stop()
+		elif self.player.state() == QMediaPlayer.PausedState:
+			self.player.stop()
+		elif self.player.state() == QMediaPlayer.StoppedState:
+			pass
 
-    def show_status_message(self, message):
-        self.statusBar().showMessage(message, 5000)
+	def qmp_mediaStatusChanged(self):
+		if self.player.mediaStatus() == QMediaPlayer.LoadedMedia and self.userAction == 1:
+			durationT = self.player.duration()
+			self.centralWidget().layout().itemAt(0).layout().itemAt(1).widget().setRange(0,durationT)
+			self.centralWidget().layout().itemAt(0).layout().itemAt(2).widget().setText('%d:%02d'%(int(durationT/60000),int((durationT/1000)%60)))
+			self.player.play()
 
-    @Slot(QMediaPlayer.Error, str)
-    def _player_error(self, error, error_string):
-        print(error_string, file=sys.stderr)
-        self.show_status_message(error_string)
+	def qmp_stateChanged(self):
+		if self.player.state() == QMediaPlayer.StoppedState:
+			self.player.stop()
+
+	def qmp_positionChanged(self, position,senderType=False):
+		sliderLayout = self.centralWidget().layout().itemAt(0).layout()
+		if senderType == False:
+			sliderLayout.itemAt(1).widget().setValue(position)
+		#update the text label
+		sliderLayout.itemAt(0).widget().setText('%d:%02d'%(int(position/60000),int((position/1000)%60)))
+
+	def seekPosition(self, position):
+		sender = self.sender()
+		if isinstance(sender,QSlider):
+			if self.player.isSeekable():
+				self.player.setPosition(position)
+
+	def qmp_volumeChanged(self):
+		msg = self.statusBar().currentMessage()
+		msg = msg[:-2] + str(self.player.volume())
+		self.statusBar().showMessage(msg)
+
+	def increaseVolume(self):
+		vol = self.player.volume()
+		vol = min(vol+5,100)
+		self.player.setVolume(vol)
+
+	def decreaseVolume(self):
+		vol = self.player.volume()
+		vol = max(vol-5,0)
+		self.player.setVolume(vol)
+
+	def fileOpen(self):
+		fileAc = QAction('Open File',self)
+		fileAc.setShortcut('Ctrl+O')
+		fileAc.setStatusTip('Open File')
+		fileAc.triggered.connect(self.openFile)
+		return fileAc
+
+	def openFile(self):
+		fileChoosen = QFileDialog.getOpenFileUrl(self,'Open Music File', QUrl(expanduser('~')),'Audio (*.mp3 *.ogg *.wav)','*.mp3 *.ogg *.wav')
+		if fileChoosen != None:
+			self.currentPlaylist.addMedia(QMediaContent(fileChoosen[0]))
+
+	def folderOpen(self):
+		folderAc = QAction('Open Folder',self)
+		folderAc.setShortcut('Ctrl+D')
+		folderAc.setStatusTip('Open Folder (Will add all the files in the folder) ')
+		folderAc.triggered.connect(self.addFiles)
+		return folderAc
+
+	def addFiles(self):
+		folderChoosen = QFileDialog.getExistingDirectory(self,'Open Music Folder', expanduser('~'))
+		if folderChoosen != None:
+			it = QDirIterator(folderChoosen)
+			it.next()
+			while it.hasNext():
+				if it.fileInfo().isDir() == False and it.filePath() != '.':
+					fInfo = it.fileInfo()
+					print(it.filePath(),fInfo.suffix())
+					if fInfo.suffix() in ('mp3','ogg','wav'):
+						print('added file ',fInfo.fileName())
+						self.currentPlaylist.addMedia(QMediaContent(QUrl.fromLocalFile(it.filePath())))
+				it.next()
+
+	def songInfo(self):
+		infoAc = QAction('Info',self)
+		infoAc.setShortcut('Ctrl+I')
+		infoAc.setStatusTip('Displays Current Song Information')
+		infoAc.triggered.connect(self.displaySongInfo)
+		return infoAc
+
+	def displaySongInfo(self):
+		metaDataKeyList = self.player.availableMetaData()
+		fullText = '<table class="tftable" border="0">'
+		for key in metaDataKeyList:
+			value = self.player.metaData(key)
+			fullText = fullText + '<tr><td>' + key + '</td><td>' + str(value) + '</td></tr>'
+		fullText = fullText + '</table>'
+		infoBox = QMessageBox(self)
+		infoBox.setWindowTitle('Detailed Song Information')
+		infoBox.setTextFormat(Qt.RichText)
+		infoBox.setText(fullText)
+		infoBox.addButton('OK',QMessageBox.AcceptRole)
+		infoBox.show()
+
+	def prevItemPlaylist(self):
+		self.player.playlist().previous()
+
+	def nextItemPlaylist(self):
+		self.player.playlist().next()
+
+	def exitAction(self):
+		exitAc = QAction('&Exit',self)
+		exitAc.setShortcut('Ctrl+Q')
+		exitAc.setStatusTip('Exit App')
+		exitAc.triggered.connect(self.closeEvent)
+		return exitAc
+
+	def closeEvent(self,event):
+		reply = QMessageBox.question(self,'Message','Pres Yes to Close.',QMessageBox.Yes|QMessageBox.No,QMessageBox.Yes)
+
+		if reply == QMessageBox.Yes :
+			qApp.quit()
+		else :
+			try:
+				event.ignore()
+			except AttributeError:
+				pass
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    main_win = MainWindow()
-    available_geometry = main_win.screen().availableGeometry()
-    main_win.resize(available_geometry.width() / 3,
-                    available_geometry.height() / 2)
-    main_win.show()
-    sys.exit(app.exec())
+	app = QApplication(sys.argv)
+	ex = MainWindow()
+	sys.exit(app.exec_())
