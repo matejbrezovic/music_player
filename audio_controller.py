@@ -19,6 +19,7 @@ class AudioController(QtWidgets.QFrame):
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 
         self.player = AudioPlayer()
+        self.player.positionChanged.connect(self.player_position_changed)
 
         self.play_button = QPushButton()
         self.prev_button = QPushButton()
@@ -61,14 +62,14 @@ class AudioController(QtWidgets.QFrame):
         self.seek_slider.setOrientation(Qt.Orientation.Horizontal)
         self.seek_slider.setTracking(False)
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.seek_slider.sliderMoved.connect(self.seekPosition)
+        self.seek_slider.sliderMoved.connect(self.seek_position)
 
         self.seek_slider_time_label = QLabel("0:00/0:00")
         self.audio_file_name_label = QLabel()
         self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum))
 
-        self.equalizer_button = QPushButton()
-        self.audio_order_button = QPushButton()
+        self.equalizer_button = QPushButton("Eq")
+        self.audio_order_button = QPushButton("Au")
         self.equalizer_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.audio_order_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
 
@@ -168,8 +169,15 @@ class AudioController(QtWidgets.QFrame):
             self.volume_slider_position = self.volume_slider_position_backup
             self.volume_slider.setSliderPosition(self.volume_slider_position)
 
-    def seekPosition(self, position):
+    def seek_position(self, position):
         sender = self.sender()
         if isinstance(sender, QSlider):
             if self.player.isSeekable():
                 self.player.setPosition(position)
+
+    def player_position_changed(self, position, sender_type=False):
+        if not sender_type:
+            self.seek_slider.setValue(position * 100 / (self.player.duration() if self.player.duration() else 99999999))
+        # update the text label
+        self.seek_slider_time_label.setText('%d:%02d' % (int(position / 60000), int((position / 1000) % 60)))
+

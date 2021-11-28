@@ -180,6 +180,8 @@ class MainWindow(QMainWindow):
 			if self.player.isSeekable():
 				self.player.setPosition(position)
 
+	#############
+
 	def qmp_volumeChanged(self):
 		msg = self.statusBar().currentMessage()
 		msg = msg[:-2] + str(self.player.volume())
