@@ -1,8 +1,8 @@
+from PyQt6 import QtCore
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QUrl
-from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QWidget, QLabel, QVBoxLayout, QSizePolicy, QLayout, \
+from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, \
     QPushButton, QFrame
-from PyQt6 import QtCore
 
 from audio_player import AudioPlayer
 from constants import *
@@ -21,6 +21,7 @@ class AudioController(QtWidgets.QFrame):
 
         self.player = AudioPlayer()
         self.player.positionChanged.connect(self.player_position_changed)
+        self.player.durationChanged.connect(self.player_duration_changed)
 
         self.play_button = QPushButton()
         self.prev_button = QPushButton()
@@ -44,7 +45,7 @@ class AudioController(QtWidgets.QFrame):
         self.next_button.clicked.connect(self.next_button_clicked)
         self.prev_button.clicked.connect(self.prev_button_clicked)
 
-        self.volume_slider = VolumeSlider(Qt.Orientation.Horizontal)
+        self.volume_slider = ImprovedSlider(Qt.Orientation.Horizontal)
         self.volume_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.volume_slider.setMaximumWidth(100)
         self.volume_slider_position = STARTING_AUDIO_VOLUME
@@ -59,13 +60,14 @@ class AudioController(QtWidgets.QFrame):
         self.volume_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.volume_button.clicked.connect(self.volume_button_clicked)
 
-        self.seek_slider = QSlider()
+        self.seek_slider = SeekSlider(self)
         self.seek_slider.setMinimum(0)
         self.seek_slider.setMaximum(100)
         self.seek_slider.setOrientation(Qt.Orientation.Horizontal)
         self.seek_slider.setTracking(False)
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.seek_slider.sliderMoved.connect(self.seek_position)
+        # self.seek_slider.sliderMoved.connect(self.seek_position)
+        # self.seek_slider.mousePressEvent()
 
         self.seek_slider_time_label = QLabel("0:00/0:00")
         self.audio_file_name_label = QLabel()
@@ -126,6 +128,12 @@ class AudioController(QtWidgets.QFrame):
         self.player.setSource(QUrl(self.current_playlist[self.playlist_index]))
         self.player.play()
 
+    def player_duration_changed(self, duration):
+        duration = int(duration)
+        self.seek_slider.setRange(0, duration)
+        print("Duration: ", duration)
+        self.seek_slider_time_label.setText('%d:%02d' % (int(duration / 60000), int((duration / 1000) % 60)))
+
     def pause(self):
         print("Pause")
         self.play_button.setIcon(self.play_icon)
@@ -177,25 +185,28 @@ class AudioController(QtWidgets.QFrame):
             self.volume_slider_position = self.volume_slider_position_backup
             self.volume_slider.setSliderPosition(self.volume_slider_position)
 
-    def seek_position(self, position):
-        sender = self.sender()
-        if isinstance(sender, QSlider):
-            if self.player.isSeekable():
-                self.player.setPosition(position)
+    # def seek_position(self, position):
+    #     sender = self.sender()
+    #     # if isinstance(sender, QSlider):
+    #     # if self.player.isSeekable():
+    #     self.player.setPosition(position)
+    #     print("New pos: ", position)
 
     def player_position_changed(self, position, sender_type=False):
         if not sender_type:
-            self.seek_slider.setValue(position * 100 / (self.player.duration() if self.player.duration() else 99999999))
+            if self.player.duration():
+                self.seek_slider.setSliderPosition(position)
+                # print(position * 100 / (self.player.duration()))
         # update the text label
         self.seek_slider_time_label.setText('%d:%02d' % (int(position / 60000), int((position / 1000) % 60)))
 
 
-class VolumeSlider(QSlider):
+class ImprovedSlider(QSlider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.offset = self.contentsMargins().left()
+        # self.offset = self.contentsMargins().left()
 
-    def mousePressEvent(self, event):
+    def mousePressEvent(self, event: QtGui.QMouseEvent):
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
             val = self.pixelPosToRangeValue(event.pos())
             self.setValue(val)
@@ -220,3 +231,23 @@ class VolumeSlider(QSlider):
         p = pr.x() if self.orientation() == QtCore.Qt.Orientation.Horizontal else pr.y()
         return QtWidgets.QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), p - slider_min,
                                                         slider_max - slider_min, opt.upsideDown)
+
+
+class SeekSlider(ImprovedSlider):
+    def __init__(self, parent: AudioController, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.parent = parent
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent):
+        super(SeekSlider, self).mousePressEvent(event)
+        self.parent.player.setPosition(self.pixelPosToRangeValue(event.pos()))
+        print(self.pixelPosToRangeValue(event.pos()))
+
+    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        val = self.pixelPosToRangeValue(event.pos())
+        self.setValue(val)
+        self.parent.player.setPosition(val)
+
+    # def sliderMoved(self, position):
+    #     self.parent.player.setPosition(position)
+    #     print("New pos: ", position)

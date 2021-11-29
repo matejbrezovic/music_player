@@ -83,7 +83,7 @@ class MainWindow(QMainWindow):
 		seekSlider.setOrientation(Qt.Horizontal)
 		seekSlider.setTracking(False)
 		seekSlider.sliderMoved.connect(self.seekPosition)
-		#seekSlider.valueChanged.connect(self.seekPosition)
+		# seekSlider.valueChanged.connect(self.seekPosition)
 
 		seekSliderLabel1 = QLabel('0.00')
 		seekSliderLabel2 = QLabel('0.00')
