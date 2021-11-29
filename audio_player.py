@@ -11,7 +11,7 @@ class AudioPlayer(QMediaPlayer):
         self.setAudioOutput(self.audio_output)
         self.audioOutput().setVolume(STARTING_AUDIO_VOLUME / 100)
         self.current_volume = self.audioOutput().volume()
-        print(self.audioOutput().volume())
+        # print(self.audioOutput().volume())
 
         self.fade_in_thread = QThread(self)
         self.fade_in_thread.started.connect(lambda: self._fade_in())

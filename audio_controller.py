@@ -1,7 +1,8 @@
-from PyQt6 import QtWidgets
+from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QWidget, QLabel, QVBoxLayout, QSizePolicy, QLayout, \
-    QPushButton
+    QPushButton, QFrame
+from PyQt6 import QtCore
 
 from audio_player import AudioPlayer
 from constants import *
@@ -43,13 +44,15 @@ class AudioController(QtWidgets.QFrame):
         self.next_button.clicked.connect(self.next_button_clicked)
         self.prev_button.clicked.connect(self.prev_button_clicked)
 
-        self.volume_slider = QSlider(Qt.Orientation.Horizontal)
+        self.volume_slider = VolumeSlider(Qt.Orientation.Horizontal)
         self.volume_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.volume_slider.setMaximumWidth(100)
         self.volume_slider_position = STARTING_AUDIO_VOLUME
         self.volume_slider_position_backup = STARTING_AUDIO_VOLUME
         self.volume_slider.setSliderPosition(self.volume_slider_position)
         self.volume_slider.valueChanged.connect(self.volume_changed)
+        # self.volume_slider.sliderPressedWithValue.connect(self.player.setPosition)  # updates on click
+        # self.volume_slider.mousePressEvent.connect(self.player.setPosition)
 
         self.volume_button = QtWidgets.QPushButton()
         self.volume_button.setIcon(self.volume_on_icon)
@@ -76,9 +79,9 @@ class AudioController(QtWidgets.QFrame):
         self.audio_order_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
 
         # Layout logic
-        self.left_part = QWidget()
-        self.middle_part = QWidget()
-        self.right_part = QWidget()
+        self.left_part = QFrame()
+        self.middle_part = QFrame()
+        self.right_part = QFrame()
 
         self.left_layout = QHBoxLayout(self.left_part)
         self.left_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -89,7 +92,7 @@ class AudioController(QtWidgets.QFrame):
         self.left_layout.addWidget(self.volume_slider)
         self.left_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
-        self.left_part.setStyleSheet("background-color: green")
+        self.left_part.setStyleSheet("QFrame {background-color: rgba(0, 255, 7, 0.3)}")
         self.left_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         self.left_part.setFixedSize(self.left_layout.sizeHint())
 
@@ -104,7 +107,7 @@ class AudioController(QtWidgets.QFrame):
         self.right_layout.addWidget(self.equalizer_button)
         self.right_layout.addWidget(self.audio_order_button)
 
-        self.right_part.setStyleSheet("background-color: red")
+        self.right_part.setStyleSheet("QFrame {background-color: rgba(255, 0, 231, 0.3)}")
         self.right_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         self.right_part.setFixedSize(self.left_layout.sizeHint())
 
@@ -157,6 +160,7 @@ class AudioController(QtWidgets.QFrame):
         self.play()
 
     def volume_changed(self, volume_value: int):
+        print(volume_value)
         self.player.audio_output.setVolume(volume_value / 100)
         self.volume_slider.setSliderPosition(volume_value)
         self.volume_slider_position = volume_value
@@ -184,4 +188,34 @@ class AudioController(QtWidgets.QFrame):
             self.seek_slider.setValue(position * 100 / (self.player.duration() if self.player.duration() else 99999999))
         # update the text label
         self.seek_slider_time_label.setText('%d:%02d' % (int(position / 60000), int((position / 1000) % 60)))
+
+
+class VolumeSlider(QSlider):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.offset = self.contentsMargins().left()
+
+    def mousePressEvent(self, event):
+        super().mousePressEvent(event)
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            val = self.pixelPosToRangeValue(event.pos())
+            self.setValue(val)
+
+    def pixelPosToRangeValue(self, pos):
+        opt = QtWidgets.QStyleOptionSlider()
+        self.initStyleOption(opt)
+        gr = self.style().subControlRect(QtWidgets.QStyle.ComplexControl.CC_Slider, opt,
+                                         QtWidgets.QStyle.SubControl.SC_SliderGroove, self)
+        sr = self.style().subControlRect(QtWidgets.QStyle.ComplexControl.CC_Slider, opt,
+                                         QtWidgets.QStyle.SubControl.SC_SliderHandle, self)
+
+        slider_length = sr.width()
+        slider_min = gr.x()
+        slider_max = gr.right() - slider_length + 1
+
+        pr = pos - sr.center() + sr.topLeft()
+        p = pr.x() if self.orientation() == QtCore.Qt.Orientation.Horizontal else pr.y()
+        return QtWidgets.QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), p - slider_min,
+                                                        slider_max - slider_min, opt.upsideDown)
+
 
