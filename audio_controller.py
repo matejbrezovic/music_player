@@ -52,8 +52,6 @@ class AudioController(QtWidgets.QFrame):
         self.volume_slider_position_backup = STARTING_AUDIO_VOLUME
         self.volume_slider.setSliderPosition(self.volume_slider_position)
         self.volume_slider.valueChanged.connect(self.volume_changed)
-        # self.volume_slider.sliderPressedWithValue.connect(self.player.setPosition)  # updates on click
-        # self.volume_slider.mousePressEvent.connect(self.player.setPosition)
 
         self.volume_button = QtWidgets.QPushButton()
         self.volume_button.setIcon(self.volume_on_icon)
@@ -66,14 +64,11 @@ class AudioController(QtWidgets.QFrame):
         self.seek_slider.setOrientation(Qt.Orientation.Horizontal)
         self.seek_slider.setTracking(False)
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        # self.seek_slider.sliderMoved.connect(self.seek_position)
-        # self.seek_slider.mousePressEvent()
 
         self.seek_slider_time_label = QLabel("0:00/0:00")
         self.audio_file_name_label = QLabel()
         self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum))
         self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # self.audio_file_name_label.setContentsMargins(0, 0, 0, 0)
 
         self.equalizer_button = QPushButton("Eq")
         self.audio_order_button = QPushButton("Au")
@@ -118,7 +113,6 @@ class AudioController(QtWidgets.QFrame):
         self.main_layout.addWidget(self.left_part)
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
-        # self.main_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
     def play(self):
         print("Play")
@@ -168,7 +162,7 @@ class AudioController(QtWidgets.QFrame):
         self.play()
 
     def volume_changed(self, volume_value: int):
-        print(volume_value)
+        print("Volume: ", volume_value)
         self.player.audio_output.setVolume(volume_value / 100)
         self.volume_slider.setSliderPosition(volume_value)
         self.volume_slider_position = volume_value
@@ -185,26 +179,17 @@ class AudioController(QtWidgets.QFrame):
             self.volume_slider_position = self.volume_slider_position_backup
             self.volume_slider.setSliderPosition(self.volume_slider_position)
 
-    # def seek_position(self, position):
-    #     sender = self.sender()
-    #     # if isinstance(sender, QSlider):
-    #     # if self.player.isSeekable():
-    #     self.player.setPosition(position)
-    #     print("New pos: ", position)
-
     def player_position_changed(self, position, sender_type=False):
         if not sender_type:
             if self.player.duration():
                 self.seek_slider.setSliderPosition(position)
-                # print(position * 100 / (self.player.duration()))
-        # update the text label
+        # update the time text label
         self.seek_slider_time_label.setText('%d:%02d' % (int(position / 60000), int((position / 1000) % 60)))
 
 
 class ImprovedSlider(QSlider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        # self.offset = self.contentsMargins().left()
 
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
@@ -241,13 +226,9 @@ class SeekSlider(ImprovedSlider):
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         super(SeekSlider, self).mousePressEvent(event)
         self.parent.player.setPosition(self.pixelPosToRangeValue(event.pos()))
-        print(self.pixelPosToRangeValue(event.pos()))
+        print("Player position: ", self.pixelPosToRangeValue(event.pos()))
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         val = self.pixelPosToRangeValue(event.pos())
         self.setValue(val)
         self.parent.player.setPosition(val)
-
-    # def sliderMoved(self, position):
-    #     self.parent.player.setPosition(position)
-    #     print("New pos: ", position)
