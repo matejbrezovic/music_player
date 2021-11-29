@@ -196,10 +196,13 @@ class VolumeSlider(QSlider):
         self.offset = self.contentsMargins().left()
 
     def mousePressEvent(self, event):
-        super().mousePressEvent(event)
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
             val = self.pixelPosToRangeValue(event.pos())
             self.setValue(val)
+
+    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        val = self.pixelPosToRangeValue(event.pos())
+        self.setValue(val)
 
     def pixelPosToRangeValue(self, pos):
         opt = QtWidgets.QStyleOptionSlider()
@@ -217,5 +220,3 @@ class VolumeSlider(QSlider):
         p = pr.x() if self.orientation() == QtCore.Qt.Orientation.Horizontal else pr.y()
         return QtWidgets.QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), p - slider_min,
                                                         slider_max - slider_min, opt.upsideDown)
-
-
