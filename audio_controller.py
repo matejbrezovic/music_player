@@ -1,3 +1,4 @@
+import os
 from typing import List
 
 from PyQt6 import QtCore
@@ -17,8 +18,7 @@ class AudioController(QtWidgets.QFrame):
         self.setStyleSheet("QFrame {background-color: rgba(0, 0, 88, 0.3)}")
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
-        self.current_playlist = ['/home/matey/Music/Here We Go!.mp3', '/home/matey/Music/Remembrance.mp3',
-                                 '/home/matey/Music/music that makes you braver.m4a']
+        self.current_playlist = [DEFAULT_AUDIO_PATH + "/" + name for name in os.listdir(DEFAULT_AUDIO_PATH)]
         self.playlist_index = -1
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 
@@ -156,7 +156,8 @@ class AudioController(QtWidgets.QFrame):
         minutes = int((time_in_seconds / 60000) % 60)
         seconds = int((time_in_seconds / 1000) % 60)
 
-        return f'{str(hours) + ":" if hours else ""}{minutes}:{"0" + str(seconds) if seconds < 10 else seconds}'
+        return f'{str(hours) + ":" if hours else ""}{"0" + str(minutes) if hours else minutes}:' \
+               f'{"0" + str(seconds) if seconds < 10 else seconds}'
 
     def player_duration_changed(self, duration):
         duration = int(duration)
