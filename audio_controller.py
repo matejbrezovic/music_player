@@ -3,7 +3,8 @@ from typing import List
 from PyQt6 import QtCore
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QUrl
-from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, QFrame
+from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
+    QFrame
 
 from audio_player import AudioPlayer
 from constants import *
@@ -16,7 +17,8 @@ class AudioController(QtWidgets.QFrame):
         self.setStyleSheet("QFrame {background-color: rgba(0, 0, 88, 0.3)}")
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
-        self.current_playlist = ['/home/matey/Music/Here We Go!.mp3', '/home/matey/Music/Remembrance.mp3']
+        self.current_playlist = ['/home/matey/Music/Here We Go!.mp3', '/home/matey/Music/Remembrance.mp3',
+                                 '/home/matey/Music/music that makes you braver.m4a']
         self.playlist_index = -1
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 
@@ -67,9 +69,27 @@ class AudioController(QtWidgets.QFrame):
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.seek_slider_time_label = QLabel("0:00/0:00")
+        self.seek_slider_time_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
+        self.offset_label = QLabel(self.seek_slider_time_label.text())
+        self.offset_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
+        self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
         self.audio_file_name_label = QLabel("---")
-        self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum))
+        # self.audio_file_name_label.setStyleSheet("QLabel {background-color: red}")
+        self.seek_slider_time_label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 0)}")
+        self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
         self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.name_time_label_container = QFrame()
+        self.name_time_label_container.setContentsMargins(0, 0, 0, 0)
+        self.name_time_label_container_layout = QHBoxLayout(self.name_time_label_container)
+        self.name_time_label_container_layout.setContentsMargins(0, 0, 0, 0)
+        self.name_time_label_container_layout.addWidget(self.offset_label)
+        self.name_time_label_container_layout.addWidget(self.audio_file_name_label)
+        self.name_time_label_container_layout.addWidget(self.seek_slider_time_label)
+        self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding))
+        # self.name_time_label_container.setStyleSheet("background-color: green")
+        # self.seek_slider.setStyleSheet("background-color: yellow")
 
         self.equalizer_button = QPushButton("Eq")
         self.audio_order_button = QPushButton("Au")
@@ -96,7 +116,7 @@ class AudioController(QtWidgets.QFrame):
 
         self.middle_layout = QVBoxLayout(self.middle_part)
         self.middle_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        self.middle_layout.addWidget(self.audio_file_name_label)
+        self.middle_layout.addWidget(self.name_time_label_container)
         self.middle_layout.addWidget(self.seek_slider)
         self.middle_layout.setContentsMargins(0, 4, 0, 2)
 
@@ -130,17 +150,26 @@ class AudioController(QtWidgets.QFrame):
         self.player.setSource(QUrl(self.current_playlist[self.playlist_index]))
         self.player.play()
 
+    @staticmethod
+    def get_formatted_time(time_in_seconds: int):
+        hours = int(time_in_seconds / 3600000)
+        minutes = int((time_in_seconds / 60000) % 60)
+        seconds = int((time_in_seconds / 1000) % 60)
+
+        return f'{str(hours) + ":" if hours else ""}{minutes}:{"0" + str(seconds) if seconds < 10 else seconds}'
+
     def player_duration_changed(self, duration):
         duration = int(duration)
         self.seek_slider.setRange(0, duration)
         print("Duration: ", duration)
-        self.seek_slider_time_label.setText('%d:%02d' % (int(duration / 60000), int((duration / 1000) % 60)))
+        self.seek_slider_time_label.setText(self.get_formatted_time(self.player.duration()))
 
     def pause(self):
         print("Pause")
         self.play_button.setIcon(self.play_icon)
         self.user_action = 2
         self.player.pause()
+        # print(self.get_player_duration_formatted())
 
     def unpause(self):
         print("Unpause")
@@ -192,7 +221,7 @@ class AudioController(QtWidgets.QFrame):
             if self.player.duration():
                 self.seek_slider.setSliderPosition(position)
         # update the time text label
-        self.seek_slider_time_label.setText('%d:%02d' % (int(position / 60000), int((position / 1000) % 60)))
+        self.seek_slider_time_label.setText(self.get_formatted_time(self.player.position()) + "/" + self.get_formatted_time(self.player.duration()))
 
 
 class ImprovedSlider(QSlider):

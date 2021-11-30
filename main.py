@@ -19,7 +19,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.setWindowTitle('music player v0.0.1')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
-        self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 80, 600)
+        self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
     def _setup_ui(self):
         self.central_widget = QWidget(self)
