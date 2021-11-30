@@ -1,9 +1,9 @@
+from typing import List
+
 from PyQt6 import QtCore
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QUrl
-from PyQt6.QtGui import QMouseEvent
-from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, \
-    QPushButton, QFrame
+from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, QFrame
 
 from audio_player import AudioPlayer
 from constants import *
@@ -67,7 +67,7 @@ class AudioController(QtWidgets.QFrame):
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.seek_slider_time_label = QLabel("0:00/0:00")
-        self.audio_file_name_label = QLabel()
+        self.audio_file_name_label = QLabel("---")
         self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum))
         self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -115,6 +115,13 @@ class AudioController(QtWidgets.QFrame):
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
 
+    def set_player_position(self, position: int):
+        self.player.setPosition(position)
+
+    def set_playlist(self, playlist: List[str]):
+        self.current_playlist = playlist
+        self.playlist_index = 0
+
     def play(self):
         print("Play")
         self.play_button.setIcon(self.pause_icon)
@@ -140,9 +147,6 @@ class AudioController(QtWidgets.QFrame):
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
         self.player.play()
-
-    def set_player_position(self, position: int):
-        self.player.setPosition(position)
 
     def play_pause_button_clicked(self):
         if self.user_action <= 0:
@@ -246,7 +250,4 @@ class SeekSlider(ImprovedSlider):
         self.parent.player.audio_output.setVolume(self.backup_volume)
         self.parent.set_player_position(self.sliderPosition())
         self.parent.unpause()
-
-
-
 
