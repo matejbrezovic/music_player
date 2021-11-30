@@ -1,6 +1,7 @@
 from PyQt6 import QtCore
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QUrl
+from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, \
     QPushButton, QFrame
 
@@ -118,7 +119,7 @@ class AudioController(QtWidgets.QFrame):
         print("Play")
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
-        self.audio_file_name_label.setText(self.current_playlist[self.playlist_index].rsplit("/", 1)[-1])
+        self.audio_file_name_label.setText(self.current_playlist[self.playlist_index].rsplit("/", 1)[-1]) # TODO replace with os filename?
         self.player.setSource(QUrl(self.current_playlist[self.playlist_index]))
         self.player.play()
 
@@ -139,6 +140,9 @@ class AudioController(QtWidgets.QFrame):
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
         self.player.play()
+
+    def set_player_position(self, position: int):
+        self.player.setPosition(position)
 
     def play_pause_button_clicked(self):
         if self.user_action <= 0:
@@ -222,13 +226,27 @@ class SeekSlider(ImprovedSlider):
     def __init__(self, parent: AudioController, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.parent = parent
+        self.backup_volume = self.parent.player.audio_output.volume()
 
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         super(SeekSlider, self).mousePressEvent(event)
         self.parent.player.setPosition(self.pixelPosToRangeValue(event.pos()))
-        print("Player position: ", self.pixelPosToRangeValue(event.pos()))
+        self.backup_volume = self.parent.player.audio_output.volume()
+        self.parent.player.audio_output.setVolume(0)
+        self.parent.pause()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         val = self.pixelPosToRangeValue(event.pos())
         self.setValue(val)
         self.parent.player.setPosition(val)
+
+    def mouseReleaseEvent(self, ev: QtGui.QMouseEvent) -> None:
+        # handles unmuting audio and updating player
+        print(self.backup_volume)
+        self.parent.player.audio_output.setVolume(self.backup_volume)
+        self.parent.set_player_position(self.sliderPosition())
+        self.parent.unpause()
+
+
+
+
