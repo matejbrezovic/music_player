@@ -226,6 +226,8 @@ class AudioController(QtWidgets.QFrame):
     def player_position_changed(self, position, sender_type=False):
         if not sender_type:
             if self.player.duration():
+                if position == self.player.duration():
+                    self.next_button_clicked()
                 self.seek_slider.setSliderPosition(position)
         # update the time text label
         self.seek_slider_time_label.setText(self.get_formatted_time(self.player.position()) + "/" + self.get_formatted_time(self.player.duration()))
