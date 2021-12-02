@@ -11,6 +11,9 @@ from audio_player import AudioPlayer
 from constants import *
 
 
+# NumberAnimation { properties: "x"; from: 100; duration: 200 }
+# volumeCtrl.volume = min(1, Math.max(0, mouse.x / (volumeBar.width - 1)))
+
 class AudioController(QtWidgets.QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -25,6 +28,8 @@ class AudioController(QtWidgets.QFrame):
         self.player = AudioPlayer()
         self.player.positionChanged.connect(self.player_position_changed)
         self.player.durationChanged.connect(self.player_duration_changed)
+        # self.audio_player_thread = QThread()
+        # self.player.moveToThread(self.audio_player_thread)
 
         self.play_button = QPushButton()
         self.prev_button = QPushButton()
@@ -173,6 +178,7 @@ class AudioController(QtWidgets.QFrame):
         # print(self.get_player_duration_formatted())
 
     def unpause(self):
+        # self.player.audio_output.setVolume(0)
         print("Unpause")
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
@@ -261,9 +267,11 @@ class SeekSlider(ImprovedSlider):
         super().__init__(*args, **kwargs)
         self.parent = parent
         self.backup_volume = self.parent.player.audio_output.volume()
+        self.backup_action = -1
 
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         super(SeekSlider, self).mousePressEvent(event)
+        self.backup_action = self.parent.user_action
         self.parent.player.setPosition(self.pixelPosToRangeValue(event.pos()))
         self.backup_volume = self.parent.player.audio_output.volume()
         self.parent.player.audio_output.setVolume(0)
@@ -279,5 +287,6 @@ class SeekSlider(ImprovedSlider):
         print(self.backup_volume)
         self.parent.player.audio_output.setVolume(self.backup_volume)
         self.parent.set_player_position(self.sliderPosition())
-        self.parent.unpause()
 
+        if self.backup_action == 1:
+            self.parent.unpause()
