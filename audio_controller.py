@@ -6,10 +6,12 @@ from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
     QFrame
+from PySide6.QtCore import QVariantAnimation
 
 from audio_player import AudioPlayer
 from constants import *
 
+from random import shuffle
 
 # NumberAnimation { properties: "x"; from: 100; duration: 200 }
 # volumeCtrl.volume = min(1, Math.max(0, mouse.x / (volumeBar.width - 1)))
@@ -22,6 +24,7 @@ class AudioController(QtWidgets.QFrame):
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
         self.current_playlist = [DEFAULT_AUDIO_PATH + "/" + name for name in os.listdir(DEFAULT_AUDIO_PATH)]
+        shuffle(self.current_playlist)
         self.playlist_index = -1
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 

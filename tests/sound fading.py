@@ -5,6 +5,8 @@ from PyQt6.QtCore import QUrl
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QStyle
 
+from audio_player import AudioPlayer
+
 
 class MainWindowUi(QtWidgets.QMainWindow):
     def __init__(self):
@@ -35,7 +37,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         print("Play")
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
-        self.player.setSource(QUrl("Some audio file path goes here."))
+        self.player.setSource(QUrl("/home/matey/Music/Remembrance.ogg"))
         self.player.play()
 
     def pause(self):
@@ -59,19 +61,19 @@ class MainWindowUi(QtWidgets.QMainWindow):
             self.unpause()
 
 
-class AudioPlayer(QMediaPlayer):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.audio_output = QAudioOutput()
-        self.setAudioOutput(self.audio_output)
-        self.audioOutput().setVolume(0.3)
-        self.current_volume = self.audio_output.volume()
-
-    def play(self):
-        super().play()
-
-    def pause(self):
-        super().pause()
+# class AudioPlayer(QMediaPlayer):
+#     def __init__(self, parent=None):
+#         super().__init__(parent)
+#         self.audio_output = QAudioOutput()
+#         self.setAudioOutput(self.audio_output)
+#         self.audioOutput().setVolume(0.3)
+#         self.current_volume = self.audio_output.volume()
+#
+#     def play(self):
+#         super().play()
+#
+#     def pause(self):
+#         super().pause()
 
 
 if __name__ == '__main__':
