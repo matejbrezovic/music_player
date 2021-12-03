@@ -24,7 +24,7 @@ class AudioController(QtWidgets.QFrame):
         self.playlist_index = -1
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 
-        self.player = AudioPlayer()
+        self.player = AudioPlayer(self)
         self.player.positionChanged.connect(self.player_position_changed)
         self.player.durationChanged.connect(self.player_duration_changed)
 
