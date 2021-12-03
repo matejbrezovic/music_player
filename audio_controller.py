@@ -1,4 +1,5 @@
 import os
+from random import shuffle
 from typing import List
 
 from PyQt6 import QtCore
@@ -6,15 +7,10 @@ from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
     QFrame
-from PySide6.QtCore import QVariantAnimation
 
 from audio_player import AudioPlayer
 from constants import *
 
-from random import shuffle
-
-# NumberAnimation { properties: "x"; from: 100; duration: 200 }
-# volumeCtrl.volume = min(1, Math.max(0, mouse.x / (volumeBar.width - 1)))
 
 class AudioController(QtWidgets.QFrame):
     def __init__(self, parent=None):
@@ -31,8 +27,6 @@ class AudioController(QtWidgets.QFrame):
         self.player = AudioPlayer()
         self.player.positionChanged.connect(self.player_position_changed)
         self.player.durationChanged.connect(self.player_duration_changed)
-        # self.audio_player_thread = QThread()
-        # self.player.moveToThread(self.audio_player_thread)
 
         self.play_button = QPushButton()
         self.prev_button = QPushButton()
@@ -173,19 +167,17 @@ class AudioController(QtWidgets.QFrame):
         print("Duration: ", duration)
         self.seek_slider_time_label.setText(self.get_formatted_time(self.player.duration()))
 
-    def pause(self):
+    def pause(self, fade=True):
         print("Pause")
         self.play_button.setIcon(self.play_icon)
         self.user_action = 2
-        self.player.pause()
-        # print(self.get_player_duration_formatted())
+        self.player.pause(fade)
 
-    def unpause(self):
-        # self.player.audio_output.setVolume(0)
+    def unpause(self, fade=True):
         print("Unpause")
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
-        self.player.play()
+        self.player.play(fade)
 
     def play_pause_button_clicked(self):
         if self.user_action <= 0:
@@ -280,7 +272,7 @@ class SeekSlider(ImprovedSlider):
         self.parent.player.setPosition(self.pixelPosToRangeValue(event.pos()))
         self.backup_volume = self.parent.player.audio_output.volume()
         self.parent.player.audio_output.setVolume(0)
-        self.parent.pause()
+        self.parent.pause(fade=False)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         val = self.pixelPosToRangeValue(event.pos())
@@ -294,4 +286,4 @@ class SeekSlider(ImprovedSlider):
         self.parent.set_player_position(self.sliderPosition())
 
         if self.backup_action == 1:
-            self.parent.unpause()
+            self.parent.unpause(fade=False)

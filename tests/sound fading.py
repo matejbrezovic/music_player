@@ -1,7 +1,7 @@
 import sys
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QUrl
+from PyQt6.QtCore import QUrl, QPropertyAnimation, QEasingCurve
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QStyle
 
@@ -59,21 +59,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
             self.pause()
         elif self.user_action == 2:
             self.unpause()
-
-
-# class AudioPlayer(QMediaPlayer):
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#         self.audio_output = QAudioOutput()
-#         self.setAudioOutput(self.audio_output)
-#         self.audioOutput().setVolume(0.3)
-#         self.current_volume = self.audio_output.volume()
-#
-#     def play(self):
-#         super().play()
-#
-#     def pause(self):
-#         super().pause()
 
 
 if __name__ == '__main__':
