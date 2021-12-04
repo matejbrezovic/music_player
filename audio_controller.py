@@ -203,6 +203,7 @@ class AudioController(QtWidgets.QFrame):
     def volume_changed(self, volume_value: int):
         print("Volume: ", volume_value)
         self.player.audio_output.setVolume(volume_value / 100)
+        self.player.current_volume = volume_value / 100
         self.volume_slider.setSliderPosition(volume_value)
         self.volume_slider_position = volume_value
         if volume_value == 0:
@@ -225,7 +226,8 @@ class AudioController(QtWidgets.QFrame):
                     self.next_button_clicked()
                 self.seek_slider.setSliderPosition(position)
         # update the time text label
-        self.seek_slider_time_label.setText(self.get_formatted_time(self.player.position()) + "/" + self.get_formatted_time(self.player.duration()))
+        self.seek_slider_time_label.setText(self.get_formatted_time(self.player.position()) + "/" +
+                                            self.get_formatted_time(self.player.duration()))
 
 
 class ImprovedSlider(QSlider):

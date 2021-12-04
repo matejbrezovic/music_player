@@ -12,7 +12,7 @@ class AudioPlayer(QMediaPlayer):
         self.setAudioOutput(self.audio_output)
         self.audioOutput().setVolume(STARTING_AUDIO_VOLUME / 100)
         self.current_volume = self.audio_output.volume()
-        self.parent = parent
+        # self.parent = parent
 
         self.fade_in_anim = QPropertyAnimation(self.audio_output, b"volume")
         self.fade_in_anim.setDuration(1400)
@@ -29,7 +29,7 @@ class AudioPlayer(QMediaPlayer):
 
     def play(self, fade=True):
         if fade:
-            self.current_volume = self.parent.volume_slider.sliderPosition() / 100
+            # self.current_volume = self.parent.volume_slider.sliderPosition() / 100
             self.fade_in_anim.setEndValue(self.current_volume)
             print("unfade_vol; ", self.current_volume)
             self.fade_in_anim.start()
