@@ -76,6 +76,7 @@ class AudioController(QtWidgets.QFrame):
         self.offset_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
         self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
         self.audio_file_name_label = QLabel("---")
+        self.audio_file_name_label.setMaximumWidth(400)
         # self.audio_file_name_label.setStyleSheet("QLabel {background-color: red}")
         self.seek_slider_time_label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 0)}")
         self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -215,9 +216,11 @@ class AudioController(QtWidgets.QFrame):
         if self.player.audio_output.volume():
             self.volume_slider_position_backup = self.volume_slider_position
             self.volume_slider.setSliderPosition(0)
+            self.player.current_volume = self.player.audio_output.volume()
         else:
             self.volume_slider_position = self.volume_slider_position_backup
             self.volume_slider.setSliderPosition(self.volume_slider_position)
+            self.player.current_volume = self.player.audio_output.volume()
 
     def player_position_changed(self, position, sender_type=False):
         if not sender_type:
