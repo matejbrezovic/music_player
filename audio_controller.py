@@ -1,5 +1,4 @@
 import os
-from random import shuffle
 from typing import List
 
 from PyQt6 import QtCore
@@ -9,6 +8,7 @@ from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, Q
     QFrame
 
 from audio_player import AudioPlayer
+from audio_playlist import AudioPlaylist
 from constants import *
 
 
@@ -19,9 +19,10 @@ class AudioController(QtWidgets.QFrame):
         self.setStyleSheet("QFrame {background-color: rgba(0, 0, 88, 0.3)}")
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
-        self.current_playlist = [DEFAULT_AUDIO_PATH + "/" + name for name in os.listdir(DEFAULT_AUDIO_PATH)]
-        shuffle(self.current_playlist)
-        self.playlist_index = -1
+        self.current_playlist = AudioPlaylist()
+        self.current_playlist.set_playlist([DEFAULT_AUDIO_PATH + "/" + name for name in os.listdir(DEFAULT_AUDIO_PATH)])
+        # shuffle(self.current_playlist)
+        # self.playlist_index = -1
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 
         self.player = AudioPlayer(self)
@@ -77,7 +78,6 @@ class AudioController(QtWidgets.QFrame):
         self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
         self.audio_file_name_label = QLabel("---")
         self.audio_file_name_label.setMaximumWidth(400)
-        # self.audio_file_name_label.setStyleSheet("QLabel {background-color: red}")
         self.seek_slider_time_label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 0)}")
         self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
@@ -91,8 +91,6 @@ class AudioController(QtWidgets.QFrame):
         self.name_time_label_container_layout.addWidget(self.audio_file_name_label)
         self.name_time_label_container_layout.addWidget(self.seek_slider_time_label)
         self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding))
-        # self.name_time_label_container.setStyleSheet("background-color: green")
-        # self.seek_slider.setStyleSheet("background-color: yellow")
 
         self.equalizer_button = QPushButton("Eq")
         self.audio_order_button = QPushButton("Au")
@@ -142,15 +140,14 @@ class AudioController(QtWidgets.QFrame):
         self.player.setPosition(position)
 
     def set_playlist(self, playlist: List[str]):
-        self.current_playlist = playlist
-        self.playlist_index = 0
+        self.current_playlist.set_playlist(playlist)
 
     def play(self):
         print("Play")
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
-        self.audio_file_name_label.setText(self.current_playlist[self.playlist_index].rsplit("/", 1)[-1]) # TODO replace with os filename?
-        self.player.setSource(QUrl(self.current_playlist[self.playlist_index]))
+        self.audio_file_name_label.setText(os.path.basename(self.current_playlist.get_current()))
+        self.player.setSource(QUrl(self.current_playlist.get_current()))
         self.player.play()
 
     @staticmethod
@@ -163,10 +160,20 @@ class AudioController(QtWidgets.QFrame):
                f'{"0" + str(seconds) if seconds < 10 else seconds}'
 
     def player_duration_changed(self, duration):
-        duration = int(duration)
+        # duration = int(duration)
         self.seek_slider.setRange(0, duration)
         print("Duration: ", duration)
         self.seek_slider_time_label.setText(self.get_formatted_time(self.player.duration()))
+
+    def player_position_changed(self, position, sender_type=False):
+        if not sender_type:
+            if self.player.duration():
+                if position == self.player.duration():
+                    self.next_button_clicked()
+                self.seek_slider.setSliderPosition(position)
+        # update the time text label
+        self.seek_slider_time_label.setText(self.get_formatted_time(self.player.position()) + "/" +
+                                            self.get_formatted_time(self.player.duration()))
 
     def pause(self, fade=True):
         print("Pause")
@@ -182,7 +189,7 @@ class AudioController(QtWidgets.QFrame):
 
     def play_pause_button_clicked(self):
         if self.user_action <= 0:
-            self.playlist_index = 0
+            self.current_playlist.set_playlist_index(0)
             self.play()
         elif self.user_action == 1:
             self.pause()
@@ -190,15 +197,11 @@ class AudioController(QtWidgets.QFrame):
             self.unpause()
 
     def next_button_clicked(self):
-        self.playlist_index += 1
-        if self.playlist_index == len(self.current_playlist):
-            self.playlist_index = 0
+        self.current_playlist.set_next()
         self.play()
 
     def prev_button_clicked(self):
-        self.playlist_index -= 1
-        if self.playlist_index <= -1:
-            self.playlist_index = len(self.current_playlist) - 1
+        self.current_playlist.set_prev()
         self.play()
 
     def volume_changed(self, volume_value: int):
@@ -221,16 +224,6 @@ class AudioController(QtWidgets.QFrame):
             self.volume_slider_position = self.volume_slider_position_backup
             self.volume_slider.setSliderPosition(self.volume_slider_position)
             self.player.current_volume = self.player.audio_output.volume()
-
-    def player_position_changed(self, position, sender_type=False):
-        if not sender_type:
-            if self.player.duration():
-                if position == self.player.duration():
-                    self.next_button_clicked()
-                self.seek_slider.setSliderPosition(position)
-        # update the time text label
-        self.seek_slider_time_label.setText(self.get_formatted_time(self.player.position()) + "/" +
-                                            self.get_formatted_time(self.player.duration()))
 
 
 class ImprovedSlider(QSlider):
