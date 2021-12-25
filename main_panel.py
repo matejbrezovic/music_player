@@ -1,5 +1,6 @@
 from PyQt6 import QtWidgets
 from constants import *
+from tag_manager import TagManager
 
 
 class MainPanel(QtWidgets.QFrame):
@@ -8,3 +9,5 @@ class MainPanel(QtWidgets.QFrame):
 
         self.setStyleSheet("background-color: rgba(255, 255, 0, 0.3)")
         self.setMinimumWidth(MAIN_PANEL_MIN_WIDTH)
+        self.tag_manager = TagManager()
+
