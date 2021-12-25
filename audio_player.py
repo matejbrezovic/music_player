@@ -27,7 +27,6 @@ class AudioPlayer(QMediaPlayer):
         self.fade_out_anim.finished.connect(super().pause)
 
     def play(self, fade=True):
-
         if fade and False:
             self.fade_in_anim.setStartValue(0 if self.current_volume < FADE_IN_ANIM_START_VALUE
                                             else FADE_IN_ANIM_START_VALUE)
