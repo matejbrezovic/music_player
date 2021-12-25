@@ -16,8 +16,8 @@ class AudioPlaylist:
         self.mode = 1  # 1 ordered, 2 shuffle, 3 repeat one
 
     def set_playlist(self, playlist: List[str]):
-        self.playlist = playlist
-        self.ordered_playlist = playlist
+        self.playlist = playlist.copy()
+        self.ordered_playlist = playlist.copy()
         self.playlist_index = 0
 
     def set_playlist_index(self, playlist_index: int):
@@ -29,10 +29,15 @@ class AudioPlaylist:
             self.playlist = self.ordered_playlist.copy()
         elif mode == 2:
             shuffle(self.playlist)
+            while self.playlist[self.playlist_index + 1] == self.ordered_playlist[self.playlist_index]:
+                shuffle(self.playlist)
         elif mode == 3:
             self.playlist = [self.playlist[self.playlist_index]]
         else:
             raise Exception(f"Incorrect playlist mode: {mode}")
+
+    def change_mode(self):
+        self.set_mode(self.mode + 1 if self.mode <= 2 else 1)
 
     def set_next(self):
         self.playlist_index = self.playlist_index + 1 if len(self.playlist) - 1 > self.playlist_index else 0

@@ -93,9 +93,13 @@ class AudioController(QtWidgets.QFrame):
         self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding))
 
         self.equalizer_button = QPushButton("Eq")
-        self.audio_order_button = QPushButton("Au")
         self.equalizer_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
+
+        self.audio_order_button_modes = ("O", "S", "R")  # order, shuffle, repeat single
+        self.audio_order_button_mode_index = 0
+        self.audio_order_button = QPushButton("O")
         self.audio_order_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
+        self.audio_order_button.clicked.connect(self.change_audio_order)
 
         # Layout logic
         self.left_part = QFrame()
@@ -135,6 +139,12 @@ class AudioController(QtWidgets.QFrame):
         self.main_layout.addWidget(self.left_part)
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
+
+    def change_audio_order(self):
+        self.current_playlist.change_mode()
+        self.audio_order_button_mode_index = self.audio_order_button_mode_index + 1 if \
+            self.audio_order_button_mode_index <= 1 else 0
+        self.audio_order_button.setText(self.audio_order_button_modes[self.audio_order_button_mode_index])
 
     def set_player_position(self, position: int):
         self.player.setPosition(position)
@@ -232,14 +242,14 @@ class ImprovedSlider(QSlider):
 
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            val = self.pixelPosToRangeValue(event.pos())
+            val = self.pixel_pos_to_range_value(event.pos())
             self.setValue(val)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        val = self.pixelPosToRangeValue(event.pos())
+        val = self.pixel_pos_to_range_value(event.pos())
         self.setValue(val)
 
-    def pixelPosToRangeValue(self, pos):
+    def pixel_pos_to_range_value(self, pos):
         opt = QtWidgets.QStyleOptionSlider()
         self.initStyleOption(opt)
         gr = self.style().subControlRect(QtWidgets.QStyle.ComplexControl.CC_Slider, opt,
@@ -267,13 +277,13 @@ class SeekSlider(ImprovedSlider):
     def mousePressEvent(self, event: QtGui.QMouseEvent):
         super(SeekSlider, self).mousePressEvent(event)
         self.backup_action = self.parent.user_action
-        self.parent.player.setPosition(self.pixelPosToRangeValue(event.pos()))
+        self.parent.player.setPosition(self.pixel_pos_to_range_value(event.pos()))
         self.backup_volume = self.parent.player.audio_output.volume()
         self.parent.player.audio_output.setVolume(0)
         self.parent.pause(fade=False)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        val = self.pixelPosToRangeValue(event.pos())
+        val = self.pixel_pos_to_range_value(event.pos())
         self.setValue(val)
         self.parent.player.setPosition(val)
 
