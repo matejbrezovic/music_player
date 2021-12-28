@@ -1,10 +1,5 @@
-from typing import List
-
-from PyQt6.QtCore import QPropertyAnimation, QEasingCurve
-from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
 from random import shuffle
-
-from constants import *
+from typing import List
 
 
 class AudioPlaylist:
