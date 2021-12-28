@@ -37,12 +37,14 @@ class ElidedLabel(QLabel):
 
 
 def get_artwork_pixmap(file_path: str, default: str):
+    class NoArtworkError(Exception):
+        pass
+
     pixmap = QPixmap()
     try:
         try:
             file_id3 = ID3(file_path)
             artwork = file_id3.getall("APIC")[0]
-            # print(type(artwork.data))
             pixmap.loadFromData(artwork.data)
         except (mutagen.id3.ID3NoHeaderError, IndexError):
             try:
@@ -52,9 +54,11 @@ def get_artwork_pixmap(file_path: str, default: str):
             except (mutagen.mp4.MP4StreamInfoError, KeyError):
                 raise NoArtworkError
     except (AttributeError, NoArtworkError):
-        pixmap = QPixmap(f"icons/{default.lower()}.png")
+        if default.lower() in ['album', 'artist', 'composer', 'folder']:
+            pixmap = QPixmap(f"icons/{default.lower()}.png")
+        else:
+            pixmap = QPixmap("icons/misc.png")
     return pixmap
 
 
-class NoArtworkError(Exception):
-    pass
+

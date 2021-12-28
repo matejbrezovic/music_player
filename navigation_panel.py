@@ -19,7 +19,11 @@ class NavigationPanel(QtWidgets.QFrame):
         self.tag_manager = TagManager()
         self.group_options = {
             0: "Album",
-            1: "Artist"
+            1: "Artist",
+            2: "Composer",
+            3: "Folder",
+            4: "Genre",
+            5: "Year"
         }
         self.group_container_scroll_area = QScrollArea()
         self.group_container_widget = QFrame()
@@ -45,16 +49,21 @@ class NavigationPanel(QtWidgets.QFrame):
         self.groups = defaultdict(lambda: [])
 
         for track in TRACKS:
-            track_file = self.tag_manager.load_file(track)
-            group_key = track_file[self.group_options[key]].value
-            self.groups[group_key if len(group_key) > 0 else "[Empty]"].append(track)
+            if self.group_options[key].lower() != "folder":
+                track_file = self.tag_manager.load_file(track)
+                group_key = str(track_file[self.group_options[key]].value)
+                self.groups["[Unknown]" if group_key == "0" else (group_key if len(group_key) > 0
+                            else ("[Empty]" if key == 0 else "[Unknown]"))].append(track)
+            else:
+                group_key = track.split("/" if "/ in track" else "\\")[-2]
+                self.groups[group_key].append(track)
 
         self.groups = {x: self.groups[x] for x in sorted(self.groups)}
         for group in self.groups:
             title = group
-            subtitle = str(len(self.groups[group])) + " " + \
-                          ("Tracks" if self.group_combo_box_index == 0 else "Tracks")[:(-1 if len(self.groups[group])
-                                                                                        == 1 else 10)]
+            subtitle = str(str(len(self.groups[group])) + " " + ("Tracks" if self.group_combo_box_index == 0
+                                                                 else "Tracks"))[:(-1 if len(self.groups[group])
+                                                                                   == 1 else 10)]
             group_widget = GroupWidget(title, subtitle, self.group_options[key], self.groups[group])
             self.group_container_layout.addWidget(group_widget)
 
