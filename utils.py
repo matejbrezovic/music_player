@@ -1,6 +1,10 @@
+import mutagen
 from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QFontMetrics, QPainter
+from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
 from PyQt6.QtWidgets import QLabel, QSizePolicy
+from mutagen.id3 import ID3
+from mutagen.mp4 import MP4
+from PIL.ImageQt import ImageQt
 
 
 def classify(module):
@@ -30,3 +34,27 @@ class ElidedLabel(QLabel):
         metrics = QFontMetrics(self.font())
         elided = metrics.elidedText(self.text(), Qt.TextElideMode.ElideRight, self.width())
         QPainter(self).drawText(self.rect(), self.alignment(), elided)
+
+
+def get_artwork_pixmap(file_path: str, default: str):
+    pixmap = QPixmap()
+    try:
+        try:
+            file_id3 = ID3(file_path)
+            artwork = file_id3.getall("APIC")[0]
+            # print(type(artwork.data))
+            pixmap.loadFromData(artwork.data)
+        except (mutagen.id3.ID3NoHeaderError, IndexError):
+            try:
+                file_xmp = MP4(file_path)
+                artwork = file_xmp.tags["covr"]
+                pixmap = QPixmap.fromImage(ImageQt(artwork))
+            except (mutagen.mp4.MP4StreamInfoError, KeyError):
+                raise NoArtworkError
+    except (AttributeError, NoArtworkError):
+        pixmap = QPixmap(f"icons/{default.lower()}.png")
+    return pixmap
+
+
+class NoArtworkError(Exception):
+    pass

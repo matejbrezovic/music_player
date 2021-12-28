@@ -1,7 +1,7 @@
 from collections import defaultdict
+from typing import List
 
 from PyQt6 import QtWidgets
-from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QWidget, QFrame, QScrollArea
 
 from constants import *
@@ -25,10 +25,10 @@ class NavigationPanel(QtWidgets.QFrame):
         self.group_container_widget = QFrame()
         self.group_container_scroll_area.setWidget(self.group_container_widget)
         self.group_container_scroll_area.setWidgetResizable(True)
-        self.group_container_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.group_container_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.group_container_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.group_container_layout = QtWidgets.QVBoxLayout(self.group_container_widget)
-        self.group_container_layout.setContentsMargins(0, 0, 10, 0)
+        self.group_container_layout.setContentsMargins(0, 0, 0, 0)
         self.group_container_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.group_combo_box = QtWidgets.QComboBox()
         self.group_combo_box_index = 0
@@ -46,14 +46,16 @@ class NavigationPanel(QtWidgets.QFrame):
 
         for track in TRACKS:
             track_file = self.tag_manager.load_file(track)
-            self.groups[track_file[self.group_options[key]].value].append(track)
+            group_key = track_file[self.group_options[key]].value
+            self.groups[group_key if len(group_key) > 0 else "[Empty]"].append(track)
 
+        self.groups = {x: self.groups[x] for x in sorted(self.groups)}
         for group in self.groups:
             title = group
             subtitle = str(len(self.groups[group])) + " " + \
-                          ("Tracks" if self.group_combo_box_index == 0 else "Albums")[:(-1 if len(self.groups[group])
+                          ("Tracks" if self.group_combo_box_index == 0 else "Tracks")[:(-1 if len(self.groups[group])
                                                                                         == 1 else 10)]
-            group_widget = GroupWidget(title, subtitle, self.group_options[key])
+            group_widget = GroupWidget(title, subtitle, self.group_options[key], self.groups[group])
             self.group_container_layout.addWidget(group_widget)
 
     def group_key_changed(self, new_key: int):
@@ -63,21 +65,24 @@ class NavigationPanel(QtWidgets.QFrame):
 
 
 class GroupWidget(QFrame):
-    def __init__(self, title: str, subtitle: str, group_type: str):
+    def __init__(self, title: str, subtitle: str, group_type: str, tracks: List[str]):
         super().__init__()
         self.setStyleSheet("GroupWidget {background-color: rgba(18, 178, 255, 0.3)}")
-        self.setContentsMargins(0, 0, 20, 0)
+        self.setContentsMargins(0, 0, 0, 0)
         self.setFixedHeight(60)
         self.title = title
         self.subtitle = subtitle
+        self.tracks = tracks
+        self.tag_manager = TagManager()
 
         self.title_label = ElidedLabel(self.title)
 
         self.subtitle_label = QLabel(self.subtitle)
-        self.subtitle_label.setStyleSheet("font-size: 10x;")
+        self.subtitle_label.setStyleSheet("font-size: 10px;")
         self.image_label = QLabel()
         self.image_label.setFixedSize(60, 60)
-        pixmap = QPixmap(f"icons/{group_type.lower()}.png")
+
+        pixmap = get_artwork_pixmap(self.tracks[0], group_type)
         self.image_label.setPixmap(pixmap.scaled(self.image_label.width() - 4,
                                                  self.image_label.height() - 4,
                                                  Qt.AspectRatioMode.KeepAspectRatio,
