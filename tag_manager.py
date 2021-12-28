@@ -8,3 +8,5 @@ class TagManager(classify(mt)):
 
     # def get_tags(self):
     #     ...
+
+

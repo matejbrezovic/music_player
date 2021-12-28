@@ -153,7 +153,7 @@ class AudioController(QtWidgets.QFrame):
         self.current_playlist.set_playlist(playlist)
 
     def play(self):
-        print("Play")
+        # print("Play")
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
         self.audio_file_name_label.setText(os.path.basename(self.current_playlist.get_current()))
@@ -172,7 +172,7 @@ class AudioController(QtWidgets.QFrame):
     def player_duration_changed(self, duration):
         # duration = int(duration)
         self.seek_slider.setRange(0, duration)
-        print("Duration: ", duration)
+        # print("Duration: ", duration)
         self.seek_slider_time_label.setText(self.get_formatted_time(self.player.duration()))
 
     def player_position_changed(self, position, sender_type=False):
@@ -186,13 +186,13 @@ class AudioController(QtWidgets.QFrame):
                                             self.get_formatted_time(self.player.duration()))
 
     def pause(self, fade=True):
-        print("Pause")
+        # print("Pause")
         self.play_button.setIcon(self.play_icon)
         self.user_action = 2
         self.player.pause(fade)
 
     def unpause(self, fade=True):
-        print("Unpause")
+        # print("Unpause")
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
         self.player.play(fade)
@@ -215,7 +215,7 @@ class AudioController(QtWidgets.QFrame):
         self.play()
 
     def volume_changed(self, volume_value: int):
-        print("Volume: ", volume_value)
+        # print("Volume: ", volume_value)
         self.player.audio_output.setVolume(volume_value / 100)
         self.player.current_volume = volume_value / 100
         self.volume_slider.setSliderPosition(volume_value)
@@ -289,7 +289,7 @@ class SeekSlider(ImprovedSlider):
 
     def mouseReleaseEvent(self, ev: QtGui.QMouseEvent) -> None:
         # handles unmuting audio and updating player
-        print(self.backup_volume)
+        # print(self.backup_volume)
         self.parent.player.audio_output.setVolume(self.backup_volume)
         self.parent.set_player_position(self.sliderPosition())
 

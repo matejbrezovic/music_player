@@ -27,20 +27,20 @@ class AudioPlayer(QMediaPlayer):
         self.fade_out_anim.finished.connect(super().pause)
 
     def play(self, fade=True):
-        if fade and False:
+        if fade:
             self.fade_in_anim.setStartValue(0 if self.current_volume < FADE_IN_ANIM_START_VALUE
                                             else FADE_IN_ANIM_START_VALUE)
             self.fade_in_anim.setKeyValueAt(FADE_IN_ANIM_KEY_VALUE, 0 if self.current_volume < FADE_IN_ANIM_START_VALUE
                                             else FADE_IN_ANIM_START_VALUE)
             self.fade_in_anim.setEndValue(self.current_volume)
-            print("fade_in_vol; ", self.current_volume)
+            # print("fade_in_vol; ", self.current_volume)
             self.fade_in_anim.start()
         super().play()
 
     def pause(self, fade=True):
         self.current_volume = self.audio_output.volume()
-        if fade and False:
-            print("curr", self.current_volume)
+        if fade:
+            # print("curr", self.current_volume)
             self.fade_out_anim.setStartValue(self.current_volume)
             self.fade_out_anim.setKeyValueAt(FADE_OUT_ANIM_KEY_VALUE, self.current_volume)
             self.fade_out_anim.start()
