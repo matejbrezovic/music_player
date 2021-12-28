@@ -1,6 +1,6 @@
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFontMetrics, QPainter
-from PyQt6.QtWidgets import QLabel
+from PyQt6.QtWidgets import QLabel, QSizePolicy
 
 
 def classify(module):
@@ -24,6 +24,7 @@ def delete_items(layout):
 class ElidedLabel(QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
 
     def paintEvent(self, event):
         metrics = QFontMetrics(self.font())

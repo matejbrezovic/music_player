@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from PyQt6 import QtWidgets
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import QWidget, QFrame
+from PyQt6.QtWidgets import QWidget, QFrame, QScrollArea
 
 from constants import *
 from tag_manager import TagManager
@@ -21,9 +21,15 @@ class NavigationPanel(QtWidgets.QFrame):
             0: "Album",
             1: "Artist"
         }
+        self.group_container_scroll_area = QScrollArea()
         self.group_container_widget = QFrame()
+        self.group_container_scroll_area.setWidget(self.group_container_widget)
+        self.group_container_scroll_area.setWidgetResizable(True)
+        self.group_container_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.group_container_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.group_container_layout = QtWidgets.QVBoxLayout(self.group_container_widget)
         self.group_container_layout.setContentsMargins(0, 0, 10, 0)
+        self.group_container_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.group_combo_box = QtWidgets.QComboBox()
         self.group_combo_box_index = 0
         self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
@@ -33,7 +39,7 @@ class NavigationPanel(QtWidgets.QFrame):
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vertical_layout.addWidget(self.group_combo_box)
-        self.vertical_layout.addWidget(self.group_container_widget)
+        self.vertical_layout.addWidget(self.group_container_scroll_area)
 
     def _load_groups(self, key: int = 0):
         self.groups = defaultdict(lambda: [])
