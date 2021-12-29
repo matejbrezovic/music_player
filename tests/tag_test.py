@@ -1,7 +1,5 @@
 import io
-import os
 import sys
-import time
 
 from PIL import Image
 from PyQt6 import QtWidgets
@@ -11,13 +9,11 @@ from mutagen.id3 import ID3
 
 from tag_manager import TagManager
 
-
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     # mainWindow = MainWindowUi()
     # mainWindow.show()
     pixmap = QPixmap()
-
 
     tm = TagManager()
 

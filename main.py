@@ -32,6 +32,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self._setup_menu_bar()
         self._setup_panels()
 
+    # noinspection PyTypeChecker
     def _setup_menu_bar(self):
         self.menu_bar = QtWidgets.QMenuBar(self)
         self.setMenuBar(self.menu_bar)
