@@ -104,7 +104,6 @@ class GroupWidget(QFrame):
                                                               Qt.TransformationMode.SmoothTransformation))
 
         self.text_widget = QWidget()
-
         self.vertical_layout = QtWidgets.QVBoxLayout(self.text_widget)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setSpacing(0)

@@ -155,8 +155,8 @@ class AudioController(QtWidgets.QFrame):
         # print("Play")
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
-        self.audio_file_name_label.setText(os.path.basename(self.current_playlist.get_current()))
-        self.player.setSource(QUrl(self.current_playlist.get_current()))
+        self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing))
+        self.player.setSource(QUrl(self.current_playlist.currently_playing))
         self.player.play()
 
     @staticmethod
