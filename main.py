@@ -67,6 +67,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     mainWindow = MainWindowUi()
-    mainWindow.show()
+    # mainWindow.show()
+    SelectFoldersDialog().exec()
 
     sys.exit(app.exec())

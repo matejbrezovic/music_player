@@ -61,4 +61,13 @@ def get_artwork_pixmap(file_path: str, default: str):
     return pixmap
 
 
-
+def iterItems(root):
+    def recurse(parent):
+        for row in range(parent.rowCount()):
+            for column in range(parent.columnCount()):
+                child = parent.child(row, column)
+                yield child
+                if child.hasChildren():
+                    yield from recurse(child)
+    if root is not None:
+        yield from recurse(root)
