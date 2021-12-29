@@ -1,16 +1,15 @@
 import sys
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import *
 
 from audio_controller import AudioController
 from constants import *
+from dialogs import *
 from information_panel import InformationPanel
 from main_panel import MainPanel
 from navigation_panel import NavigationPanel
-from dialogs import *
 
 
 class MainWindowUi(QtWidgets.QMainWindow):
@@ -19,11 +18,11 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self._setup_ui()
 
-        self.setWindowTitle('music player v0.0.3')
+        self.setWindowTitle('music player v0.0.4')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
-    def _setup_ui(self):
+    def _setup_ui(self) -> None:
         self.central_widget = QWidget(self)
         self.central_widget_layout = QVBoxLayout()
         self.central_widget.setLayout(self.central_widget_layout)
@@ -33,7 +32,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self._setup_panels()
 
     # noinspection PyTypeChecker
-    def _setup_menu_bar(self):
+    def _setup_menu_bar(self) -> None:
         self.menu_bar = QtWidgets.QMenuBar(self)
         self.setMenuBar(self.menu_bar)
 
@@ -46,7 +45,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.menu_bar.addMenu(file_menu)
 
-    def _setup_panels(self):
+    def _setup_panels(self) -> None:
         self.navigation_panel = NavigationPanel()
         self.main_panel = MainPanel()
         self.information_panel = InformationPanel()

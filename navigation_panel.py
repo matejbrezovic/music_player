@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import List
 
 from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtWidgets import QWidget, QFrame, QScrollArea
+from PyQt6.QtWidgets import QWidget, QScrollArea
 
 from constants import *
 from tag_manager import TagManager

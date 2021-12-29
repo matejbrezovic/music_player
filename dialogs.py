@@ -19,7 +19,6 @@ class ScanFoldersDialog(QDialog):
         self.main_frame.setObjectName("main_frame")
         self.main_frame.setStyleSheet("QFrame#main_frame {border: 1px solid rgba(0, 0, 0, 0.3)}")
 
-        self.label = QLabel("Scan for new files in the following folders:")
         self.choose_folders_button = QPushButton("Choose Folders")
         self.choose_folders_button.clicked.connect(lambda: SelectFoldersDialog().exec())
         self.selected_folders_scroll_area = QScrollArea()
@@ -38,7 +37,7 @@ class ScanFoldersDialog(QDialog):
         self.top_horizontal_layout = QHBoxLayout(self.top_horizontal_widget)
         self.top_horizontal_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.top_horizontal_layout.addWidget(self.label)
+        self.top_horizontal_layout.addWidget(QLabel("Scan for new files in the following folders:"))
         self.top_horizontal_layout.addStretch()
         self.top_horizontal_layout.addWidget(self.choose_folders_button)
 
