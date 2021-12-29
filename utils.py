@@ -1,7 +1,7 @@
 import mutagen
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
-from PyQt6.QtWidgets import QLabel, QSizePolicy
+from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
 from PIL.ImageQt import ImageQt
@@ -61,13 +61,8 @@ def get_artwork_pixmap(file_path: str, default: str):
     return pixmap
 
 
-def iterItems(root):
-    def recurse(parent):
-        for row in range(parent.rowCount()):
-            for column in range(parent.columnCount()):
-                child = parent.child(row, column)
-                yield child
-                if child.hasChildren():
-                    yield from recurse(child)
-    if root is not None:
-        yield from recurse(root)
+class QHLine(QFrame):
+    def __init__(self):
+        super(QHLine, self).__init__()
+        self.setFrameShape(QFrame.Shape.HLine)
+        self.setFrameShadow(QFrame.Shadow.Sunken)

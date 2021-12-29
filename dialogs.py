@@ -1,10 +1,8 @@
 import os
 
-from PyQt6 import QtWidgets, QtGui, QtCore
-from PyQt6.QtCore import Qt, QModelIndex, QDir
-from PyQt6.QtGui import QFileSystemModel, QIcon, QStandardItemModel, QStandardItem
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QFrame, QHBoxLayout, QLabel, QPushButton, QScrollArea, QWidget, \
-    QTreeView, QTreeWidgetItem, QTreeWidget
+from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QWidget, \
+    QTreeWidgetItem, QTreeWidget
+
 from utils import *
 
 
@@ -38,6 +36,7 @@ class ScanFoldersDialog(QDialog):
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.top_horizontal_widget = QWidget()
         self.top_horizontal_layout = QHBoxLayout(self.top_horizontal_widget)
+        self.top_horizontal_layout.setContentsMargins(0, 0, 0, 0)
 
         self.top_horizontal_layout.addWidget(self.label)
         self.top_horizontal_layout.addStretch()
@@ -50,66 +49,78 @@ class ScanFoldersDialog(QDialog):
 class SelectFoldersDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Choose Folders")
-        self.setFixedSize(500, 900)
+        self.setWindowTitle("Choose Folders...")
+        self.setFixedSize(500, 800)
         self.main_layout = QVBoxLayout(self)
-        self.main_layout.setContentsMargins(5, 5, 5, 5)
+        self.main_layout.setContentsMargins(8, 8, 8, 8)
 
         self.main_frame = QFrame()
         self.main_frame.setObjectName("main_frame")
         self.main_frame.setStyleSheet("QFrame#main_frame {border: 1px solid rgba(0, 0, 0, 0.3)}")
 
+        self.dir_tree_widget = QTreeWidget()
+        self.dir_tree_widget.itemClicked.connect(self.tree_item_clicked)
+        self.dir_tree_widget.itemExpanded.connect(self.tree_item_clicked)
+        self.dir_tree_widget.setAnimated(False)
+        self.dir_tree_widget.setSortingEnabled(True)
+        self.dir_tree_widget.setSortingEnabled(False)
+        self.dir_tree_widget.setHeaderHidden(True)
+        self.dir_tree_widget.setIndentation(20)
+        self.dir_tree_widget.setContentsMargins(0, 0, 0, 0)
+        self.dir_tree_widget.setStyleSheet("border: none")
+        self.dir_tree_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.dir_tree_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.load_immediate_directory_dir_tree_widget("/", self.dir_tree_widget)
+
+        self.scroll_area = QScrollArea()
+        self.scroll_area.setWidget(self.dir_tree_widget)
+        self.scroll_area.setWidgetResizable(True)
+        self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.scroll_area.setFixedHeight(700)
+        self.scroll_area.setStyleSheet("border: none")
+
+        self.info_label = QLabel("Select folders containing music to add to the library")
+        self.info_label.setStyleSheet("color: rgba(0, 0, 0, 0.4)")
+        self.info_label.setFixedHeight(20)
+
+        self.ok_button = QPushButton("OK")
+        self.cancel_button = QPushButton("Cancel")
+
         self.main_layout.addWidget(self.main_frame)
         self.vertical_layout = QVBoxLayout(self.main_frame)
+        self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.bottom_horizontal_layout = QHBoxLayout()
 
-        self.model = QFileSystemModel()
-        self.model.setFilter(QDir.Filter.Dirs)
-        self.model.setRootPath('')
+        self.bottom_horizontal_layout.addWidget(self.ok_button)
+        self.bottom_horizontal_layout.addWidget(self.cancel_button)
+        self.bottom_horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.bottom_widget = QWidget()
+        self.bottom_widget.setLayout(self.bottom_horizontal_layout)
 
-        self.tree_view = QTreeView()
-        self.tree_view.setModel(self.model)
+        self.vertical_layout.addWidget(self.info_label)
+        self.vertical_layout.addWidget(self.scroll_area)
+        self.vertical_layout.addWidget(QHLine())
+        self.vertical_layout.addWidget(self.bottom_widget)
+        self.vertical_layout.setContentsMargins(0, 0, 0, 0)
 
-        # root = self.tree_view.model().invisibleRootItem()
-        # for item in iterItems(self.tree_view.model().itemData(self.model.index(0, 0))):
-        #     print(item.text())
-
-
-        self.tree_view.setAnimated(False)
-        self.tree_view.setIndentation(20)
-        self.tree_view.setSortingEnabled(True)
-
-        self.tree_view.setWindowTitle("Dir View")
-        self.tree_view.resize(640, 480)
-
-
-        # self.model = QFileSystemModel()
-        # self.model.setRootPath('')
-        # self.tree = QTreeWidget()
-        # self.tree.setModel(self.model)
-        # self.load_directory_tree_view('/', self.tree)
-        # self.tree.setRootIndex(self.model.index(0, 0))
-        # print(self.tree.model().itemData(self.model.index(0, 1)))
-
-        # self.tree.setAnimated(False)
-        # self.tree.setIndentation(20)
-        # self.tree.setSortingEnabled(True)
-        #
-        # self.tree.setWindowTitle("Dir View")
-        # self.tree.resize(640, 480)
-
-        self.vertical_layout.addWidget(self.tree_view)
-
-    def load_directory_tree_view(self, start_path, tree):
+    def load_immediate_directory_dir_tree_widget(self, path, tree):
         try:
-            for element in [x for x in os.listdir(start_path) if os.path.isdir(start_path + ("/" if start_path != "/" else "") + x )]:
-                path_info = start_path + ("/" if start_path != "/" else "") + element
-                parent_itm = QTreeWidgetItem(tree, [os.path.basename(element)])
-                if os.path.isdir(path_info):
-                    self.load_directory_tree_view(path_info, parent_itm)
-                    parent_itm.setIcon(0, QIcon('icons/folder.png'))
-                else:
-                    parent_itm.setIcon(0, QIcon('icons/folder.png'))
+            for element in [x for x in os.listdir(path) if os.path.isdir(path + ("/" if path != "/" else "") + x)]:
+                path_info = path + ("/" if path != "/" else "") + element
+                new_item = self.DirectoryItem(tree, [os.path.basename(element)], full_path=path_info)
+                new_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
+                new_item.setCheckState(0, Qt.CheckState.Unchecked)
+                self.DirectoryItem(new_item, ["/"])
         except PermissionError:
-            print("AA")
             pass
 
+    def tree_item_clicked(self, item):
+        print("clicked on", item.text(0))
+        item.takeChild(0)
+        self.load_immediate_directory_dir_tree_widget(item.full_path, item)
+
+    class DirectoryItem(QTreeWidgetItem):
+        def __init__(self, *args, full_path=None):
+            super().__init__(*args)
+            self.full_path = full_path
