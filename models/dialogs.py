@@ -50,7 +50,7 @@ class SelectFoldersDialog(QDialog):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Choose Folders...")
-        self.setFixedSize(500, 800)
+        self.setFixedSize(500, 600)
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(8, 8, 8, 8)
 
@@ -79,7 +79,7 @@ class SelectFoldersDialog(QDialog):
         self.scroll_area.setWidgetResizable(True)
         self.scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll_area.setFixedHeight(700)
+        self.scroll_area.setFixedHeight(500)
         self.scroll_area.setStyleSheet("border: none")
 
         self.info_label = QLabel("Select folders containing music to add to the library")
@@ -87,7 +87,9 @@ class SelectFoldersDialog(QDialog):
         self.info_label.setFixedHeight(20)
 
         self.ok_button = QPushButton("OK")
+        self.ok_button.clicked.connect(self.ok_button_clicked)
         self.cancel_button = QPushButton("Cancel")
+        self.cancel_button.clicked.connect(self.cancel_button_clicked)
 
         self.main_layout.addWidget(self.main_frame)
         self.vertical_layout = QVBoxLayout(self.main_frame)
@@ -141,13 +143,25 @@ class SelectFoldersDialog(QDialog):
         if not self._is_user_action:
             return
 
-        # for child in item.get_children():
-        #     print(child.text(0))
-
         self._is_user_action = False
         change_children_checked_state(item)
         change_parents_checked_state(item)
         self._is_user_action = True
+
+    def ok_button_clicked(self):
+        def get_main_checked_items(parent_item=self.dir_tree_widget.invisibleRootItem()):
+            checked_items = []
+            for item in [parent_item.child(i) for i in range(parent_item.childCount())]:
+                if item.checkState(0) == Qt.CheckState.Checked:
+                    checked_items.append(item)
+                elif item.checkState(0) == Qt.CheckState.PartiallyChecked:
+                    checked_items.extend(get_main_checked_items(item))
+            return checked_items
+
+        return [item.full_path for item in get_main_checked_items()]
+
+    def cancel_button_clicked(self):
+        self.done(0)
 
     class DirectoryItem(QTreeWidgetItem):
         def __init__(self, *args, full_path=None):
