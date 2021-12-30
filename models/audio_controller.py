@@ -6,8 +6,8 @@ from PyQt6.QtCore import Qt, QUrl
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
     QFrame
 
-from audio_player import AudioPlayer
-from audio_playlist import AudioPlaylist
+from models.audio_player import AudioPlayer
+from models.audio_playlist import AudioPlaylist
 from constants import *
 
 

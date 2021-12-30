@@ -9,5 +9,5 @@ class Track:
     artist: str
     composer: str
     genre: str
-    artwork_path: str = ""
+    artwork_path: str
 

@@ -1,4 +1,5 @@
 import os
+from typing import Union
 
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QWidget, \
     QTreeWidgetItem, QTreeWidget
@@ -103,8 +104,12 @@ class SelectFoldersDialog(QDialog):
         self.vertical_layout.addWidget(self.bottom_widget)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
 
-    def load_immediate_directory_dir_tree_widget(self, path, tree):
+    def load_immediate_directory_dir_tree_widget(self, path, tree: Union[QTreeWidget, QTreeWidgetItem]):
+        if isinstance(tree, self.DirectoryItem) and tree.child(0).text(0) != "/":
+            return
         try:
+            if isinstance(tree, self.DirectoryItem):
+                tree.takeChild(0)
             for element in [x for x in os.listdir(path) if os.path.isdir(path + ("/" if path != "/" else "") + x)]:
                 path_info = path + ("/" if path != "/" else "") + element
                 new_item = self.DirectoryItem(tree, [os.path.basename(element)], full_path=path_info)
@@ -115,9 +120,10 @@ class SelectFoldersDialog(QDialog):
             pass
 
     def tree_item_clicked(self, item):
-        print("clicked on", item.text(0))
-        item.takeChild(0)
         self.load_immediate_directory_dir_tree_widget(item.full_path, item)
+
+    def tree_item_checked(self, item):
+        print(item)
 
     class DirectoryItem(QTreeWidgetItem):
         def __init__(self, *args, full_path=None):

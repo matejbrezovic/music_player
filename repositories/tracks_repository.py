@@ -1,7 +1,7 @@
 import sqlite3
 from typing import List
 
-from base_repository import BaseRepository
+from repositories.base_repository import BaseRepository
 from models.track import Track
 
 
