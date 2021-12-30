@@ -67,5 +67,5 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     # mainWindow = MainWindowUi()
     # mainWindow.show()
-    ScanFoldersDialog().exec()
+    SelectFoldersDialog().exec()
     sys.exit(app.exec())
