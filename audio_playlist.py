@@ -41,16 +41,11 @@ class AudioPlaylist:
         self.playlist_index = self.playlist_index if self.mode == 3 else \
             self.playlist_index + 1 if len(self.playlist) - 1 > self.playlist_index else 0
         self.update_currently_playing()
-        # return self.playlist[self.playlist_index]
 
     def set_prev(self):
         self.playlist_index = self.playlist_index if self.mode == 3 else \
             self.playlist_index - 1 if self.playlist_index > 0 else len(self.playlist) - 1
         self.update_currently_playing()
-        # return self.playlist[self.playlist_index]
-
-    # def get_current(self):
-    #     return self.playlist[self.playlist_index]
 
     def update_currently_playing(self):
         self.currently_playing = self.playlist[self.playlist_index]

@@ -2,6 +2,7 @@ import os
 
 file_counter = 0
 
+
 def get_number_of_lines(file_path: str) -> int:
     with open(file_path, 'r') as f:
         lines = f.readlines()
@@ -25,6 +26,7 @@ def get_number_of_lines_in_dir(dir_path: str):
             file_counter += 1
             total += get_number_of_lines(full_path)
     return total
+
 
 if __name__ == "__main__":
     print(get_number_of_lines_in_dir("C:/My Files/My Projects/music_player"), f" lines in {file_counter} files")
