@@ -4,12 +4,12 @@ from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import *
 
-from audio_controller import AudioController
+from models.audio_controller import AudioController
 from constants import *
-from dialogs import *
-from information_panel import InformationPanel
-from main_panel import MainPanel
-from navigation_panel import NavigationPanel
+from models.dialogs import *
+from models.information_panel import InformationPanel
+from models.main_panel import MainPanel
+from models.navigation_panel import NavigationPanel
 
 
 class MainWindowUi(QtWidgets.QMainWindow):

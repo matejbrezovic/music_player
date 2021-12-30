@@ -26,3 +26,8 @@ FADE_OUT_ANIM_KEY_VALUE = FADE_IN_ANIM_KEY_VALUE
 FADE_OUT_ANIM_END_VALUE = 0
 
 TRACKS = [DEFAULT_AUDIO_PATH + "/" + name for name in os.listdir(DEFAULT_AUDIO_PATH)]
+
+
+# Database settings
+
+DATABASE_PATH = os.path.abspath("database/test_database.db")

@@ -1,11 +1,10 @@
 import sys
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QUrl, QPropertyAnimation, QEasingCurve
-from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PyQt6.QtCore import QUrl
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QStyle
 
-from audio_player import AudioPlayer
+from models.audio_player import AudioPlayer
 
 
 class MainWindowUi(QtWidgets.QMainWindow):
