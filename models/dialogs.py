@@ -29,21 +29,34 @@ class ScanFoldersDialog(QDialog):
         self.selected_folders_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.selected_folders_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.proceed_button = QPushButton("Proceed")
+        self.proceed_button.clicked.connect(self.proceed_button_clicked)
         self.close_button = QPushButton("Close")
+        self.close_button.clicked.connect(lambda: self.done(0))
 
         self.main_layout.addWidget(self.main_frame)
         self.vertical_layout = QVBoxLayout(self.main_frame)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         self.top_horizontal_widget = QWidget()
         self.top_horizontal_layout = QHBoxLayout(self.top_horizontal_widget)
         self.top_horizontal_layout.setContentsMargins(0, 0, 0, 0)
-
         self.top_horizontal_layout.addWidget(QLabel("Scan for new files in the following folders:"))
         self.top_horizontal_layout.addStretch()
         self.top_horizontal_layout.addWidget(self.choose_folders_button)
 
+        self.bottom_horizontal_widget = QWidget()
+        self.bottom_horizontal_layout = QHBoxLayout(self.bottom_horizontal_widget)
+        self.bottom_horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.bottom_horizontal_layout.setContentsMargins(0, 0, 0, 0)
+        self.bottom_horizontal_layout.addWidget(self.proceed_button)
+        self.bottom_horizontal_layout.addWidget(self.close_button)
+
         self.vertical_layout.addWidget(self.top_horizontal_widget)
         self.vertical_layout.addWidget(self.selected_folders_scroll_area)
+        self.vertical_layout.addWidget(self.bottom_horizontal_widget)
+
+    def proceed_button_clicked(self):
+        ...
 
 
 class SelectFoldersDialog(QDialog):
@@ -89,7 +102,7 @@ class SelectFoldersDialog(QDialog):
         self.ok_button = QPushButton("OK")
         self.ok_button.clicked.connect(self.ok_button_clicked)
         self.cancel_button = QPushButton("Cancel")
-        self.cancel_button.clicked.connect(self.cancel_button_clicked)
+        self.cancel_button.clicked.connect(lambda: self.done(0))
 
         self.main_layout.addWidget(self.main_frame)
         self.vertical_layout = QVBoxLayout(self.main_frame)
@@ -159,9 +172,6 @@ class SelectFoldersDialog(QDialog):
             return checked_items
 
         return [item.full_path for item in get_main_checked_items()]
-
-    def cancel_button_clicked(self):
-        self.done(0)
 
     class DirectoryItem(QTreeWidgetItem):
         def __init__(self, *args, full_path=None):
