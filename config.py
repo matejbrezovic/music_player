@@ -10,7 +10,7 @@ class Config:
         self.settings[key] = value
 
     def get_setting(self, key):
-        return self.settings[key]
+        return self.settings[key] if key in self.settings else None
 
     def save(self, file_path: str):
         with open(file_path, 'w') as f:
@@ -18,4 +18,7 @@ class Config:
 
     def load(self, file_path: str):
         with open(file_path, 'r') as f:
-            self.settings = json.load(f)
+            try:
+                self.settings = json.load(f)
+            except json.decoder.JSONDecodeError:
+                return {}

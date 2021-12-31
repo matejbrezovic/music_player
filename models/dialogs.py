@@ -4,7 +4,12 @@ from typing import Union, List, Tuple
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QWidget, \
     QTreeWidgetItem, QTreeWidget, QGridLayout, QCheckBox, QSpacerItem
 
+from config import Config
+from data_models.track import Track
+from repositories.tracks_repository import TracksRepository
+from tag_manager import TagManager
 from utils import *
+from constants import *
 
 
 class ScanFoldersDialog(QDialog):
@@ -59,12 +64,44 @@ class ScanFoldersDialog(QDialog):
         self.vertical_layout.addWidget(self.selected_folders_scroll_area)
         self.vertical_layout.addWidget(self.bottom_horizontal_widget)
 
-        self.update_selected_folders(["/home/matey"])
+        config = Config()
+        config.load(DEFAULT_CONFIG_PATH)
+        self.update_selected_folders(config.get_setting("preselected_folders"))
 
     def proceed_button_clicked(self):
-        ...
+        config = Config()
+        config.load(DEFAULT_CONFIG_PATH)
+        found_files = []
+        for folder in config.get_setting("preselected_folders"):
+            for root, dirs, files in os.walk("C:/" + folder):
+                for file in files:
+                    if file.rsplit(".")[-1] in SUPPORTED_AUDIO_FORMATS:
+                        found_files.append(f"{root}/{file}")
+        tracks = self.convert_file_paths_to_tracks(found_files)
+        for t in tracks:
+            print(t)
+        TracksRepository().save_tracks(tracks)
+
+    def convert_file_paths_to_tracks(self, file_paths: List[str]) -> List[Track]:
+        tracks = []
+        tag_manager = TagManager()
+        for i, file_path in enumerate(file_paths):
+            loaded_file = tag_manager.load_file(file_path)
+            tracks.append(Track(
+                i,
+                file_path,
+                file_path.rsplit("/")[-1],
+                loaded_file["album"].first,
+                loaded_file["artist"].first,
+                loaded_file["composer"].first,
+                loaded_file["genre"].first,
+                ""  # get_artwork_pixmap(file_path, "album")
+            ))
+        return tracks
 
     def update_selected_folders(self, paths: List[str]) -> None:
+        if not paths:
+            return
         delete_grid_layout_items(self.selected_folders_widget_grid_layout)
         for i, path in enumerate(paths):
             checkbox = QCheckBox()
@@ -74,6 +111,10 @@ class ScanFoldersDialog(QDialog):
             self.selected_folders.append(path)
         self.selected_folders_widget_grid_layout.addItem(QSpacerItem(1, 1, QSizePolicy.Policy.Minimum,
                                                                      QSizePolicy.Policy.Expanding))
+        config = Config()
+        config.load(DEFAULT_CONFIG_PATH)
+        config.add_setting("preselected_folders", paths)
+        config.save(DEFAULT_CONFIG_PATH)
 
 
 class SelectFoldersDialog(QDialog):

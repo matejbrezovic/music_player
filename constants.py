@@ -1,3 +1,5 @@
+SUPPORTED_AUDIO_FORMATS = ["mp3", "m4a", "ogg"]
+
 # Gui constants
 import os
 
@@ -31,3 +33,10 @@ TRACKS = [DEFAULT_AUDIO_PATH + "/" + name for name in os.listdir(DEFAULT_AUDIO_P
 # Database settings
 
 DATABASE_PATH = os.path.abspath("database/test_database.db")
+
+
+# Settings constants
+
+DEFAULT_CONFIG_PATH = "C:/My Files/My Projects/music_player/settings/config.txt"
+DEFAULT_LOADED_TRACKS_FILE_PATH = "C:/My Files/My Projects/music_player/settings/tracks.txt"
+

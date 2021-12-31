@@ -5,6 +5,7 @@ from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtWidgets import QWidget, QScrollArea
 
 from constants import *
+from repositories.tracks_repository import TracksRepository
 from tag_manager import TagManager
 from utils import *
 
@@ -48,28 +49,31 @@ class NavigationPanel(QtWidgets.QFrame):
         self.groups = defaultdict(lambda: [])
         self.group_widgets = []
 
-        for track in TRACKS:
-            if self.group_options[key].lower() != "folder":
-                track_file = self.tag_manager.load_file(track)
-                group_key = str(track_file[self.group_options[key]].value)
-                self.groups["[Unknown]" if group_key == "0" else (group_key if len(group_key) > 0
-                            else ("[Empty]" if key == 0 else "[Unknown]"))].append(track)
-            else:
-                group_key = track.split("/" if "/ in track" else "\\")[-2]
-                self.groups[group_key].append(track)
+        print("LOADING")
 
-        self.groups = {x: self.groups[x] for x in sorted(self.groups)}
-        for group in self.groups:
-            title = group
-            subtitle = str(str(len(self.groups[group])) + " " + ("Tracks" if self.group_combo_box.currentIndex() == 0
-                                                                 else "Tracks"))[:(-1 if len(self.groups[group])
-                                                                                   == 1 else 10)]
-            group_widget = GroupWidget(title, subtitle, self.group_options[key], self.groups[group])
-            self.group_widgets.append(group_widget)
-            self.group_container_layout.addWidget(group_widget)
-
-        for group_widget in self.group_widgets:
-            group_widget.group_widgets = self.group_widgets
+        for track in TracksRepository().get_tracks():
+            print(track)
+        #     if self.group_options[key].lower() != "folder":
+        #         track_file = self.tag_manager.load_file(track)
+        #         group_key = str(track_file[self.group_options[key]].value)
+        #         self.groups["[Unknown]" if group_key == "0" else (group_key if len(group_key) > 0
+        #                     else ("[Empty]" if key == 0 else "[Unknown]"))].append(track)
+        #     else:
+        #         group_key = track.split("/" if "/ in track" else "\\")[-2]
+        #         self.groups[group_key].append(track)
+        #
+        # self.groups = {x: self.groups[x] for x in sorted(self.groups)}
+        # for group in self.groups:
+        #     title = group
+        #     subtitle = str(str(len(self.groups[group])) + " " + ("Tracks" if self.group_combo_box.currentIndex() == 0
+        #                                                          else "Tracks"))[:(-1 if len(self.groups[group])
+        #                                                                            == 1 else 10)]
+        #     group_widget = GroupWidget(title, subtitle, self.group_options[key], self.groups[group])
+        #     self.group_widgets.append(group_widget)
+        #     self.group_container_layout.addWidget(group_widget)
+        #
+        # for group_widget in self.group_widgets:
+        #     group_widget.group_widgets = self.group_widgets
 
     def group_key_changed(self, new_key: int):
         delete_items(self.group_container_layout)
