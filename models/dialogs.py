@@ -1,8 +1,8 @@
 import os
-from typing import Union
+from typing import Union, List, Tuple
 
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QWidget, \
-    QTreeWidgetItem, QTreeWidget
+    QTreeWidgetItem, QTreeWidget, QGridLayout, QCheckBox, QSpacerItem
 
 from utils import *
 
@@ -13,6 +13,7 @@ class ScanFoldersDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Scan Folders for New Files")
         self.setFixedSize(700, 400)
+        self.selected_folders = []
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(5, 5, 5, 5)
 
@@ -21,9 +22,12 @@ class ScanFoldersDialog(QDialog):
         self.main_frame.setStyleSheet("QFrame#main_frame {border: 1px solid rgba(0, 0, 0, 0.3)}")
 
         self.choose_folders_button = QPushButton("Choose Folders")
-        self.choose_folders_button.clicked.connect(lambda: SelectFoldersDialog().exec())
+        self.choose_folders_button.clicked.connect(lambda: SelectFoldersDialog(self,
+                                                                               tuple(self.selected_folders)).exec())
         self.selected_folders_scroll_area = QScrollArea()
         self.selected_folders_widget = QWidget()
+        self.selected_folders_widget_grid_layout = QGridLayout(self.selected_folders_widget)
+        self.selected_folders_widget_grid_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.selected_folders_scroll_area.setWidget(self.selected_folders_widget)
         self.selected_folders_scroll_area.setWidgetResizable(True)
         self.selected_folders_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -55,15 +59,30 @@ class ScanFoldersDialog(QDialog):
         self.vertical_layout.addWidget(self.selected_folders_scroll_area)
         self.vertical_layout.addWidget(self.bottom_horizontal_widget)
 
+        self.update_selected_folders(["/home/matey"])
+
     def proceed_button_clicked(self):
         ...
 
+    def update_selected_folders(self, paths: List[str]) -> None:
+        delete_grid_layout_items(self.selected_folders_widget_grid_layout)
+        for i, path in enumerate(paths):
+            checkbox = QCheckBox()
+            checkbox.setCheckState(Qt.CheckState.Checked)
+            self.selected_folders_widget_grid_layout.addWidget(checkbox, i, 0)
+            self.selected_folders_widget_grid_layout.addWidget(QLabel(path), i, 1)
+            self.selected_folders.append(path)
+        self.selected_folders_widget_grid_layout.addItem(QSpacerItem(1, 1, QSizePolicy.Policy.Minimum,
+                                                                     QSizePolicy.Policy.Expanding))
+
 
 class SelectFoldersDialog(QDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, parent: ScanFoldersDialog = None, preselected_folders: Tuple[str] = ()):
+        super().__init__()
         self.setWindowTitle("Choose Folders...")
         self.setFixedSize(500, 600)
+        self.parent = parent
+        self.preselected_folders = preselected_folders
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(8, 8, 8, 8)
 
@@ -121,8 +140,28 @@ class SelectFoldersDialog(QDialog):
         self.vertical_layout.addWidget(self.bottom_widget)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
 
+        self.select_preselected_folders()
+
+    def select_preselected_folders(self):
+        def get_child_by_text(item, text: str):
+            for child in [item.child(i) for i in range(item.childCount())]:
+                if child.text(0) == text:
+                    return child
+
+        for path in self.preselected_folders:
+            path_parts = path.split("/")
+            item = self.dir_tree_widget.invisibleRootItem()
+            for path_part in path_parts[1:-1]:
+                self.load_immediate_directory_dir_tree_widget(item.full_path if isinstance(item, self.DirectoryItem)
+                                                              else "/", item)
+                item = get_child_by_text(item, path_part)
+                item.setExpanded(True)
+            self.load_immediate_directory_dir_tree_widget(item.full_path if isinstance(item, self.DirectoryItem)
+                                                          else "/", item)
+            get_child_by_text(item, path_parts[-1]).setCheckState(0, Qt.CheckState.Checked)
+
     def load_immediate_directory_dir_tree_widget(self, path, tree: Union[QTreeWidget, QTreeWidgetItem]):
-        if isinstance(tree, (self.DirectoryItem, self.PlaceholderItem)) \
+        if isinstance(tree, QTreeWidgetItem) \
                 and (not tree.child(0) or not isinstance(tree.child(0), self.PlaceholderItem)):
             return
         try:
@@ -147,7 +186,9 @@ class SelectFoldersDialog(QDialog):
     def tree_item_changed(self, item):
         def change_parents_checked_state(item):
             for parent in item.get_parents():
-                parent.setCheckState(0, parent.get_all_children_state())
+                children_check_state = parent.get_all_children_state()
+                parent.setCheckState(0, Qt.CheckState.PartiallyChecked if
+                                     children_check_state != Qt.CheckState.Unchecked else Qt.CheckState.Unchecked)
 
         def change_children_checked_state(item):
             for child in item.get_children():
@@ -171,7 +212,8 @@ class SelectFoldersDialog(QDialog):
                     checked_items.extend(get_main_checked_items(item))
             return checked_items
 
-        return [item.full_path for item in get_main_checked_items()]
+        self.parent.update_selected_folders([item.full_path for item in get_main_checked_items()])
+        self.done(0)
 
     class DirectoryItem(QTreeWidgetItem):
         def __init__(self, *args, full_path=None):

@@ -2,7 +2,7 @@ import sqlite3
 from typing import List
 
 from repositories.base_repository import BaseRepository
-from models.track import Track
+from data_models.track import Track
 
 
 class TracksRepository(BaseRepository):

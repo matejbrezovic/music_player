@@ -4,6 +4,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import *
 
+from config import Config
 from models.audio_controller import AudioController
 from constants import *
 from models.dialogs import *
@@ -67,4 +68,5 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     mainWindow = MainWindowUi()
     mainWindow.show()
+    # ScanFoldersDialog().exec()
     sys.exit(app.exec())

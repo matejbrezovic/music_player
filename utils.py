@@ -1,7 +1,7 @@
 import mutagen
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
-from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame
+from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
 from PIL.ImageQt import ImageQt
@@ -59,6 +59,20 @@ def get_artwork_pixmap(file_path: str, default: str):
         else:
             pixmap = QPixmap("icons/misc.png")
     return pixmap
+
+
+def delete_grid_layout_items(layout: QGridLayout):
+    if layout is None:
+        return
+    for r in range(layout.rowCount()):
+        for c in range(layout.columnCount()):
+            item = layout.itemAtPosition(r, c)
+            if item is not None:
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+    for i in range(layout.count()):
+        layout.takeAt(i)
 
 
 class QHLine(QFrame):
