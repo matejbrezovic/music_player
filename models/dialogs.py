@@ -71,16 +71,16 @@ class ScanFoldersDialog(QDialog):
     def proceed_button_clicked(self):
         config = Config()
         config.load(DEFAULT_CONFIG_PATH)
-        found_files = []
+        found_file_paths = []
         for folder in config.get_setting("preselected_folders"):
             for root, dirs, files in os.walk("C:/" + folder):
                 for file in files:
                     if file.rsplit(".")[-1] in SUPPORTED_AUDIO_FORMATS:
-                        found_files.append(f"{root}/{file}")
-        tracks = self.convert_file_paths_to_tracks(found_files)
-        for t in tracks:
-            print(t)
+                        found_file_paths.append(f"{root}/{file}")
+        tracks = self.convert_file_paths_to_tracks([file_path.replace("\\", "/").replace("//", "/") for
+                                                    file_path in found_file_paths])
         TracksRepository().save_tracks(tracks)
+        self.done(0)
 
     def convert_file_paths_to_tracks(self, file_paths: List[str]) -> List[Track]:
         tracks = []
@@ -95,6 +95,7 @@ class ScanFoldersDialog(QDialog):
                 loaded_file["artist"].first,
                 loaded_file["composer"].first,
                 loaded_file["genre"].first,
+                str(loaded_file["year"].first),
                 ""  # get_artwork_pixmap(file_path, "album")
             ))
         return tracks

@@ -4,9 +4,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import *
 
-from config import Config
 from models.audio_controller import AudioController
-from constants import *
 from models.dialogs import *
 from models.information_panel import InformationPanel
 from models.main_panel import MainPanel
@@ -17,7 +15,11 @@ class MainWindowUi(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
+        self.scan_folders_dialog = ScanFoldersDialog()
+
         self._setup_ui()
+
+        self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
 
         self.setWindowTitle('music player v0.0.4')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
@@ -29,8 +31,8 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.central_widget.setLayout(self.central_widget_layout)
         self.setCentralWidget(self.central_widget)
 
-        self._setup_menu_bar()
         self._setup_panels()
+        self._setup_menu_bar()
 
     # noinspection PyTypeChecker
     def _setup_menu_bar(self) -> None:
@@ -40,7 +42,8 @@ class MainWindowUi(QtWidgets.QMainWindow):
         file_menu = QMenu("&File", self)
         add_files_action = QAction("&Add Files to Library", self)
         scan_folders_action = QAction("&Scan Folders for New Files", self)
-        scan_folders_action.triggered.connect(lambda: ScanFoldersDialog().exec())
+        scan_folders_action.triggered.connect(lambda: self.scan_folders_dialog.exec())
+
         file_menu.addAction(add_files_action)
         file_menu.addAction(scan_folders_action)
 
@@ -68,5 +71,4 @@ if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     mainWindow = MainWindowUi()
     mainWindow.show()
-    # ScanFoldersDialog().exec()
     sys.exit(app.exec())

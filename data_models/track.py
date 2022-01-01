@@ -5,10 +5,11 @@ from dataclasses import dataclass
 class Track:
     track_id: int
     file_path: str
-    name: str
+    title: str
     album: str
     artist: str
     composer: str
     genre: str
+    year: str
     artwork_path: str
 

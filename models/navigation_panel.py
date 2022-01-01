@@ -5,6 +5,7 @@ from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtWidgets import QWidget, QScrollArea
 
 from constants import *
+from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
 from tag_manager import TagManager
 from utils import *
@@ -52,36 +53,38 @@ class NavigationPanel(QtWidgets.QFrame):
         print("LOADING")
 
         for track in TracksRepository().get_tracks():
-            print(track)
-        #     if self.group_options[key].lower() != "folder":
-        #         track_file = self.tag_manager.load_file(track)
-        #         group_key = str(track_file[self.group_options[key]].value)
-        #         self.groups["[Unknown]" if group_key == "0" else (group_key if len(group_key) > 0
-        #                     else ("[Empty]" if key == 0 else "[Unknown]"))].append(track)
-        #     else:
-        #         group_key = track.split("/" if "/ in track" else "\\")[-2]
-        #         self.groups[group_key].append(track)
-        #
-        # self.groups = {x: self.groups[x] for x in sorted(self.groups)}
-        # for group in self.groups:
-        #     title = group
-        #     subtitle = str(str(len(self.groups[group])) + " " + ("Tracks" if self.group_combo_box.currentIndex() == 0
-        #                                                          else "Tracks"))[:(-1 if len(self.groups[group])
-        #                                                                            == 1 else 10)]
-        #     group_widget = GroupWidget(title, subtitle, self.group_options[key], self.groups[group])
-        #     self.group_widgets.append(group_widget)
-        #     self.group_container_layout.addWidget(group_widget)
-        #
-        # for group_widget in self.group_widgets:
-        #     group_widget.group_widgets = self.group_widgets
+            if self.group_options[key].lower() != "folder":
+                group_key = str(getattr(track, self.group_options[key].lower()))
+                self.groups["[Unknown]" if group_key == "None" else (group_key if len(group_key) > 0
+                            else ("[Empty]" if key == 0 else "[Unknown]"))].append(track)
+            else:
+                group_key = track.file_path.split("/" if "/" in track.file_path else "\\")[-2]
+                self.groups[group_key].append(track)
+
+        self.groups = {x: self.groups[x] for x in sorted(self.groups)}
+        for group in self.groups:
+            title = group
+            subtitle = str(str(len(self.groups[group])) + " " + ("Tracks" if self.group_combo_box.currentIndex() == 0
+                                                                 else "Tracks"))[:(-1 if len(self.groups[group])
+                                                                                   == 1 else 10)]
+            group_widget = GroupWidget(title, subtitle, self.group_options[key], self.groups[group])
+            self.group_widgets.append(group_widget)
+            self.group_container_layout.addWidget(group_widget)
+
+        for group_widget in self.group_widgets:
+            group_widget.group_widgets = self.group_widgets
 
     def group_key_changed(self, new_key: int):
         delete_items(self.group_container_layout)
         self._load_groups(new_key)
 
+    def refresh_groups(self):
+        delete_items(self.group_container_layout)
+        self._load_groups(self.group_combo_box.currentIndex())
+
 
 class GroupWidget(QFrame):
-    def __init__(self, title: str, subtitle: str, group_type: str, tracks: List[str]):
+    def __init__(self, title: str, subtitle: str, group_type: str, tracks: List[Track]):
         super().__init__()
         self.default_stylesheet = "GroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
         self.selected_stylesheet = "GroupWidget {background-color: rgba(0, 0, 0, 0.3)}"
@@ -100,8 +103,8 @@ class GroupWidget(QFrame):
         self.subtitle_label.setStyleSheet("font-size: 10px;")
         self.image_label = QLabel()
         self.image_label.setFixedSize(60, 60)
-
-        self.artwork_pixmap = get_artwork_pixmap(self.tracks[0], group_type)
+        # print(self.tracks[0])
+        self.artwork_pixmap = get_artwork_pixmap(self.tracks[0].file_path, group_type)
         self.image_label.setPixmap(self.artwork_pixmap.scaled(self.image_label.width() - 4,
                                                               self.image_label.height() - 4,
                                                               Qt.AspectRatioMode.KeepAspectRatio,
