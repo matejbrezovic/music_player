@@ -50,8 +50,6 @@ class NavigationPanel(QtWidgets.QFrame):
         self.groups = defaultdict(lambda: [])
         self.group_widgets = []
 
-        print("LOADING")
-
         for track in TracksRepository().get_tracks():
             if self.group_options[key].lower() != "folder":
                 group_key = str(getattr(track, self.group_options[key].lower()))

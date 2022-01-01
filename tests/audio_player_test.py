@@ -1,17 +1,20 @@
-from typing import List, Union
+import sys
 
-from PyQt6 import QtCore
-from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QUrl
-from PyQt6.QtMultimedia import QMediaPlayer
-from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
-    QFrame
+from PyQt6 import QtWidgets, QtGui, QtCore
+from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, Qt, QUrl
+from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput
+from PyQt6.QtWidgets import QPushButton, QHBoxLayout, QVBoxLayout, QSizePolicy, QFrame, QLayout, QLabel, QSlider, QStyle
 
-from data_models.track import Track
-from models.audio_player import AudioPlayer
-from models.audio_playlist import AudioPlaylist
 from constants import *
-from repositories.tracks_repository import TracksRepository
+
+
+class AudioPlayer(QMediaPlayer):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.audio_output = QAudioOutput()
+        self.setAudioOutput(self.audio_output)
+        self.audioOutput().setVolume(0.5)
+        self.current_volume = self.audio_output.volume()
 
 
 class AudioController(QtWidgets.QFrame):
@@ -21,10 +24,9 @@ class AudioController(QtWidgets.QFrame):
         self.setStyleSheet("QFrame {background-color: rgba(0, 0, 88, 0.3)}")
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
-        self.current_playlist = AudioPlaylist()
-        self.current_playlist.set_playlist(TracksRepository().get_tracks())
-        # shuffle(self.current_playlist)
-        # self.playlist_index = -1
+        self.current_playlist = ["C:/Users/matey/Music/Unknown Worlds/Subnautica/06 Below Zero.mp3",
+                                 "C:/Users/matey/Music/Unknown Worlds/Subnautica/07 Sanctuary.mp3"]
+        self.playlist_index = 0
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 
         self.player = AudioPlayer(self)
@@ -94,15 +96,6 @@ class AudioController(QtWidgets.QFrame):
         self.name_time_label_container_layout.addWidget(self.seek_slider_time_label)
         self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding))
 
-        self.equalizer_button = QPushButton("Eq")
-        self.equalizer_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
-
-        self.audio_order_button_modes = ("O", "S", "R")  # order, shuffle, repeat single
-        self.audio_order_button_mode_index = 0
-        self.audio_order_button = QPushButton("O")
-        self.audio_order_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
-        self.audio_order_button.clicked.connect(self.change_audio_order)
-
         # Layout logic
         self.left_part = QFrame()
         self.middle_part = QFrame()
@@ -127,80 +120,45 @@ class AudioController(QtWidgets.QFrame):
         self.middle_layout.addWidget(self.seek_slider)
         self.middle_layout.setContentsMargins(0, 4, 0, 2)
 
-        self.right_layout = QHBoxLayout(self.right_part)
-        self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.right_layout.addWidget(self.equalizer_button)
-        self.right_layout.addWidget(self.audio_order_button)
-
-        self.right_part.setStyleSheet("QFrame {background-color: rgba(255, 0, 231, 0.3)}")
-        self.right_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
-        self.right_part.setFixedSize(self.left_layout.sizeHint())
-
         self.main_layout = QHBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.addWidget(self.left_part)
         self.main_layout.addWidget(self.middle_part)
-        self.main_layout.addWidget(self.right_part)
-
-    def change_audio_order(self):
-        self.current_playlist.change_mode()
-        self.audio_order_button_mode_index = self.audio_order_button_mode_index + 1 if \
-            self.audio_order_button_mode_index <= 1 else 0
-        self.audio_order_button.setText(self.audio_order_button_modes[self.audio_order_button_mode_index])
 
     def set_player_position(self, position: int):
         self.player.setPosition(position)
 
-    def set_playlist(self, playlist: List[Union[Track, str]]):
-        self.current_playlist.set_playlist(playlist)
-
-    def play(self, fade=True):
-        # print("Play")
+    def play(self):
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
-        self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing))
-        self.player.setSource(QUrl(self.current_playlist.currently_playing))
-        self.player.play(fade=fade)
-
-    @staticmethod
-    def get_formatted_time(time_in_seconds: int):
-        hours = int(time_in_seconds / 3600000)
-        minutes = int((time_in_seconds / 60000) % 60)
-        seconds = int((time_in_seconds / 1000) % 60)
-
-        return f'{str(hours) + ":" if hours else ""}{"0" + str(minutes) if hours else minutes}:' \
-               f'{"0" + str(seconds) if seconds < 10 else seconds}'
+        self.audio_file_name_label.setText(os.path.basename(self.current_playlist[self.playlist_index]))
+        self.player.setSource(QUrl(self.current_playlist[self.playlist_index]))
+        self.player.play()
 
     def player_duration_changed(self, duration):
-        self.seek_slider.setRange(0, duration - 120)
-        self.seek_slider_time_label.setText(self.get_formatted_time(self.player.duration()))
+        self.seek_slider.setRange(0, duration)
 
     def player_position_changed(self, position, sender_type=False):
         if not sender_type:
             if self.player.duration():
-                if position > self.player.duration() - 120:
+                if position == self.player.duration():
                     self.next_button_clicked()
                 else:
                     self.seek_slider.setSliderPosition(position)
-                    # update the time text label
-                    self.seek_slider_time_label.setText(self.get_formatted_time(self.player.position()) + "/" +
-                                                        self.get_formatted_time(self.player.duration()))
 
-    def pause(self, fade=True):
-        # print("Pause")
+    def pause(self):
         self.play_button.setIcon(self.play_icon)
         self.user_action = 2
-        self.player.pause(fade)
+        self.player.pause()
 
-    def unpause(self, fade=True):
-        # print("Unpause")
+    def unpause(self):
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
-        self.player.play(fade)
+        self.player.play()
 
     def play_pause_button_clicked(self):
         if self.user_action <= 0:
-            self.current_playlist.set_playlist_index(0)
+            self.playlist_index = 0
             self.play()
         elif self.user_action == 1:
             self.pause()
@@ -208,12 +166,12 @@ class AudioController(QtWidgets.QFrame):
             self.unpause()
 
     def next_button_clicked(self):
-        self.current_playlist.set_next()
-        self.play(fade=False)
+        self.playlist_index = self.playlist_index + 1 if self.playlist_index + 1 < len(self.current_playlist) else 0
+        self.play()
 
     def prev_button_clicked(self):
-        self.current_playlist.set_prev()
-        self.play(fade=False)
+        self.playlist_index = self.playlist_index - 1 if self.playlist_index - 1 >= 0 else len(self.current_playlist) - 1
+        self.play()
 
     def volume_changed(self, volume_value: int):
         self.player.audio_output.setVolume(volume_value / 100)
@@ -280,7 +238,7 @@ class SeekSlider(ImprovedSlider):
         self.parent.player.setPosition(self.pixel_pos_to_range_value(event.pos()))
         self.backup_volume = self.parent.player.audio_output.volume()
         self.parent.player.audio_output.setVolume(0)
-        self.parent.pause(fade=False)
+        self.parent.pause()
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         val = self.pixel_pos_to_range_value(event.pos())
@@ -288,9 +246,15 @@ class SeekSlider(ImprovedSlider):
         self.parent.player.setPosition(val)
 
     def mouseReleaseEvent(self, ev: QtGui.QMouseEvent) -> None:
-        # handles unmuting audio and updating player
         self.parent.player.audio_output.setVolume(self.backup_volume)
         self.parent.set_player_position(self.sliderPosition())
 
         if self.backup_action == 1:
-            self.parent.unpause(fade=False)
+            self.parent.unpause()
+
+
+if __name__ == '__main__':
+    app = QtWidgets.QApplication(sys.argv)
+    audio_controller = AudioController()
+    audio_controller.show()
+    sys.exit(app.exec())

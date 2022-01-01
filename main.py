@@ -55,6 +55,9 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.information_panel = InformationPanel()
         self.audio_controller = AudioController()
 
+        self.main_panel.track_double_clicked.connect(lambda track: (self.audio_controller.set_playlist([track]),
+                                                                    self.audio_controller.play(fade=False)))
+
         self.horizontal_splitter = QSplitter(Qt.Orientation.Horizontal)
 
         self.horizontal_splitter.addWidget(self.navigation_panel)

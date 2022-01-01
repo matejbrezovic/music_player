@@ -1,6 +1,6 @@
 from typing import List
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import *
 
 from data_models.track import Track
@@ -8,6 +8,9 @@ from utils import ElidedLabel, delete_items
 
 
 class TrackViewWidget(QFrame):
+    track_double_clicked = pyqtSignal(Track)
+    track_clicked = pyqtSignal(Track)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.selected_color = "rgba(175, 193, 244, 0.5)"
@@ -69,9 +72,11 @@ class TrackViewWidget(QFrame):
                                                not isinstance(widget, QSplitterHandle)]):
                 label = ElidedLabel(getattr(track, self.column_names[j].lower()))
                 label.index = i
+                label.track = track
                 label.default_stylesheet = label.styleSheet()
                 label.setContentsMargins(5, 5, 5, 0)
                 label.clicked.connect(self.row_clicked)
+                label.double_clicked.connect(self.row_double_clicked)
                 label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
                 column_widget.layout().addWidget(label)
 
@@ -82,6 +87,10 @@ class TrackViewWidget(QFrame):
 
     def row_clicked(self, clicked_label):
         self.select_row(clicked_label.index)
+        self.track_clicked.emit(clicked_label.track)
+
+    def row_double_clicked(self, clicked_label):
+        self.track_double_clicked.emit(clicked_label.track)
 
     def select_row(self, index: int):
         for column_widget in [widget for widget in reversed(self.track_info_splitter.children()) if

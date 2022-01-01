@@ -1,7 +1,7 @@
 from typing import List
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QComboBox, QVBoxLayout
 
 from constants import *
@@ -12,6 +12,8 @@ from tag_manager import TagManager
 
 
 class MainPanel(QtWidgets.QFrame):
+    track_double_clicked = pyqtSignal(Track)
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
@@ -20,6 +22,7 @@ class MainPanel(QtWidgets.QFrame):
         self.tag_manager = TagManager()
 
         self.track_view_widget = TrackViewWidget()
+        self.track_view_widget.track_double_clicked.connect(lambda track: self.track_double_clicked.emit(track))
 
         self.view_options = {
             0: "Tracks",

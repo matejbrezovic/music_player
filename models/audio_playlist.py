@@ -1,5 +1,7 @@
 from random import shuffle
-from typing import List
+from typing import List, Union
+
+from data_models.track import Track
 
 
 class AudioPlaylist:
@@ -11,7 +13,9 @@ class AudioPlaylist:
         self.mode = 1  # 1 ordered, 2 shuffle, 3 repeat one
         self.currently_playing = ""
 
-    def set_playlist(self, playlist: List[str]):
+    def set_playlist(self, playlist: List[Union[Track, str]]):
+        if isinstance(playlist[0], Track):
+            playlist = [track.file_path for track in playlist]
         self.playlist = playlist.copy()
         self.ordered_playlist = playlist.copy()
         self.currently_playing = self.ordered_playlist[0]

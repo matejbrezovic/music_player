@@ -1,4 +1,5 @@
 import mutagen
+from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout
@@ -27,6 +28,7 @@ def delete_items(layout):
 
 class ElidedLabel(QLabel):
     clicked = pyqtSignal(QLabel)
+    double_clicked = pyqtSignal(QLabel)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -37,8 +39,13 @@ class ElidedLabel(QLabel):
         elided = metrics.elidedText(self.text(), Qt.TextElideMode.ElideRight, self.width())
         QPainter(self).drawText(self.rect(), self.alignment(), elided)
 
+    # noinspection PyUnresolvedReferences
     def mousePressEvent(self, ev):
         self.clicked.emit(self)
+
+    # noinspection PyUnresolvedReferences
+    def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
+        self.double_clicked.emit(self)
 
 
 def get_artwork_pixmap(file_path: str, default: str):
