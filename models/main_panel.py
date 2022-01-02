@@ -16,11 +16,10 @@ class MainPanel(QtWidgets.QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-
+        self.displayed_tracks = []
         self.setStyleSheet("MainPanel {background-color: rgba(255, 255, 0, 0.3)}")
         self.setMinimumWidth(MAIN_PANEL_MIN_WIDTH)
         self.tag_manager = TagManager()
-
         self.track_view_widget = TrackViewWidget()
         self.track_view_widget.track_double_clicked.connect(lambda track: self.track_double_clicked.emit(track))
 
@@ -49,3 +48,10 @@ class MainPanel(QtWidgets.QFrame):
 
     def display_tracks(self, tracks: List[Track]):
         self.track_view_widget.set_tracks(tracks)
+        self.displayed_tracks = tracks
+
+    def select_track(self, track: Track):
+        # self.track_view_widget.deselect_row_by_track(track)
+        self.track_view_widget.select_row_by_track(track)
+
+

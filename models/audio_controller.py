@@ -2,29 +2,28 @@ from typing import List, Union
 
 from PyQt6 import QtCore
 from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QUrl
-from PyQt6.QtMultimedia import QMediaPlayer
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
     QFrame
 
+from constants import *
 from data_models.track import Track
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
-from constants import *
 from repositories.tracks_repository import TracksRepository
 
 
 class AudioController(QtWidgets.QFrame):
+    updated_playing_track = pyqtSignal(Track)
+
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.setStyleSheet("QFrame {background-color: rgba(0, 0, 88, 0.3)}")
+        self.setObjectName("audio_controller")
+        self.setStyleSheet("QFrame#audio_controller {background-color: rgba(0, 0, 88, 0.3)}")
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
         self.current_playlist = AudioPlaylist()
         self.current_playlist.set_playlist(TracksRepository().get_tracks())
-        # shuffle(self.current_playlist)
-        # self.playlist_index = -1
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 
         self.player = AudioPlayer(self)
@@ -154,13 +153,16 @@ class AudioController(QtWidgets.QFrame):
     def set_playlist(self, playlist: List[Union[Track, str]]):
         self.current_playlist.set_playlist(playlist)
 
-    def play(self, fade=True):
-        # print("Play")
+    def set_playlist_index(self, index: int):
+        self.current_playlist.set_playlist_index(index)
+
+    def play(self):
+        self.updated_playing_track.emit(self.current_playlist.currently_playing)
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
-        self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing))
-        self.player.setSource(QUrl(self.current_playlist.currently_playing))
-        self.player.play(fade=fade)
+        self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing.file_path))
+        self.player.setSource(QUrl(self.current_playlist.currently_playing.file_path))
+        self.player.play()
 
     @staticmethod
     def get_formatted_time(time_in_seconds: int):
@@ -182,21 +184,18 @@ class AudioController(QtWidgets.QFrame):
                     self.next_button_clicked()
                 else:
                     self.seek_slider.setSliderPosition(position)
-                    # update the time text label
                     self.seek_slider_time_label.setText(self.get_formatted_time(self.player.position()) + "/" +
                                                         self.get_formatted_time(self.player.duration()))
 
     def pause(self, fade=True):
-        # print("Pause")
         self.play_button.setIcon(self.play_icon)
         self.user_action = 2
-        self.player.pause(fade)
+        self.player.pause(fade=fade)
 
     def unpause(self, fade=True):
-        # print("Unpause")
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
-        self.player.play(fade)
+        self.player.play(fade=fade)
 
     def play_pause_button_clicked(self):
         if self.user_action <= 0:
@@ -209,11 +208,11 @@ class AudioController(QtWidgets.QFrame):
 
     def next_button_clicked(self):
         self.current_playlist.set_next()
-        self.play(fade=False)
+        self.play()
 
     def prev_button_clicked(self):
         self.current_playlist.set_prev()
-        self.play(fade=False)
+        self.play()
 
     def volume_changed(self, volume_value: int):
         self.player.audio_output.setVolume(volume_value / 100)

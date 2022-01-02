@@ -12,6 +12,9 @@ from utils import *
 
 
 class NavigationPanel(QtWidgets.QFrame):
+    group_clicked = pyqtSignal(list)
+    group_double_clicked = pyqtSignal(list)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
@@ -70,6 +73,8 @@ class NavigationPanel(QtWidgets.QFrame):
             self.group_container_layout.addWidget(group_widget)
 
         for group_widget in self.group_widgets:
+            group_widget.group_clicked.connect(lambda tracks: self.group_clicked.emit(tracks))
+            group_widget.group_double_clicked.connect(lambda tracks: self.group_double_clicked.emit(tracks))
             group_widget.group_widgets = self.group_widgets
 
     def group_key_changed(self, new_key: int):
@@ -82,6 +87,9 @@ class NavigationPanel(QtWidgets.QFrame):
 
 
 class GroupWidget(QFrame):
+    group_clicked = pyqtSignal(list)
+    group_double_clicked = pyqtSignal(list)
+
     def __init__(self, title: str, subtitle: str, group_type: str, tracks: List[Track]):
         super().__init__()
         self.default_stylesheet = "GroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
@@ -101,7 +109,6 @@ class GroupWidget(QFrame):
         self.subtitle_label.setStyleSheet("font-size: 10px;")
         self.image_label = QLabel()
         self.image_label.setFixedSize(60, 60)
-        # print(self.tracks[0])
         self.artwork_pixmap = get_artwork_pixmap(self.tracks[0].file_path, group_type)
         self.image_label.setPixmap(self.artwork_pixmap.scaled(self.image_label.width() - 4,
                                                               self.image_label.height() - 4,
@@ -125,3 +132,10 @@ class GroupWidget(QFrame):
         for group_widget in self.group_widgets:
             group_widget.setStyleSheet(self.default_stylesheet)
         self.setStyleSheet(self.selected_stylesheet)
+        self.group_clicked.emit(self.tracks)
+
+    def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
+        for group_widget in self.group_widgets:
+            group_widget.setStyleSheet(self.default_stylesheet)
+        self.setStyleSheet(self.selected_stylesheet)
+        self.group_double_clicked.emit(self.tracks)

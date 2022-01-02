@@ -18,6 +18,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.scan_folders_dialog = ScanFoldersDialog()
 
         self._setup_ui()
+        self._setup_signals()
 
         self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
 
@@ -55,9 +56,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.information_panel = InformationPanel()
         self.audio_controller = AudioController()
 
-        self.main_panel.track_double_clicked.connect(lambda track: (self.audio_controller.set_playlist([track]),
-                                                                    self.audio_controller.play(fade=False)))
-
         self.horizontal_splitter = QSplitter(Qt.Orientation.Horizontal)
 
         self.horizontal_splitter.addWidget(self.navigation_panel)
@@ -68,6 +66,18 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.central_widget_layout.addWidget(self.horizontal_splitter)
         self.central_widget_layout.addWidget(self.audio_controller)
+
+    def _setup_signals(self):
+        self.main_panel.track_double_clicked.connect(lambda track: (self.audio_controller.set_playlist(
+                                                                    self.main_panel.displayed_tracks),
+                                                                    self.audio_controller.set_playlist_index(
+                                                                    self.audio_controller.current_playlist.index(track)),
+                                                                    self.audio_controller.play()))
+        self.navigation_panel.group_clicked.connect(lambda tracks: self.main_panel.display_tracks(tracks))
+        self.navigation_panel.group_double_clicked.connect(lambda tracks: (self.main_panel.display_tracks(tracks),
+                                                                           self.audio_controller.set_playlist(tracks),
+                                                                           self.audio_controller.play()))
+        self.audio_controller.updated_playing_track.connect(lambda track: self.main_panel.select_track(track))
 
 
 if __name__ == '__main__':
