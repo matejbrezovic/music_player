@@ -1,7 +1,7 @@
 from collections import defaultdict
 from typing import List
 
-from PyQt6 import QtWidgets, QtGui
+from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import QWidget, QScrollArea
 
 from constants import *
@@ -18,6 +18,7 @@ class NavigationPanel(QtWidgets.QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
+        self.selected_group_index = 0
         self.setStyleSheet("NavigationPanel {background-color: rgba(0, 212, 88, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
@@ -72,9 +73,11 @@ class NavigationPanel(QtWidgets.QFrame):
             self.group_widgets.append(group_widget)
             self.group_container_layout.addWidget(group_widget)
 
-        for group_widget in self.group_widgets:
-            group_widget.group_clicked.connect(lambda tracks: self.group_clicked.emit(tracks))
-            group_widget.group_double_clicked.connect(lambda tracks: self.group_double_clicked.emit(tracks))
+        for i, group_widget in enumerate(self.group_widgets):
+            group_widget.group_clicked.connect(lambda clicked_group_widget: (self.update_selected_group_index(self.group_widgets.index(clicked_group_widget)),
+                                                                    self.group_clicked.emit(clicked_group_widget.tracks)))
+            group_widget.group_double_clicked.connect(lambda clicked_group_widget: (self.update_selected_group_index(i),
+                                                      self.group_double_clicked.emit(clicked_group_widget.tracks)))
             group_widget.group_widgets = self.group_widgets
 
     def group_key_changed(self, new_key: int):
@@ -85,10 +88,17 @@ class NavigationPanel(QtWidgets.QFrame):
         delete_items(self.group_container_layout)
         self._load_groups(self.group_combo_box.currentIndex())
 
+    def update_selected_group_index(self, index: int):
+        self.selected_group_index = index
+
+    # def get_display_key(self):
+    #     # print(self.selected_group_index)
+    #     return self.group_combo_box.currentIndex(), self.selected_group_index
+
 
 class GroupWidget(QFrame):
-    group_clicked = pyqtSignal(list)
-    group_double_clicked = pyqtSignal(list)
+    group_clicked = pyqtSignal(QFrame)
+    group_double_clicked = pyqtSignal(QFrame)
 
     def __init__(self, title: str, subtitle: str, group_type: str, tracks: List[Track]):
         super().__init__()
@@ -104,8 +114,11 @@ class GroupWidget(QFrame):
         self.group_widgets = []
 
         self.title_label = ElidedLabel(self.title)
-
-        self.subtitle_label = QLabel(self.subtitle)
+        self.title_label.clicked.connect(self.mousePressEvent)
+        self.title_label.double_clicked.connect(self.mouseDoubleClickEvent)
+        self.subtitle_label = ElidedLabel(self.subtitle)
+        self.subtitle_label.clicked.connect(self.mousePressEvent)
+        self.subtitle_label.double_clicked.connect(self.mouseDoubleClickEvent)
         self.subtitle_label.setStyleSheet("font-size: 10px;")
         self.image_label = QLabel()
         self.image_label.setFixedSize(60, 60)
@@ -132,10 +145,10 @@ class GroupWidget(QFrame):
         for group_widget in self.group_widgets:
             group_widget.setStyleSheet(self.default_stylesheet)
         self.setStyleSheet(self.selected_stylesheet)
-        self.group_clicked.emit(self.tracks)
+        self.group_clicked.emit(self)
 
     def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
         for group_widget in self.group_widgets:
             group_widget.setStyleSheet(self.default_stylesheet)
         self.setStyleSheet(self.selected_stylesheet)
-        self.group_double_clicked.emit(self.tracks)
+        self.group_double_clicked.emit(self)

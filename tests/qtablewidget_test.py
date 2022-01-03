@@ -1,12 +1,16 @@
+import random
+import string
+import sys
 from typing import List
 
 from PyQt6.QtWidgets import *
 
 from data_models.track import Track
+from repositories.tracks_repository import TracksRepository
 from utils import *
 
 
-class TrackViewWidget(QFrame):
+class TrackViewWidgetWithTable(QFrame):
     track_double_clicked = pyqtSignal(Track)
     track_clicked = pyqtSignal(Track)
 
@@ -32,7 +36,9 @@ class TrackViewWidget(QFrame):
         for column_name in self.column_names:
             widget = ElidedLabel("   " + column_name)
             widget.setMinimumWidth(20)
+            widget.setStyleSheet(f"background-color: rgb({random.randint(50, 200)},{random.randint(50, 200)},{random.randint(50, 200)})")
             self.header_splitter.addWidget(widget)
+        print(self.header_splitter.sizes())
 
         self.table_widget = QTableWidget()
         self.table_widget.setColumnCount(len(self.column_names))
@@ -41,17 +47,13 @@ class TrackViewWidget(QFrame):
         self.table_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_widget.setShowGrid(False)
-        self.table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table_widget.itemClicked.connect(lambda item: (self.track_clicked.emit(item.track)))
+        self.table_widget.itemClicked.connect(lambda item: self.track_clicked.emit(item.track))
         self.table_widget.itemDoubleClicked.connect(lambda item: self.track_double_clicked.emit(item.track))
-        self.table_widget.setStyleSheet("selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black")
-        # self.table_widget.cellClicked.connect(lambda row_index, _: (self.track_clicked.emit(self.displayed_tracks[row_index]),
-        #                                                             self.table_widget.rowAt(row_index).set)
-        # self.table_widget.itemDoubleClicked.connect(lambda item: self.track_double_clicked.emit(item.track))
 
         self.main_layout.addWidget(self.header_splitter)
         self.main_layout.addWidget(self.table_widget)
+        # self.set_tracks(TracksRepository().get_tracks()[:40])
 
     def update_column_width(self):
         total_sizes = sum(self.header_splitter.sizes())
@@ -67,10 +69,8 @@ class TrackViewWidget(QFrame):
                 label_name = getattr(track, self.column_names[j].lower())
                 item = QTableWidgetItem()
                 item.setText(label_name)
-                item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
                 item.track = track
                 self.table_widget.setItem(i, j, item)
-            self.table_widget.setRowHeight(i, 22)
 
     def select_row_by_index(self, index: int):
         self.table_widget.selectRow(index)
@@ -80,3 +80,43 @@ class TrackViewWidget(QFrame):
         if track not in self.displayed_tracks:
             return
         self.select_row_by_index(self.displayed_tracks.index(track))
+
+
+class App(QWidget):
+    def __init__(self):
+        super().__init__()
+        self.title = 'Testing widget'
+
+        self.setWindowTitle(self.title)
+        self.resize(1000, 600)
+
+        self.track_view_widget = TrackViewWidgetWithTable()
+        self.refresh_button = QPushButton("Refresh")
+        self.refresh_button.clicked.connect(self.button_clicked)
+
+        self.layout = QVBoxLayout()
+        self.layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.layout.addWidget(self.track_view_widget)
+        self.layout.addWidget(self.refresh_button)
+        self.setLayout(self.layout)
+        # self.track_view_widget.update_column_width()
+        self.show()
+
+    def button_clicked(self):
+        self.track_view_widget.set_tracks(TracksRepository().get_tracks())
+
+    def generate_tracks(self, num):
+        tracks = []
+        for i in range(num):
+            tracks.append(Track(i,
+                                *[(''.join(random.choice(string.ascii_lowercase) for _ in range(10))) for _ in
+                                  range(8)]
+                                ))
+        return tracks
+
+
+if __name__ == '__main__':
+    app = QApplication(sys.argv)
+    ex = App()
+    ex.track_view_widget.update_column_width()
+    sys.exit(app.exec())

@@ -26,6 +26,17 @@ def delete_items(layout):
                 delete_items(item.layout())
 
 
+def unparent_items(layout):
+    if layout is not None:
+        while layout.count():
+            item = layout.takeAt(0)
+            widget = item.widget()
+            if widget is not None:
+                widget.setParent(None)
+            else:
+                delete_items(item.layout())
+
+
 class ElidedLabel(QLabel):
     clicked = pyqtSignal(QLabel)
     double_clicked = pyqtSignal(QLabel)
@@ -39,11 +50,9 @@ class ElidedLabel(QLabel):
         elided = metrics.elidedText(self.text(), Qt.TextElideMode.ElideRight, self.width())
         QPainter(self).drawText(self.rect(), self.alignment(), elided)
 
-    # noinspection PyUnresolvedReferences
     def mousePressEvent(self, ev):
         self.clicked.emit(self)
 
-    # noinspection PyUnresolvedReferences
     def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
         self.double_clicked.emit(self)
 

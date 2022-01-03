@@ -7,7 +7,6 @@ from PyQt6.QtWidgets import QComboBox, QVBoxLayout
 from constants import *
 from data_models.track import Track
 from models.track_view_widget import TrackViewWidget
-from repositories.tracks_repository import TracksRepository
 from tag_manager import TagManager
 
 
@@ -41,8 +40,6 @@ class MainPanel(QtWidgets.QFrame):
         self.main_layout.addWidget(self.view_options_combo_box)
         self.main_layout.addWidget(self.track_view_widget)
 
-        self.display_tracks(TracksRepository().get_tracks())
-
     def view_key_changed(self):
         ...
 
@@ -51,7 +48,6 @@ class MainPanel(QtWidgets.QFrame):
         self.displayed_tracks = tracks
 
     def select_track(self, track: Track):
-        # self.track_view_widget.deselect_row_by_track(track)
         self.track_view_widget.select_row_by_track(track)
 
 

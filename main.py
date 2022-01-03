@@ -26,6 +26,9 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
+        self.show()
+        self.main_panel.track_view_widget.update_column_width()
+
     def _setup_ui(self) -> None:
         self.central_widget = QWidget(self)
         self.central_widget_layout = QVBoxLayout()
@@ -51,10 +54,10 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.menu_bar.addMenu(file_menu)
 
     def _setup_panels(self) -> None:
-        self.navigation_panel = NavigationPanel()
-        self.main_panel = MainPanel()
-        self.information_panel = InformationPanel()
-        self.audio_controller = AudioController()
+        self.navigation_panel = NavigationPanel(self)
+        self.main_panel = MainPanel(self)
+        self.information_panel = InformationPanel(self)
+        self.audio_controller = AudioController(self)
 
         self.horizontal_splitter = QSplitter(Qt.Orientation.Horizontal)
 
@@ -83,5 +86,4 @@ class MainWindowUi(QtWidgets.QMainWindow):
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     mainWindow = MainWindowUi()
-    mainWindow.show()
     sys.exit(app.exec())
