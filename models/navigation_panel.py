@@ -74,9 +74,9 @@ class NavigationPanel(QtWidgets.QFrame):
             self.group_container_layout.addWidget(group_widget)
 
         for i, group_widget in enumerate(self.group_widgets):
-            group_widget.group_clicked.connect(lambda clicked_group_widget: (self.update_selected_group_index(self.group_widgets.index(clicked_group_widget)),
+            group_widget.clicked.connect(lambda clicked_group_widget: (self.update_selected_group_index(self.group_widgets.index(clicked_group_widget)),
                                                                     self.group_clicked.emit(clicked_group_widget.tracks)))
-            group_widget.group_double_clicked.connect(lambda clicked_group_widget: (self.update_selected_group_index(i),
+            group_widget.double_clicked.connect(lambda clicked_group_widget: (self.update_selected_group_index(i),
                                                       self.group_double_clicked.emit(clicked_group_widget.tracks)))
             group_widget.group_widgets = self.group_widgets
 
@@ -91,14 +91,10 @@ class NavigationPanel(QtWidgets.QFrame):
     def update_selected_group_index(self, index: int):
         self.selected_group_index = index
 
-    # def get_display_key(self):
-    #     # print(self.selected_group_index)
-    #     return self.group_combo_box.currentIndex(), self.selected_group_index
-
 
 class GroupWidget(QFrame):
-    group_clicked = pyqtSignal(QFrame)
-    group_double_clicked = pyqtSignal(QFrame)
+    clicked = pyqtSignal(QFrame)
+    double_clicked = pyqtSignal(QFrame)
 
     def __init__(self, title: str, subtitle: str, group_type: str, tracks: List[Track]):
         super().__init__()
@@ -145,10 +141,10 @@ class GroupWidget(QFrame):
         for group_widget in self.group_widgets:
             group_widget.setStyleSheet(self.default_stylesheet)
         self.setStyleSheet(self.selected_stylesheet)
-        self.group_clicked.emit(self)
+        self.clicked.emit(self)
 
     def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
         for group_widget in self.group_widgets:
             group_widget.setStyleSheet(self.default_stylesheet)
         self.setStyleSheet(self.selected_stylesheet)
-        self.group_double_clicked.emit(self)
+        self.double_clicked.emit(self)

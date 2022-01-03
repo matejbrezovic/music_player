@@ -1,15 +1,14 @@
-import os
 from typing import Union, List, Tuple
 
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QWidget, \
-    QTreeWidgetItem, QTreeWidget, QGridLayout, QCheckBox, QSpacerItem
+    QTreeWidgetItem, QTreeWidget, QCheckBox, QSpacerItem
 
 from config import Config
+from constants import *
 from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
 from tag_manager import TagManager
 from utils import *
-from constants import *
 
 
 class ScanFoldersDialog(QDialog):

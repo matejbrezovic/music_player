@@ -3,6 +3,7 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout
+from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
 from PIL.ImageQt import ImageQt
@@ -57,6 +58,41 @@ class ElidedLabel(QLabel):
         self.double_clicked.emit(self)
 
 
+class ImageLabel(QLabel):
+    def __init__(self, pixmap: QPixmap):
+        super().__init__()
+        self.pixmap = pixmap
+
+        size_policy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)  # Very important!
+        size_policy.setHeightForWidth(True)
+        size_policy.setWidthForHeight(True)
+        self.setSizePolicy(size_policy)
+
+        if self.pixmap.width() != 0:
+            if self.pixmap.height() / self.pixmap.width() > self.height() / self.width():
+                self.pixmap = self.pixmap.scaledToHeight(self.height(), Qt.TransformationMode.SmoothTransformation)
+            else:
+                self.pixmap = self.pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation)
+
+        self.setPixmap(self.pixmap)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
+        if self.pixmap is not None:
+            if self.pixmap.width() != 0 and self.width() != 0:
+                if self.pixmap.height() / self.pixmap.width() > self.height() / self.width():
+                    displayed_image = self.pixmap.scaledToHeight(self.height(),
+                                                                 Qt.TransformationMode.SmoothTransformation)
+                else:
+                    displayed_image = self.pixmap.scaledToWidth(self.width(),
+                                                                Qt.TransformationMode.SmoothTransformation)
+
+                self.setPixmap(displayed_image)
+
+    def heightForWidth(self, width):
+        return width
+
+
 def get_artwork_pixmap(file_path: str, default: str):
     class NoArtworkError(Exception):
         pass
@@ -74,7 +110,7 @@ def get_artwork_pixmap(file_path: str, default: str):
                 pixmap = QPixmap.fromImage(ImageQt(artwork))
             except (mutagen.mp4.MP4StreamInfoError, KeyError):
                 raise NoArtworkError
-    except (AttributeError, NoArtworkError):
+    except (AttributeError, NoArtworkError, MutagenError):
         if default.lower() in ['album', 'artist', 'composer', 'folder']:
             pixmap = QPixmap(f"icons/{default.lower()}.png")
         else:

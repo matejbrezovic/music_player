@@ -22,7 +22,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
 
-        self.setWindowTitle('music player v0.0.4')
+        self.setWindowTitle('music player v0.0.6')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 

@@ -1,1 +1,1 @@
-{"preselected_folders": ["/home", "/Users/matey/Music"]}
+{"preselected_folders": ["/home", "/PerfLogs", "/Users/matey/Music"]}
