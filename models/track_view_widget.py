@@ -76,5 +76,6 @@ class TrackViewWidget(QFrame):
 
     def select_row_by_track(self, track: Track):
         if track not in self.displayed_tracks:
+            self.table_widget.clearSelection()
             return
         self.select_row_by_index(self.displayed_tracks.index(track))

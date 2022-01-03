@@ -15,6 +15,7 @@ from repositories.tracks_repository import TracksRepository
 
 class AudioController(QtWidgets.QFrame):
     updated_playing_track = pyqtSignal(Track)
+    updated_playlist = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -91,7 +92,8 @@ class AudioController(QtWidgets.QFrame):
         self.name_time_label_container_layout.addWidget(self.offset_label)
         self.name_time_label_container_layout.addWidget(self.audio_file_name_label)
         self.name_time_label_container_layout.addWidget(self.seek_slider_time_label)
-        self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Expanding))
+        self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
+                                                                 QSizePolicy.Policy.Expanding))
 
         self.equalizer_button = QPushButton("Eq")
         self.equalizer_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
@@ -152,6 +154,7 @@ class AudioController(QtWidgets.QFrame):
 
     def set_playlist(self, playlist: List[Union[Track, str]]):
         self.current_playlist.set_playlist(playlist)
+        self.updated_playlist.emit(playlist)
 
     def set_playlist_index(self, index: int):
         self.current_playlist.set_playlist_index(index)

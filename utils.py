@@ -93,7 +93,7 @@ class ImageLabel(QLabel):
         return width
 
 
-def get_artwork_pixmap(file_path: str, default: str):
+def get_artwork_pixmap(file_path: str, default: str = "album"):
     class NoArtworkError(Exception):
         pass
 

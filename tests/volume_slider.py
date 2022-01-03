@@ -1,8 +1,9 @@
-from PyQt5.QtWidgets import (QWidget, QSlider, QHBoxLayout,
-                             QLabel, QApplication)
+import sys
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QPixmap
-import sys
+from PyQt5.QtWidgets import (QWidget, QSlider, QHBoxLayout,
+                             QLabel, QApplication)
 
 
 class Example(QWidget):

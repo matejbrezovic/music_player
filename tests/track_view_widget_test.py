@@ -1,17 +1,16 @@
 import random
 import string
 import sys
+from random import randint
 from typing import List
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import *
-
-from random import randint
+from tests.simplified_track_view_widget_test import TestTrackViewWidget
 
 from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
-from tests.simplified_track_view_widget_test import TestTrackViewWidget
-from utils import ElidedLabel, unparent_items, delete_items
+from utils import ElidedLabel, delete_items
 
 
 class CustomScrollArea(QScrollArea):

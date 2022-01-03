@@ -9,8 +9,8 @@ if __name__ == '__main__':
 
     tm = TagManager()
 
-    f = tm.load_file("/home/matey/Music/06 Below Zero.mp3")
-    length = int(f["#length"])
+    f = tm.load_file("/home/matey/Music/04 Sound of Silence (Subnautica_ Below Zero).mp3")
+    length = f["#channels"]
     print(length)
 
     sys.exit(app.exec())

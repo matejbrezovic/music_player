@@ -1,3 +1,5 @@
+import datetime
+import math
 from typing import List
 
 from PyQt6 import QtWidgets
@@ -13,6 +15,9 @@ from utils import *
 
 
 class InformationPanel(QtWidgets.QFrame):
+    track_clicked = pyqtSignal(Track)
+    track_double_clicked = pyqtSignal(Track)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("information_panel")
@@ -28,6 +33,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_widget_layout.setContentsMargins(0, 0, 0, 0)
 
         self.playing_tracks_table_widget = QTableWidget()
+        # self.playing_tracks_table_widget.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.playing_tracks_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.playing_tracks_table_widget.setColumnCount(1)
         self.playing_tracks_table_widget.verticalHeader().setVisible(False)
@@ -36,6 +42,9 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.playing_tracks_table_widget.setShowGrid(False)
         self.playing_tracks_table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.playing_tracks_table_widget.cellClicked.connect(lambda row_index, _: self.row_clicked(row_index))
+        self.playing_tracks_table_widget.cellDoubleClicked.connect(lambda row_index, _:
+                                                                   self.row_double_clicked(row_index))
         self.playing_tracks_scroll_area_widget = QWidget()
         self.playing_tracks_layout = QVBoxLayout(self.playing_tracks_scroll_area_widget)
 
@@ -44,14 +53,15 @@ class InformationPanel(QtWidgets.QFrame):
 
         self.track_info_widget = QFrame()
         self.track_info_widget_layout = QVBoxLayout(self.track_info_widget)
+        self.track_info_widget_layout.setContentsMargins(0, 0, 0, 0)
         self.track_info_scroll_area = QScrollArea()
         # self.track_info_scroll_area.setFixedSize(400, 500)
         self.track_info_scroll_area.setWidgetResizable(True)
         self.track_info_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.track_info_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.track_info_scroll_area_widget = QWidget()
-        self.track_info_scroll_area_widget.setStyleSheet("background-color: green")
         self.track_info_scroll_area_widget_layout = QVBoxLayout(self.track_info_scroll_area_widget)
+        self.track_info_scroll_area_widget_layout.setContentsMargins(0, 0, 0, 0)
         self.track_info_scroll_area_widget_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.track_info_scroll_area.setWidget(self.track_info_scroll_area_widget)
 
@@ -69,39 +79,57 @@ class InformationPanel(QtWidgets.QFrame):
 
         self.vertical_splitter.addWidget(self.playing_tracks_widget)
         self.vertical_splitter.addWidget(self.track_info_widget)
-        # self.vertical_splitter.setSizes([1, 1])
+        self.vertical_splitter.setSizes([1, 1])
         self.main_layout.addWidget(self.vertical_splitter)
         self.set_playing_tracks(TracksRepository().get_tracks())
+        self.set_currently_playing_track(TracksRepository().get_tracks()[0])
+
+    def row_clicked(self, row_index: int):
+        self.playing_tracks_table_widget.setCurrentCell(row_index, 0)
+        self.track_clicked.emit(self.playing_tracks_table_widget.cellWidget(row_index, 0).track)
+
+    def row_double_clicked(self, row_index: int):
+        self.playing_tracks_table_widget.setCurrentCell(row_index, 0)
+        self.track_double_clicked.emit(self.playing_tracks_table_widget.cellWidget(row_index, 0).track)
 
     def set_playing_tracks(self, tracks: List[Track]):
-        self.reset_playing_tracks()
+        self.playing_tracks_table_widget.clearSelection()
         self.playing_tracks_table_widget.setRowCount(len(tracks))
         for i, track in enumerate(tracks):
-            track_group_widget = TrackGroupWidget(track)
+            track_group_widget = TrackGroupWidget(track, i)
+            track_group_widget.clicked.connect(self.row_clicked)
+            track_group_widget.double_clicked.connect(self.row_double_clicked)
             self.playing_tracks_table_widget.setCellWidget(i, 0, track_group_widget)
             self.playing_tracks_table_widget.setRowHeight(i, track_group_widget.height())
 
-    def update_currently_playing_track(self, track: Track):
-        ...
+    def set_currently_playing_track(self, track: Track):
+        def get_track_info(track: Track) -> str:
+            f = TagManager().load_file(track.file_path)
+            extension = track.file_path.split(".")[-1].upper()
+            samplerate = f'{str(round(f["#samplerate"].first / 1000, 1))} kHz'
+            bitrate = f'{str(math.floor(f["#bitrate"].first / 1000))}k'
+            channels = "Stereo" if f["#channels"].first == 2 else "Mono"
 
-    def reset_playing_tracks(self):
-        delete_items(self.playing_tracks_layout)
+            return f"{extension} {bitrate}, {samplerate}, {channels}, {datetime.timedelta(seconds=track.length)}"
 
-    # def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
-    #     print(self.size())
-    #     super().resizeEvent(a0)
+        self.currently_playing_track_title.setText(track.title)
+        self.currently_playing_track_info.setText(get_track_info(track))
+        self.currently_playing_track_image_label.deleteLater()
+        self.currently_playing_track_image_label = ImageLabel(get_artwork_pixmap(track.file_path))
+        self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_image_label)
 
 
 class TrackGroupWidget(QFrame):
-    clicked = pyqtSignal(Track)
-    double_clicked = pyqtSignal(Track)
+    clicked = pyqtSignal(int)
+    double_clicked = pyqtSignal(int)
 
-    def __init__(self, track: Track):
+    def __init__(self, track: Track, index: int):
         super().__init__()
         self.title = track.title
         self.subtitle = track.artist
         self.track = track
         self.tag_manager = TagManager()
+        self.index = index
 
         self.default_stylesheet = "TrackGroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
         self.selected_stylesheet = "TrackGroupWidget {background-color: rgba(0, 0, 0, 0.3)}"
@@ -137,14 +165,8 @@ class TrackGroupWidget(QFrame):
         self.horizontal_layout.addWidget(self.image_label)
         self.horizontal_layout.addWidget(self.text_widget)
 
-    # def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-    #     # for group_widget in self.group_widgets:
-    #     #     group_widget.setStyleSheet(self.default_stylesheet)
-    #     self.setStyleSheet(self.selected_stylesheet)
-    #     self.clicked.emit(self.track)
-    #
-    # def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
-    #     # for group_widget in self.group_widgets:
-    #     #     group_widget.setStyleSheet(self.default_stylesheet)
-    #     self.setStyleSheet(self.selected_stylesheet)
-    #     self.double_clicked.emit(self.track)
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        self.clicked.emit(self.index)
+
+    def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
+        self.double_clicked.emit(self.index)
