@@ -10,6 +10,7 @@ class Track:
     artist: str
     composer: str
     genre: str
-    year: str
+    year: int
+    length: int
     artwork_path: str
 

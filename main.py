@@ -74,9 +74,12 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.main_panel.track_double_clicked.connect(lambda track: (self.audio_controller.set_playlist(
                                                                     self.main_panel.displayed_tracks),
                                                                     self.audio_controller.set_playlist_index(
-                                                                    self.audio_controller.current_playlist.index(track)),
+                                                                    self.audio_controller.current_playlist.index(
+                                                                        track)),
                                                                     self.audio_controller.play()))
-        self.navigation_panel.group_clicked.connect(lambda tracks: self.main_panel.display_tracks(tracks))
+        self.navigation_panel.group_clicked.connect(lambda tracks: (self.main_panel.display_tracks(tracks),
+                                                                    self.main_panel.select_track(
+                                                                        self.audio_controller.get_current_track())))
         self.navigation_panel.group_double_clicked.connect(lambda tracks: (self.main_panel.display_tracks(tracks),
                                                                            self.audio_controller.set_playlist(tracks),
                                                                            self.audio_controller.play()))

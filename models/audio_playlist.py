@@ -11,12 +11,12 @@ class AudioPlaylist:
         self.playlist_index = 0
         self.already_played = []
         self.mode = 1  # 1 ordered, 2 shuffle, 3 repeat one
-        self.currently_playing = ""
+        self.currently_playing = None
 
     def set_playlist(self, playlist: List[Track]):
         self.playlist = playlist.copy()
         self.ordered_playlist = playlist.copy()
-        self.currently_playing = self.ordered_playlist[0]
+        self.currently_playing = self.ordered_playlist[0] if self.ordered_playlist else None
         self.playlist_index = 0
 
     def set_playlist_index(self, playlist_index: int):

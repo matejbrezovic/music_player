@@ -95,7 +95,8 @@ class ScanFoldersDialog(QDialog):
                 loaded_file["artist"].first,
                 loaded_file["composer"].first,
                 loaded_file["genre"].first,
-                str(loaded_file["year"].first),
+                loaded_file["year"].first if loaded_file["year"].first else None,
+                int(loaded_file["#length"].first),
                 ""  # get_artwork_pixmap(file_path, "album")
             ))
         return tracks

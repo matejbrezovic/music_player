@@ -46,9 +46,6 @@ class TrackViewWidget(QFrame):
         self.table_widget.itemClicked.connect(lambda item: (self.track_clicked.emit(item.track)))
         self.table_widget.itemDoubleClicked.connect(lambda item: self.track_double_clicked.emit(item.track))
         self.table_widget.setStyleSheet("selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black")
-        # self.table_widget.cellClicked.connect(lambda row_index, _: (self.track_clicked.emit(self.displayed_tracks[row_index]),
-        #                                                             self.table_widget.rowAt(row_index).set)
-        # self.table_widget.itemDoubleClicked.connect(lambda item: self.track_double_clicked.emit(item.track))
 
         self.main_layout.addWidget(self.header_splitter)
         self.main_layout.addWidget(self.table_widget)
@@ -60,13 +57,14 @@ class TrackViewWidget(QFrame):
 
     def set_tracks(self, tracks: List[Track]):
         self.table_widget.setRowCount(len(tracks))
+        self.table_widget.clearSelection()
         self.displayed_tracks = tracks
 
         for i, track in enumerate(tracks):
             for j in range(len(self.column_names)):
-                label_name = getattr(track, self.column_names[j].lower())
                 item = QTableWidgetItem()
-                item.setText(label_name)
+                item_text = getattr(track, self.column_names[j].lower())
+                item.setText(str(item_text) if item_text else "")
                 item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
                 item.track = track
                 self.table_widget.setItem(i, j, item)
