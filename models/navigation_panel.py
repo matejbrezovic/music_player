@@ -2,7 +2,7 @@ from collections import defaultdict
 from typing import List
 
 from PyQt6 import QtWidgets
-from PyQt6.QtWidgets import QWidget, QScrollArea
+from PyQt6.QtWidgets import *
 
 from constants import *
 from data_models.track import Track
@@ -11,14 +11,13 @@ from tag_manager import TagManager
 from utils import *
 
 
-class NavigationPanel(QtWidgets.QFrame):
+class NavigationPanel(QFrame):
     group_clicked = pyqtSignal(list)
     group_double_clicked = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.parent = parent
-        self.selected_group_index = 0
         self.setStyleSheet("NavigationPanel {background-color: rgba(0, 212, 88, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
@@ -31,15 +30,18 @@ class NavigationPanel(QtWidgets.QFrame):
             4: "Genre",
             5: "Year"
         }
-        self.group_container_scroll_area = QScrollArea()
-        self.group_container_widget = QFrame()
-        self.group_container_scroll_area.setWidget(self.group_container_widget)
-        self.group_container_scroll_area.setWidgetResizable(True)
-        self.group_container_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.group_container_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.group_container_layout = QtWidgets.QVBoxLayout(self.group_container_widget)
-        self.group_container_layout.setContentsMargins(0, 0, 0, 0)
-        self.group_container_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.group_table_widget = QTableWidget()
+        self.group_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        self.group_table_widget.setColumnCount(1)
+        self.group_table_widget.verticalHeader().setVisible(False)
+        self.group_table_widget.horizontalHeader().setVisible(False)
+        self.group_table_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.group_table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.group_table_widget.setShowGrid(False)
+        self.group_table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.group_table_widget.cellClicked.connect(lambda row_index, _: self.row_clicked(row_index))
+        self.group_table_widget.cellDoubleClicked.connect(lambda row_index, _: self.row_double_clicked(row_index))
+
         self.group_combo_box = QtWidgets.QComboBox()
         self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
         self.group_combo_box.addItems(self.group_options.values())
@@ -48,7 +50,15 @@ class NavigationPanel(QtWidgets.QFrame):
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vertical_layout.addWidget(self.group_combo_box)
-        self.vertical_layout.addWidget(self.group_container_scroll_area)
+        self.vertical_layout.addWidget(self.group_table_widget)
+
+    def row_clicked(self, row_index: int):
+        self.group_table_widget.setCurrentCell(row_index, 0)
+        self.group_clicked.emit(self.group_table_widget.cellWidget(row_index, 0).tracks)
+
+    def row_double_clicked(self, row_index: int):
+        self.group_table_widget.setCurrentCell(row_index, 0)
+        self.group_double_clicked.emit(self.group_table_widget.cellWidget(row_index, 0).tracks)
 
     def _load_groups(self, key: int = 0):
         self.groups = defaultdict(lambda: [])
@@ -64,39 +74,30 @@ class NavigationPanel(QtWidgets.QFrame):
                 self.groups[group_key].append(track)
 
         self.groups = {x: self.groups[x] for x in sorted(self.groups)}
-        for group in self.groups:
+        self.group_table_widget.setRowCount(len(self.groups))
+        for i, group in enumerate(self.groups):
             title = group
             subtitle = str(str(len(self.groups[group])) + " " + ("Tracks" if self.group_combo_box.currentIndex() == 0
                                                                  else "Tracks"))[:(-1 if len(self.groups[group])
                                                                                    == 1 else 10)]
-            group_widget = GroupWidget(title, subtitle, self.group_options[key], self.groups[group])
-            self.group_widgets.append(group_widget)
-            self.group_container_layout.addWidget(group_widget)
-
-        for i, group_widget in enumerate(self.group_widgets):
-            group_widget.clicked.connect(lambda clicked_group_widget: (self.update_selected_group_index(self.group_widgets.index(clicked_group_widget)),
-                                                                    self.group_clicked.emit(clicked_group_widget.tracks)))
-            group_widget.double_clicked.connect(lambda clicked_group_widget: (self.update_selected_group_index(i),
-                                                      self.group_double_clicked.emit(clicked_group_widget.tracks)))
-            group_widget.group_widgets = self.group_widgets
+            group_widget = GroupWidget(title, subtitle, self.group_options[key], self.groups[group], i)
+            group_widget.clicked.connect(self.row_clicked)
+            group_widget.double_clicked.connect(self.row_double_clicked)
+            self.group_table_widget.setCellWidget(i, 0, group_widget)
+            self.group_table_widget.setRowHeight(i, group_widget.height())
 
     def group_key_changed(self, new_key: int):
-        delete_items(self.group_container_layout)
         self._load_groups(new_key)
 
     def refresh_groups(self):
-        delete_items(self.group_container_layout)
         self._load_groups(self.group_combo_box.currentIndex())
-
-    def update_selected_group_index(self, index: int):
-        self.selected_group_index = index
 
 
 class GroupWidget(QFrame):
-    clicked = pyqtSignal(QFrame)
-    double_clicked = pyqtSignal(QFrame)
+    clicked = pyqtSignal(int)
+    double_clicked = pyqtSignal(int)
 
-    def __init__(self, title: str, subtitle: str, group_type: str, tracks: List[Track]):
+    def __init__(self, title: str, subtitle: str, group_type: str, tracks: List[Track], index: int):
         super().__init__()
         self.default_stylesheet = "GroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
         self.selected_stylesheet = "GroupWidget {background-color: rgba(0, 0, 0, 0.3)}"
@@ -107,7 +108,7 @@ class GroupWidget(QFrame):
         self.subtitle = subtitle
         self.tracks = tracks
         self.tag_manager = TagManager()
-        self.group_widgets = []
+        self.index = index
 
         self.title_label = ElidedLabel(self.title)
         self.title_label.clicked.connect(self.mousePressEvent)
@@ -138,13 +139,7 @@ class GroupWidget(QFrame):
         self.horizontal_layout.addWidget(self.text_widget)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        for group_widget in self.group_widgets:
-            group_widget.setStyleSheet(self.default_stylesheet)
-        self.setStyleSheet(self.selected_stylesheet)
-        self.clicked.emit(self)
+        self.clicked.emit(self.index)
 
     def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
-        for group_widget in self.group_widgets:
-            group_widget.setStyleSheet(self.default_stylesheet)
-        self.setStyleSheet(self.selected_stylesheet)
-        self.double_clicked.emit(self)
+        self.double_clicked.emit(self.index)
