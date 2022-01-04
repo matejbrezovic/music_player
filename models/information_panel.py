@@ -141,6 +141,7 @@ class TrackGroupWidget(QFrame):
         self.setFixedHeight(60)
 
         self.title_label = ElidedLabel(self.title)
+        self.title_label.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.title_label.clicked.connect(self.mousePressEvent)
         self.title_label.double_clicked.connect(self.mouseDoubleClickEvent)
         self.subtitle_label = ElidedLabel(self.subtitle)
@@ -155,6 +156,12 @@ class TrackGroupWidget(QFrame):
                                                               Qt.AspectRatioMode.KeepAspectRatio,
                                                               Qt.TransformationMode.SmoothTransformation))
 
+        self.time_label = QLabel(format_seconds(self.track.length))
+        # self.time_label.setStyleSheet("background-color: red")
+        self.time_label.setFixedWidth(40)
+        self.time_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.time_label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+
         self.text_widget = QWidget()
         self.vertical_layout = QtWidgets.QVBoxLayout(self.text_widget)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
@@ -164,9 +171,11 @@ class TrackGroupWidget(QFrame):
         self.vertical_layout.addWidget(self.subtitle_label)
 
         self.horizontal_layout = QtWidgets.QHBoxLayout(self)
+        # self.horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignBaseline)
         self.horizontal_layout.setContentsMargins(0, 0, 0, 0)
         self.horizontal_layout.addWidget(self.image_label)
         self.horizontal_layout.addWidget(self.text_widget)
+        self.horizontal_layout.addWidget(self.time_label)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         self.clicked.emit(self.index)
