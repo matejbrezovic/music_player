@@ -24,6 +24,11 @@ class InformationPanel(QtWidgets.QFrame):
         self.setStyleSheet("QFrame#information_panel {background-color: rgba(255, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH * 1.8)
 
+        # policy = QSizePolicy()
+        # policy.setHorizontalStretch(0)
+        # policy.setVerticalStretch(0)
+        # self.setSizePolicy(policy)
+
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -42,11 +47,9 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.playing_tracks_table_widget.setShowGrid(False)
         self.playing_tracks_table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.playing_tracks_table_widget.cellClicked.connect(lambda row_index, _: self.row_clicked(row_index))
-        self.playing_tracks_table_widget.cellDoubleClicked.connect(lambda row_index, _:
-                                                                   self.row_double_clicked(row_index))
-        self.playing_tracks_scroll_area_widget = QWidget()
-        self.playing_tracks_layout = QVBoxLayout(self.playing_tracks_scroll_area_widget)
+        self.playing_tracks_table_widget.setStyleSheet(
+            "selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black")
+        self.playing_tracks_table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
         self.playing_tracks_widget_layout.addWidget(QLabel("Playing Tracks"))
         self.playing_tracks_widget_layout.addWidget(self.playing_tracks_table_widget)
@@ -82,7 +85,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.vertical_splitter.setSizes([1, 1])
         self.main_layout.addWidget(self.vertical_splitter)
         self.set_playing_tracks(TracksRepository().get_tracks())
-        self.set_currently_playing_track(TracksRepository().get_tracks()[0])
+        # self.set_currently_playing_track(TracksRepository().get_tracks()[0])
 
     def row_clicked(self, row_index: int):
         self.playing_tracks_table_widget.setCurrentCell(row_index, 0)
@@ -109,8 +112,8 @@ class InformationPanel(QtWidgets.QFrame):
             samplerate = f'{str(round(f["#samplerate"].first / 1000, 1))} kHz'
             bitrate = f'{str(math.floor(f["#bitrate"].first / 1000))}k'
             channels = "Stereo" if f["#channels"].first == 2 else "Mono"
-
-            return f"{extension} {bitrate}, {samplerate}, {channels}, {datetime.timedelta(seconds=track.length)}"
+            print(track.length)
+            return f"{extension} {bitrate}, {samplerate}, {channels}, {format_seconds(track.length)}"
 
         self.currently_playing_track_title.setText(track.title)
         self.currently_playing_track_info.setText(get_track_info(track))
@@ -131,8 +134,8 @@ class TrackGroupWidget(QFrame):
         self.tag_manager = TagManager()
         self.index = index
 
-        self.default_stylesheet = "TrackGroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
-        self.selected_stylesheet = "TrackGroupWidget {background-color: rgba(0, 0, 0, 0.3)}"
+        self.default_stylesheet = ""  # "TrackGroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
+        # self.selected_stylesheet = "TrackGroupWidget {background-color: rgba(0, 0, 0, 0.3)}"
         self.setStyleSheet(self.default_stylesheet)
         self.setContentsMargins(0, 0, 0, 0)
         self.setFixedHeight(60)

@@ -1,3 +1,5 @@
+import datetime
+
 import mutagen
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -116,6 +118,19 @@ def get_artwork_pixmap(file_path: str, default: str = "album"):
         else:
             pixmap = QPixmap("icons/misc.png")
     return pixmap
+
+
+def get_formatted_time(track_duration: int):
+    hours = int(track_duration / 3600000)
+    minutes = int((track_duration / 60000) % 60)
+    seconds = int((track_duration / 1000) % 60)
+
+    return f'{str(hours) + ":" if hours else ""}{"0" + str(minutes) if hours else minutes}:' \
+           f'{"0" + str(seconds) if seconds < 10 else seconds}'
+
+
+def format_seconds(time_in_seconds: int):
+    return str(datetime.timedelta(seconds=time_in_seconds)).replace("0:", "")
 
 
 def delete_grid_layout_items(layout: QGridLayout):

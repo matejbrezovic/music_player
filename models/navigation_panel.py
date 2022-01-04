@@ -17,7 +17,7 @@ class NavigationPanel(QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.parent = parent
+        # self.parent = parent
         self.setStyleSheet("NavigationPanel {background-color: rgba(0, 212, 88, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
@@ -39,10 +39,11 @@ class NavigationPanel(QFrame):
         self.group_table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.group_table_widget.setShowGrid(False)
         self.group_table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.group_table_widget.cellClicked.connect(lambda row_index, _: self.row_clicked(row_index))
-        self.group_table_widget.cellDoubleClicked.connect(lambda row_index, _: self.row_double_clicked(row_index))
+        self.group_table_widget.setStyleSheet("selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black")
+        self.group_table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
         self.group_combo_box = QtWidgets.QComboBox()
+        # self.group_combo_box.setAnimated(False)
         self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
         self.group_combo_box.addItems(self.group_options.values())
 
@@ -99,8 +100,8 @@ class GroupWidget(QFrame):
 
     def __init__(self, title: str, subtitle: str, group_type: str, tracks: List[Track], index: int):
         super().__init__()
-        self.default_stylesheet = "GroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
-        self.selected_stylesheet = "GroupWidget {background-color: rgba(0, 0, 0, 0.3)}"
+        self.default_stylesheet = ""  # "GroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
+        # self.selected_stylesheet = "GroupWidget {background-color: rgba(0, 0, 0, 0.3)}"
         self.setStyleSheet(self.default_stylesheet)
         self.setContentsMargins(0, 0, 0, 0)
         self.setFixedHeight(60)

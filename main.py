@@ -4,8 +4,9 @@ from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import *
 
+from models.add_files_dialog import AddFilesDialog
 from models.audio_controller import AudioController
-from models.dialogs import *
+from models.scan_folders_dialog import *
 from models.information_panel import InformationPanel
 from models.main_panel import MainPanel
 from models.navigation_panel import NavigationPanel
@@ -16,15 +17,17 @@ class MainWindowUi(QtWidgets.QMainWindow):
         super().__init__()
 
         self.scan_folders_dialog = ScanFoldersDialog()
+        self.add_files_dialog = AddFilesDialog()
 
         self._setup_ui()
         self._setup_signals()
 
         self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
+        self.add_files_dialog.finished.connect(self.navigation_panel.refresh_groups )
 
         self.setWindowTitle('music player v0.0.6')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
-        self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
+        # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
         self.show()
         self.main_panel.track_view_widget.update_column_width()
@@ -45,6 +48,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         file_menu = QMenu("&File", self)
         add_files_action = QAction("&Add Files to Library", self)
+        add_files_action.triggered.connect(lambda: self.add_files_dialog.exec())
         scan_folders_action = QAction("&Scan Folders for New Files", self)
         scan_folders_action.triggered.connect(lambda: self.scan_folders_dialog.exec())
 
@@ -59,13 +63,16 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.information_panel = InformationPanel(self)
         self.audio_controller = AudioController(self)
 
-        self.horizontal_splitter = QSplitter(Qt.Orientation.Horizontal)
+        self.horizontal_splitter = HorizontalSplitter()
 
         self.horizontal_splitter.addWidget(self.navigation_panel)
         self.horizontal_splitter.addWidget(self.main_panel)
         self.horizontal_splitter.addWidget(self.information_panel)
         self.horizontal_splitter.setSizes([int(PANEL_MIN_WIDTH * 1.5), MAIN_PANEL_MIN_WIDTH * 2,
                                            int(PANEL_MIN_WIDTH * 1.5)])
+        self.horizontal_splitter.setStretchFactor(0, 0)
+        self.horizontal_splitter.setStretchFactor(1, 1)
+        self.horizontal_splitter.setStretchFactor(2, 0)
 
         self.central_widget_layout.addWidget(self.horizontal_splitter)
         self.central_widget_layout.addWidget(self.audio_controller)
@@ -93,7 +100,31 @@ class MainWindowUi(QtWidgets.QMainWindow):
                                                                     self.audio_controller.play()))
 
 
+class HorizontalSplitter(QSplitter):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setOrientation(Qt.Orientation.Horizontal)
+        self.last_sizes = self.sizes()
+        self.splitterMoved.connect(self.splitter_moved)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        try:
+            if self.sizes()[0] > self.last_sizes[0] or self.sizes()[2] > self.last_sizes[2]:
+                first = self.last_sizes[0]
+                third = self.last_sizes[2]
+                second = self.width() - first - third
+                self.setSizes([first, second, third])
+        except IndexError:
+            self.last_sizes = self.sizes()
+        self.last_sizes = self.sizes()
+
+    def splitter_moved(self):
+        self.last_sizes = self.sizes()
+
+
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
+    # AddFilesDialog().exec()
     mainWindow = MainWindowUi()
     sys.exit(app.exec())

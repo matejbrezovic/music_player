@@ -76,29 +76,10 @@ class ScanFoldersDialog(QDialog):
                 for file in files:
                     if file.rsplit(".")[-1] in SUPPORTED_AUDIO_FORMATS:
                         found_file_paths.append(f"{root}/{file}")
-        tracks = self.convert_file_paths_to_tracks([file_path.replace("\\", "/").replace("//", "/") for
+        tracks = TracksRepository().convert_file_paths_to_tracks([file_path.replace("\\", "/").replace("//", "/") for
                                                     file_path in found_file_paths])
         TracksRepository().save_tracks(tracks)
         self.done(0)
-
-    def convert_file_paths_to_tracks(self, file_paths: List[str]) -> List[Track]:
-        tracks = []
-        tag_manager = TagManager()
-        for i, file_path in enumerate(file_paths):
-            loaded_file = tag_manager.load_file(file_path)
-            tracks.append(Track(
-                i,
-                file_path,
-                file_path.rsplit("/")[-1],
-                loaded_file["album"].first,
-                loaded_file["artist"].first,
-                loaded_file["composer"].first,
-                loaded_file["genre"].first,
-                loaded_file["year"].first if loaded_file["year"].first else None,
-                int(loaded_file["#length"].first),
-                ""  # get_artwork_pixmap(file_path, "album")
-            ))
-        return tracks
 
     def update_selected_folders(self, paths: List[str]) -> None:
         if not paths:

@@ -11,6 +11,7 @@ from data_models.track import Track
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
 from repositories.tracks_repository import TracksRepository
+from utils import get_formatted_time
 
 
 class AudioController(QtWidgets.QFrame):
@@ -167,18 +168,9 @@ class AudioController(QtWidgets.QFrame):
         self.player.setSource(QUrl(self.current_playlist.currently_playing.file_path))
         self.player.play()
 
-    @staticmethod
-    def get_formatted_time(time_in_seconds: int):
-        hours = int(time_in_seconds / 3600000)
-        minutes = int((time_in_seconds / 60000) % 60)
-        seconds = int((time_in_seconds / 1000) % 60)
-
-        return f'{str(hours) + ":" if hours else ""}{"0" + str(minutes) if hours else minutes}:' \
-               f'{"0" + str(seconds) if seconds < 10 else seconds}'
-
     def player_duration_changed(self, duration):
         self.seek_slider.setRange(0, duration - 120)
-        self.seek_slider_time_label.setText(self.get_formatted_time(self.player.duration()))
+        self.seek_slider_time_label.setText(get_formatted_time(self.player.duration()))
 
     def player_position_changed(self, position, sender_type=False):
         if not sender_type:
@@ -187,8 +179,8 @@ class AudioController(QtWidgets.QFrame):
                     self.next_button_clicked()
                 else:
                     self.seek_slider.setSliderPosition(position)
-                    self.seek_slider_time_label.setText(self.get_formatted_time(self.player.position()) + "/" +
-                                                        self.get_formatted_time(self.player.duration()))
+                    self.seek_slider_time_label.setText(get_formatted_time(self.player.position()) + "/" +
+                                                        get_formatted_time(self.player.duration()))
 
     def pause(self, fade=True):
         self.play_button.setIcon(self.play_icon)
