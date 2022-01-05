@@ -121,6 +121,27 @@ class InformationPanel(QtWidgets.QFrame):
         self.currently_playing_track_image_label = ImageLabel(get_artwork_pixmap(track.file_path))
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_image_label)
 
+        for i in range(self.playing_tracks_table_widget.rowCount()):
+            track_widget: TrackGroupWidget = self.playing_tracks_table_widget.cellWidget(i, 0)
+            if track_widget.track == track:
+                track_widget.set_playing()
+            else:
+                track_widget.reset()
+
+    def set_playing_track_paused(self, track: Track):
+        for i in range(self.playing_tracks_table_widget.rowCount()):
+            track_widget: TrackGroupWidget = self.playing_tracks_table_widget.cellWidget(i, 0)
+            if track_widget.track == track:
+                track_widget.set_paused()
+                break
+
+    def set_playing_track_unpaused(self, track: Track):
+        for i in range(self.playing_tracks_table_widget.rowCount()):
+            track_widget: TrackGroupWidget = self.playing_tracks_table_widget.cellWidget(i, 0)
+            if track_widget.track == track:
+                track_widget.set_playing()
+                break
+
 
 class TrackGroupWidget(QFrame):
     clicked = pyqtSignal(int)
@@ -149,6 +170,8 @@ class TrackGroupWidget(QFrame):
         self.subtitle_label.double_clicked.connect(self.mouseDoubleClickEvent)
         self.subtitle_label.setStyleSheet("font-size: 10px;")
         self.image_label = QLabel()
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.image_label.setStyleSheet("background-color: green")
         self.image_label.setFixedSize(60, 60)
         self.artwork_pixmap = get_artwork_pixmap(track.file_path, "album")
         self.image_label.setPixmap(self.artwork_pixmap.scaled(self.image_label.width() - 4,
@@ -171,11 +194,37 @@ class TrackGroupWidget(QFrame):
         self.vertical_layout.addWidget(self.subtitle_label)
 
         self.horizontal_layout = QtWidgets.QHBoxLayout(self)
-        # self.horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignBaseline)
+        # self.horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.horizontal_layout.setSpacing(2)
         self.horizontal_layout.setContentsMargins(0, 0, 0, 0)
         self.horizontal_layout.addWidget(self.image_label)
         self.horizontal_layout.addWidget(self.text_widget)
         self.horizontal_layout.addWidget(self.time_label)
+
+    def set_playing(self):
+        if self.horizontal_layout.count() == 3:
+            self.play_label = QLabel()
+            self.play_label.setContentsMargins(0, 1, 0, 0)
+            self.play_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+            # self.play_label.setStyleSheet("background-color: red")
+            self.play_label.setFixedWidth(15)
+            self.horizontal_layout.insertWidget(1, self.play_label)
+        self.play_label.setPixmap(QPixmap("icons/speaker_playing.png").scaled(self.play_label.width(),
+                                                                              self.play_label.width(),
+                                  Qt.AspectRatioMode.KeepAspectRatio,
+                                  Qt.TransformationMode.SmoothTransformation))
+        self.horizontal_layout.insertWidget(1, self.play_label)
+        # self.horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+    def set_paused(self):
+        self.play_label.setPixmap(QPixmap("icons/speaker_muted.png").scaled(self.play_label.width(),
+                                                                              self.play_label.width(),
+                                                                              Qt.AspectRatioMode.KeepAspectRatio,
+                                                                              Qt.TransformationMode.SmoothTransformation))
+
+    def reset(self):
+        if self.horizontal_layout.count() == 4:
+            self.horizontal_layout.itemAt(1).widget().deleteLater()
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         self.clicked.emit(self.index)

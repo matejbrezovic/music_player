@@ -17,6 +17,8 @@ from utils import get_formatted_time
 class AudioController(QtWidgets.QFrame):
     updated_playing_track = pyqtSignal(Track)
     updated_playlist = pyqtSignal(list)
+    paused = pyqtSignal(Track)
+    unpaused = pyqtSignal(Track)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -186,11 +188,13 @@ class AudioController(QtWidgets.QFrame):
         self.play_button.setIcon(self.play_icon)
         self.user_action = 2
         self.player.pause(fade=fade)
+        self.paused.emit(self.get_current_track())
 
     def unpause(self, fade=True):
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
         self.player.play(fade=fade)
+        self.unpaused.emit(self.get_current_track())
 
     def play_pause_button_clicked(self):
         if self.user_action <= 0:
