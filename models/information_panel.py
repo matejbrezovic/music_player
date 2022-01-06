@@ -62,6 +62,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_info_scroll_area.setWidgetResizable(True)
         self.track_info_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.track_info_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # self.track_info_scroll_area.scrollContentsBy(1, 1)
         self.track_info_scroll_area_widget = QWidget()
         self.track_info_scroll_area_widget_layout = QVBoxLayout(self.track_info_scroll_area_widget)
         self.track_info_scroll_area_widget_layout.setContentsMargins(0, 0, 0, 0)
