@@ -63,7 +63,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.information_panel = InformationPanel(self)
         self.audio_controller = AudioController(self)
 
-        self.horizontal_splitter = HorizontalSplitter()
+        self.horizontal_splitter = FixedHorizontalSplitter()
 
         self.horizontal_splitter.addWidget(self.navigation_panel)
         self.horizontal_splitter.addWidget(self.main_panel)
@@ -77,7 +77,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.central_widget_layout.addWidget(self.horizontal_splitter)
         self.central_widget_layout.addWidget(self.audio_controller)
 
-    def _setup_signals(self):
+    def _setup_signals(self) -> None:
         self.main_panel.track_double_clicked.connect(lambda track: (self.audio_controller.set_playlist(
                                                                     self.main_panel.displayed_tracks),
                                                                     self.audio_controller.set_playlist_index(
@@ -102,32 +102,8 @@ class MainWindowUi(QtWidgets.QMainWindow):
                                                                     self.audio_controller.play()))
 
 
-class HorizontalSplitter(QSplitter):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.setOrientation(Qt.Orientation.Horizontal)
-        self.last_sizes = self.sizes()
-        self.splitterMoved.connect(self.splitter_moved)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        try:
-            if self.sizes()[0] > self.last_sizes[0] or self.sizes()[2] > self.last_sizes[2]:
-                first = self.last_sizes[0]
-                third = self.last_sizes[2]
-                second = self.width() - first - third
-                self.setSizes([first, second, third])
-        except IndexError:
-            self.last_sizes = self.sizes()
-        self.last_sizes = self.sizes()
-
-    def splitter_moved(self):
-        self.last_sizes = self.sizes()
-
-
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)
     app.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
-    # AddFilesDialog().exec()
     mainWindow = MainWindowUi()
     sys.exit(app.exec())

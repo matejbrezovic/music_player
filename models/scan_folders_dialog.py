@@ -5,9 +5,7 @@ from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QScr
 
 from config import Config
 from constants import *
-from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
-from tag_manager import TagManager
 from utils import *
 
 
@@ -67,7 +65,7 @@ class ScanFoldersDialog(QDialog):
         config.load(DEFAULT_CONFIG_PATH)
         self.update_selected_folders(config.get_setting("preselected_folders"))
 
-    def proceed_button_clicked(self):
+    def proceed_button_clicked(self) -> None:
         config = Config()
         config.load(DEFAULT_CONFIG_PATH)
         found_file_paths = []
@@ -165,8 +163,8 @@ class SelectFoldersDialog(QDialog):
 
         self.select_preselected_folders()
 
-    def select_preselected_folders(self):
-        def get_child_by_text(item, text: str):
+    def select_preselected_folders(self) -> None:
+        def get_child_by_text(item: QTreeWidgetItem, text: str) -> QTreeWidgetItem:
             for child in [item.child(i) for i in range(item.childCount())]:
                 if child.text(0) == text:
                     return child
@@ -175,45 +173,45 @@ class SelectFoldersDialog(QDialog):
             path_parts = path.split("/")
             item = self.dir_tree_widget.invisibleRootItem()
             for path_part in path_parts[1:-1]:
-                self.load_immediate_directory_dir_tree_widget(item.full_path if isinstance(item, self.DirectoryItem)
+                self.load_immediate_directory_dir_tree_widget(item.full_path if isinstance(item, DirectoryItem)
                                                               else "/", item)
                 item = get_child_by_text(item, path_part)
                 item.setExpanded(True)
-            self.load_immediate_directory_dir_tree_widget(item.full_path if isinstance(item, self.DirectoryItem)
+            self.load_immediate_directory_dir_tree_widget(item.full_path if isinstance(item, DirectoryItem)
                                                           else "/", item)
             get_child_by_text(item, path_parts[-1]).setCheckState(0, Qt.CheckState.Checked)
 
-    def load_immediate_directory_dir_tree_widget(self, path, tree: Union[QTreeWidget, QTreeWidgetItem]):
+    def load_immediate_directory_dir_tree_widget(self, path: str, tree: Union[QTreeWidget, QTreeWidgetItem]) -> None:
         if isinstance(tree, QTreeWidgetItem) \
-                and (not tree.child(0) or not isinstance(tree.child(0), self.PlaceholderItem)):
+                and (not tree.child(0) or not isinstance(tree.child(0), PlaceholderItem)):
             return
         try:
             self._is_user_action = False
-            if isinstance(tree, self.DirectoryItem):
+            if isinstance(tree, DirectoryItem):
                 tree.takeChild(0)
             for element in [x for x in os.listdir(path) if os.path.isdir(path + ("/" if path != "/" else "") + x)]:
                 path_info = path + ("/" if path != "/" else "") + element
-                new_item = self.DirectoryItem(tree, [os.path.basename(element)], full_path=path_info)
+                new_item = DirectoryItem(tree, [os.path.basename(element)], full_path=path_info)
                 new_item.setFlags(Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsUserCheckable)
                 new_item.setCheckState(0, Qt.CheckState.Unchecked if isinstance(tree, QTreeWidget) else
                                        (Qt.CheckState.Checked if tree.checkState(0) == Qt.CheckState.Checked else
                                         Qt.CheckState.Unchecked))
-                self.PlaceholderItem(new_item)
+                PlaceholderItem(new_item)
         except PermissionError:
             pass
         self._is_user_action = True
 
-    def tree_item_clicked(self, item):
+    def tree_item_clicked(self, item: QTreeWidgetItem) -> None:
         self.load_immediate_directory_dir_tree_widget(item.full_path, item)
 
-    def tree_item_changed(self, item):
-        def change_parents_checked_state(item):
+    def tree_item_changed(self, item: QTreeWidgetItem) -> None:
+        def change_parents_checked_state(item: DirectoryItem) -> None:
             for parent in item.get_parents():
                 children_check_state = parent.get_all_children_state()
                 parent.setCheckState(0, Qt.CheckState.PartiallyChecked if
                                      children_check_state != Qt.CheckState.Unchecked else Qt.CheckState.Unchecked)
 
-        def change_children_checked_state(item):
+        def change_children_checked_state(item: DirectoryItem) -> None:
             for child in item.get_children():
                 child.setCheckState(0, item.checkState(0))
 
@@ -225,7 +223,7 @@ class SelectFoldersDialog(QDialog):
         change_parents_checked_state(item)
         self._is_user_action = True
 
-    def ok_button_clicked(self):
+    def ok_button_clicked(self) -> None:
         def get_main_checked_items(parent_item=self.dir_tree_widget.invisibleRootItem()):
             checked_items = []
             for item in [parent_item.child(i) for i in range(parent_item.childCount())]:
@@ -238,36 +236,38 @@ class SelectFoldersDialog(QDialog):
         self.parent.update_selected_folders([item.full_path for item in get_main_checked_items()])
         self.done(0)
 
-    class DirectoryItem(QTreeWidgetItem):
-        def __init__(self, *args, full_path=None):
-            super().__init__(*args)
-            self.full_path = full_path
 
-        def get_children(self):
-            children = []
-            for i in range(self.childCount()):
-                children.append(self.child(i)) if not self.child(i).childCount() \
-                    else children.extend([self.child(i)] + self.child(i).get_children())
-            return children
+class DirectoryItem(QTreeWidgetItem):
+    def __init__(self, *args, full_path=None):
+        super().__init__(*args)
+        self.full_path = full_path
 
-        def get_parents(self):
-            parents = []
-            item = self
-            while True:
-                try:
-                    item = item.parent()
-                    parents.append(item)
-                except AttributeError:
-                    break
-            return parents[:-1]
+    def get_children(self):
+        children = []
+        for i in range(self.childCount()):
+            children.append(self.child(i)) if not self.child(i).childCount() \
+                else children.extend([self.child(i)] + self.child(i).get_children())
+        return children
 
-        def get_all_children_state(self):
-            state = self.child(0).checkState(0)
-            for child in self.get_children():
-                if child.checkState(0) != state:
-                    return Qt.CheckState.PartiallyChecked
-            return state
+    def get_parents(self) -> List[QTreeWidgetItem]:
+        parents = []
+        item = self
+        while True:
+            try:
+                item = item.parent()
+                parents.append(item)
+            except AttributeError:
+                break
+        return parents[:-1]
 
-    class PlaceholderItem(DirectoryItem):
-        def __init__(self, parent):
-            super().__init__(parent, ["/"])
+    def get_all_children_state(self) -> Qt.CheckState:
+        state = self.child(0).checkState(0)
+        for child in self.get_children():
+            if child.checkState(0) != state:
+                return Qt.CheckState.PartiallyChecked
+        return state
+
+
+class PlaceholderItem(DirectoryItem):
+    def __init__(self, parent):
+        super().__init__(parent, ["/"])

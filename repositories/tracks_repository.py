@@ -23,11 +23,11 @@ class TracksRepository:
             json.dump([self._encode_track(t) for t in tracks], f)
 
     @staticmethod
-    def _encode_track(track: Track):
+    def _encode_track(track: Track) -> dict:
         return track.__dict__
 
     @staticmethod
-    def _decode_track(encoded_track: dict):
+    def _decode_track(encoded_track: dict) -> Track:
         return Track(*encoded_track.values())
 
     @staticmethod

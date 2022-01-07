@@ -17,7 +17,6 @@ class NavigationPanel(QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        # self.parent = parent
         self.setStyleSheet("NavigationPanel {background-color: rgba(0, 212, 88, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
@@ -39,11 +38,11 @@ class NavigationPanel(QFrame):
         self.group_table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.group_table_widget.setShowGrid(False)
         self.group_table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.group_table_widget.setStyleSheet("selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black")
+        self.group_table_widget.setStyleSheet("selection-background-color: rgba(166, 223, 231, 0.8); "
+                                              "selection-color: black")
         self.group_table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
         self.group_combo_box = QtWidgets.QComboBox()
-        # self.group_combo_box.setAnimated(False)
         self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
         self.group_combo_box.addItems(self.group_options.values())
 
@@ -51,17 +50,18 @@ class NavigationPanel(QFrame):
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vertical_layout.addWidget(self.group_combo_box)
+        # noinspection PyTypeChecker
         self.vertical_layout.addWidget(self.group_table_widget)
 
-    def row_clicked(self, row_index: int):
+    def row_clicked(self, row_index: int) -> None:
         self.group_table_widget.setCurrentCell(row_index, 0)
         self.group_clicked.emit(self.group_table_widget.cellWidget(row_index, 0).tracks)
 
-    def row_double_clicked(self, row_index: int):
+    def row_double_clicked(self, row_index: int) -> None:
         self.group_table_widget.setCurrentCell(row_index, 0)
         self.group_double_clicked.emit(self.group_table_widget.cellWidget(row_index, 0).tracks)
 
-    def _load_groups(self, key: int = 0):
+    def _load_groups(self, key: int = 0) -> None:
         self.groups = defaultdict(lambda: [])
         self.group_widgets = []
 
@@ -87,10 +87,10 @@ class NavigationPanel(QFrame):
             self.group_table_widget.setCellWidget(i, 0, group_widget)
             self.group_table_widget.setRowHeight(i, group_widget.height())
 
-    def group_key_changed(self, new_key: int):
+    def group_key_changed(self, new_key: int) -> None:
         self._load_groups(new_key)
 
-    def refresh_groups(self):
+    def refresh_groups(self) -> None:
         self._load_groups(self.group_combo_box.currentIndex())
 
 
@@ -142,5 +142,5 @@ class GroupWidget(QFrame):
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         self.clicked.emit(self.index)
 
-    def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
+    def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
         self.double_clicked.emit(self.index)

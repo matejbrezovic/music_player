@@ -20,15 +20,6 @@ class TrackViewWidget(QFrame):
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        class HeaderSplitter(QSplitter):
-            resized = pyqtSignal()
-            def __init__(self, parent=None):
-                super().__init__(parent)
-
-            def resizeEvent(self, event):
-                self.resized.emit()
-                super().resizeEvent(event)
-
         self.header_splitter = HeaderSplitter()
         self.header_splitter.setOrientation(Qt.Orientation.Horizontal)
         self.header_splitter.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
@@ -61,7 +52,7 @@ class TrackViewWidget(QFrame):
         self.main_layout.addWidget(self.header_splitter)
         self.main_layout.addWidget(self.table_widget)
 
-    def update_column_width(self):
+    def update_column_width(self) -> None:
         total_sizes = sum(self.header_splitter.sizes())
         try:
             for i in range(len(self.column_names)):
@@ -69,7 +60,7 @@ class TrackViewWidget(QFrame):
         except ZeroDivisionError:
             pass
 
-    def set_tracks(self, tracks: List[Track]):
+    def set_tracks(self, tracks: List[Track]) -> None:
         self.table_widget.setRowCount(len(tracks))
         self.table_widget.clearSelection()
         self.displayed_tracks = tracks
@@ -84,11 +75,11 @@ class TrackViewWidget(QFrame):
                 self.table_widget.setItem(i, j, item)
             self.table_widget.setRowHeight(i, 22)
 
-    def select_row_by_index(self, index: int):
+    def select_row_by_index(self, index: int) -> None:
         self.table_widget.selectRow(index)
         self.selected_row_index = index
 
-    def select_row_by_track(self, track: Track):
+    def select_row_by_track(self, track: Track) -> None:
         if track not in self.displayed_tracks:
             self.table_widget.clearSelection()
             return

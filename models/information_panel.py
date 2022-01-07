@@ -88,15 +88,15 @@ class InformationPanel(QtWidgets.QFrame):
         self.set_playing_tracks(TracksRepository().get_tracks())
         # self.set_currently_playing_track(TracksRepository().get_tracks()[0])
 
-    def row_clicked(self, row_index: int):
+    def row_clicked(self, row_index: int) -> None:
         self.playing_tracks_table_widget.setCurrentCell(row_index, 0)
         self.track_clicked.emit(self.playing_tracks_table_widget.cellWidget(row_index, 0).track)
 
-    def row_double_clicked(self, row_index: int):
+    def row_double_clicked(self, row_index: int) -> None:
         self.playing_tracks_table_widget.setCurrentCell(row_index, 0)
         self.track_double_clicked.emit(self.playing_tracks_table_widget.cellWidget(row_index, 0).track)
 
-    def set_playing_tracks(self, tracks: List[Track]):
+    def set_playing_tracks(self, tracks: List[Track]) -> None:
         self.playing_tracks_table_widget.clearSelection()
         self.playing_tracks_table_widget.setRowCount(len(tracks))
         for i, track in enumerate(tracks):
@@ -106,7 +106,7 @@ class InformationPanel(QtWidgets.QFrame):
             self.playing_tracks_table_widget.setCellWidget(i, 0, track_group_widget)
             self.playing_tracks_table_widget.setRowHeight(i, track_group_widget.height())
 
-    def set_currently_playing_track(self, track: Track):
+    def set_currently_playing_track(self, track: Track) -> None:
         def get_track_info(track: Track) -> str:
             f = TagManager().load_file(track.file_path)
             extension = track.file_path.split(".")[-1].upper()
@@ -129,14 +129,14 @@ class InformationPanel(QtWidgets.QFrame):
             else:
                 track_widget.reset()
 
-    def set_playing_track_paused(self, track: Track):
+    def set_playing_track_paused(self, track: Track) -> None:
         for i in range(self.playing_tracks_table_widget.rowCount()):
             track_widget: TrackGroupWidget = self.playing_tracks_table_widget.cellWidget(i, 0)
             if track_widget.track == track:
                 track_widget.set_paused()
                 break
 
-    def set_playing_track_unpaused(self, track: Track):
+    def set_playing_track_unpaused(self, track: Track) -> None:
         for i in range(self.playing_tracks_table_widget.rowCount()):
             track_widget: TrackGroupWidget = self.playing_tracks_table_widget.cellWidget(i, 0)
             if track_widget.track == track:
@@ -202,7 +202,7 @@ class TrackGroupWidget(QFrame):
         self.horizontal_layout.addWidget(self.text_widget)
         self.horizontal_layout.addWidget(self.time_label)
 
-    def set_playing(self):
+    def set_playing(self) -> None:
         if self.horizontal_layout.count() == 3:
             self.play_label = QLabel()
             self.play_label.setContentsMargins(0, 1, 0, 0)
@@ -217,13 +217,13 @@ class TrackGroupWidget(QFrame):
         self.horizontal_layout.insertWidget(1, self.play_label)
         # self.horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-    def set_paused(self):
+    def set_paused(self) -> None:
         self.play_label.setPixmap(QPixmap("icons/speaker_muted.png").scaled(self.play_label.width(),
                                                                               self.play_label.width(),
                                                                               Qt.AspectRatioMode.KeepAspectRatio,
                                                                               Qt.TransformationMode.SmoothTransformation))
 
-    def reset(self):
+    def reset(self) -> None:
         if self.horizontal_layout.count() == 4:
             self.horizontal_layout.itemAt(1).widget().deleteLater()
 

@@ -4,7 +4,7 @@ import mutagen
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
-from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout
+from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout
 from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
@@ -18,7 +18,7 @@ def classify(module):
                                     for name in dir(module))})
 
 
-def delete_items(layout):
+def delete_items(layout: QLayout) -> None:
     if layout is not None:
         while layout.count():
             item = layout.takeAt(0)
@@ -29,7 +29,7 @@ def delete_items(layout):
                 delete_items(item.layout())
 
 
-def unparent_items(layout):
+def unparent_items(layout: QLayout) -> None:
     if layout is not None:
         while layout.count():
             item = layout.takeAt(0)
@@ -40,6 +40,20 @@ def unparent_items(layout):
                 delete_items(item.layout())
 
 
+def delete_grid_layout_items(layout: QGridLayout) -> None:
+    if layout is None:
+        return
+    for r in range(layout.rowCount()):
+        for c in range(layout.columnCount()):
+            item = layout.itemAtPosition(r, c)
+            if item is not None:
+                widget = item.widget()
+                if widget is not None:
+                    widget.deleteLater()
+    for i in range(layout.count()):
+        layout.takeAt(i)
+
+
 class ElidedLabel(QLabel):
     clicked = pyqtSignal(QLabel)
     double_clicked = pyqtSignal(QLabel)
@@ -48,15 +62,15 @@ class ElidedLabel(QLabel):
         super().__init__(*args, **kwargs)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
 
-    def paintEvent(self, event):
+    def paintEvent(self, event) -> None:
         metrics = QFontMetrics(self.font())
         elided = metrics.elidedText(self.text(), Qt.TextElideMode.ElideRight, self.width())
         QPainter(self).drawText(self.rect(), self.alignment(), elided)
 
-    def mousePressEvent(self, ev):
+    def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
         self.clicked.emit(self)
 
-    def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
+    def mouseDoubleClickEvent(self, ev: QtGui.QMouseEvent) -> None:
         self.double_clicked.emit(self)
 
 
@@ -79,7 +93,7 @@ class ImageLabel(QLabel):
         self.setPixmap(self.pixmap)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
+    def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
         if self.pixmap is not None:
             if self.pixmap.width() != 0 and self.width() != 0:
                 if self.pixmap.height() / self.pixmap.width() > self.height() / self.width():
@@ -91,11 +105,51 @@ class ImageLabel(QLabel):
 
                 self.setPixmap(displayed_image)
 
-    def heightForWidth(self, width):
+    def heightForWidth(self, width: int) -> int:
         return width
 
 
-def get_artwork_pixmap(file_path: str, default: str = "album"):
+class FixedHorizontalSplitter(QSplitter):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setOrientation(Qt.Orientation.Horizontal)
+        self.last_sizes = self.sizes()
+        self.splitterMoved.connect(self.splitter_moved)
+
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+        super().resizeEvent(event)
+        try:
+            if self.sizes()[0] > self.last_sizes[0] or self.sizes()[2] > self.last_sizes[2]:
+                first = self.last_sizes[0]
+                third = self.last_sizes[2]
+                second = self.width() - first - third
+                self.setSizes([first, second, third])
+        except IndexError:
+            self.last_sizes = self.sizes()
+        self.last_sizes = self.sizes()
+
+    def splitter_moved(self) -> None:
+        self.last_sizes = self.sizes()
+
+
+class QHLine(QFrame):
+    def __init__(self):
+        super(QHLine, self).__init__()
+        self.setFrameShape(QFrame.Shape.HLine)
+        self.setFrameShadow(QFrame.Shadow.Sunken)
+
+
+class HeaderSplitter(QSplitter):
+    resized = pyqtSignal()
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def resizeEvent(self, event) -> None:
+        self.resized.emit()
+        super().resizeEvent(event)
+
+
+def get_artwork_pixmap(file_path: str, default: str = "album") -> QPixmap:
     class NoArtworkError(Exception):
         pass
 
@@ -120,7 +174,7 @@ def get_artwork_pixmap(file_path: str, default: str = "album"):
     return pixmap
 
 
-def get_formatted_time(track_duration: int):
+def get_formatted_time(track_duration: int) -> str:
     hours = int(track_duration / 3600000)
     minutes = int((track_duration / 60000) % 60)
     seconds = int((track_duration / 1000) % 60)
@@ -129,26 +183,5 @@ def get_formatted_time(track_duration: int):
            f'{"0" + str(seconds) if seconds < 10 else seconds}'
 
 
-def format_seconds(time_in_seconds: int):
+def format_seconds(time_in_seconds: int) -> str:
     return str(datetime.timedelta(seconds=time_in_seconds)).replace("0:", "")
-
-
-def delete_grid_layout_items(layout: QGridLayout):
-    if layout is None:
-        return
-    for r in range(layout.rowCount()):
-        for c in range(layout.columnCount()):
-            item = layout.itemAtPosition(r, c)
-            if item is not None:
-                widget = item.widget()
-                if widget is not None:
-                    widget.deleteLater()
-    for i in range(layout.count()):
-        layout.takeAt(i)
-
-
-class QHLine(QFrame):
-    def __init__(self):
-        super(QHLine, self).__init__()
-        self.setFrameShape(QFrame.Shape.HLine)
-        self.setFrameShadow(QFrame.Shadow.Sunken)

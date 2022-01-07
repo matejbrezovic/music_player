@@ -40,14 +40,14 @@ class MainPanel(QtWidgets.QFrame):
         self.main_layout.addWidget(self.view_options_combo_box)
         self.main_layout.addWidget(self.track_view_widget)
 
-    def view_key_changed(self):
+    def view_key_changed(self) -> None:
         ...
 
-    def display_tracks(self, tracks: List[Track]):
+    def display_tracks(self, tracks: List[Track]) -> None:
         self.track_view_widget.set_tracks(tracks)
         self.displayed_tracks = tracks
 
-    def select_track(self, track: Track):
+    def select_track(self, track: Track) -> None:
         self.track_view_widget.select_row_by_track(track)
 
 
