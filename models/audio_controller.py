@@ -281,7 +281,6 @@ class SeekSlider(ImprovedSlider):
         self.backup_action = self.parent.user_action
         self.parent.player.setPosition(self.pixel_pos_to_range_value(event.pos()))
         self.backup_volume = self.parent.player.audio_output.volume()
-        self.parent.player.audio_output.setVolume(0)
         self.parent.pause(fade=False)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
