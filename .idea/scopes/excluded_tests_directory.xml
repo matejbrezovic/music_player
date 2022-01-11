@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="excluded tests directory" pattern="file[music_player]:*/&amp;&amp;!file[music_player]:tests/*" />
+</component>

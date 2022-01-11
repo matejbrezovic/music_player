@@ -29,15 +29,15 @@ def delete_items(layout: QLayout) -> None:
                 delete_items(item.layout())
 
 
-def unparent_items(layout: QLayout) -> None:
-    if layout is not None:
-        while layout.count():
-            item = layout.takeAt(0)
-            widget = item.widget()
-            if widget is not None:
-                widget.setParent(None)
-            else:
-                delete_items(item.layout())
+# def unparent_items(layout: QLayout) -> None:
+#     if layout is not None:
+#         while layout.count():
+#             item = layout.takeAt(0)
+#             widget = item.widget()
+#             if widget is not None:
+#                 widget.setParent(None)
+#             else:
+#                 delete_items(item.layout())
 
 
 def delete_grid_layout_items(layout: QGridLayout) -> None:
@@ -141,10 +141,11 @@ class QHLine(QFrame):
 
 class HeaderSplitter(QSplitter):
     resized = pyqtSignal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
-    def resizeEvent(self, event) -> None:
+    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         self.resized.emit()
         super().resizeEvent(event)
 

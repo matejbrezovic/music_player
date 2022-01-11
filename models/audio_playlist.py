@@ -1,5 +1,5 @@
 from random import shuffle
-from typing import List, Union
+from typing import List
 
 from data_models.track import Track
 
@@ -55,5 +55,3 @@ class AudioPlaylist:
 
     def update_currently_playing(self) -> None:
         self.currently_playing = self.playlist[self.playlist_index]
-
-

@@ -9,7 +9,7 @@ class Config:
     def add_setting(self, key: str, value: Any) -> None:
         self.settings[key] = value
 
-    def get_setting(self, key: str) -> None:
+    def get_setting(self, key: str) -> Any:
         return self.settings[key] if key in self.settings else None
 
     def save(self, file_path: str) -> None:

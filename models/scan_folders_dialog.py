@@ -1,5 +1,6 @@
-from typing import Union, List, Tuple
+from __future__ import annotations
 
+from typing import Union, List, Tuple
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QWidget, \
     QTreeWidgetItem, QTreeWidget, QCheckBox, QSpacerItem
 
@@ -75,7 +76,7 @@ class ScanFoldersDialog(QDialog):
                     if file.rsplit(".")[-1] in SUPPORTED_AUDIO_FORMATS:
                         found_file_paths.append(f"{root}/{file}")
         tracks = TracksRepository().convert_file_paths_to_tracks([file_path.replace("\\", "/").replace("//", "/") for
-                                                    file_path in found_file_paths])
+                                                                  file_path in found_file_paths])
         TracksRepository().save_tracks(tracks)
         self.done(0)
 
@@ -164,8 +165,8 @@ class SelectFoldersDialog(QDialog):
         self.select_preselected_folders()
 
     def select_preselected_folders(self) -> None:
-        def get_child_by_text(item: QTreeWidgetItem, text: str) -> QTreeWidgetItem:
-            for child in [item.child(i) for i in range(item.childCount())]:
+        def get_child_by_text(_item: QTreeWidgetItem, text: str) -> QTreeWidgetItem:
+            for child in [_item.child(i) for i in range(_item.childCount())]:
                 if child.text(0) == text:
                     return child
 
@@ -204,15 +205,15 @@ class SelectFoldersDialog(QDialog):
     def tree_item_clicked(self, item: QTreeWidgetItem) -> None:
         self.load_immediate_directory_dir_tree_widget(item.full_path, item)
 
-    def tree_item_changed(self, item: QTreeWidgetItem) -> None:
-        def change_parents_checked_state(item: DirectoryItem) -> None:
-            for parent in item.get_parents():
+    def tree_item_changed(self, item: DirectoryItem) -> None:
+        def change_parents_checked_state(_item: DirectoryItem) -> None:
+            for parent in _item.get_parents():
                 children_check_state = parent.get_all_children_state()
                 parent.setCheckState(0, Qt.CheckState.PartiallyChecked if
                                      children_check_state != Qt.CheckState.Unchecked else Qt.CheckState.Unchecked)
 
-        def change_children_checked_state(item: DirectoryItem) -> None:
-            for child in item.get_children():
+        def change_children_checked_state(_item: DirectoryItem) -> None:
+            for child in _item.get_children():
                 child.setCheckState(0, item.checkState(0))
 
         if not self._is_user_action:
@@ -249,7 +250,7 @@ class DirectoryItem(QTreeWidgetItem):
                 else children.extend([self.child(i)] + self.child(i).get_children())
         return children
 
-    def get_parents(self) -> List[QTreeWidgetItem]:
+    def get_parents(self) -> List[DirectoryItem]:
         parents = []
         item = self
         while True:

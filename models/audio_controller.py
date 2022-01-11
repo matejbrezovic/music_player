@@ -234,7 +234,7 @@ class AudioController(QtWidgets.QFrame):
             self.volume_slider.setSliderPosition(self.volume_slider_position)
             self.player.current_volume = self.player.audio_output.volume()
 
-    def get_current_track(self) -> None:
+    def get_current_track(self) -> Track:
         return self.current_playlist.currently_playing
 
 
