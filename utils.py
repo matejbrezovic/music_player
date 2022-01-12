@@ -167,7 +167,7 @@ def get_artwork_pixmap(file_path: str, default: str = "album") -> QPixmap:
                 pixmap = QPixmap.fromImage(ImageQt(artwork))
             except (mutagen.mp4.MP4StreamInfoError, KeyError):
                 raise NoArtworkError
-    except (AttributeError, NoArtworkError, MutagenError):
+    except (AttributeError, NoArtworkError, MutagenError, TypeError):
         if default.lower() in ['album', 'artist', 'composer', 'folder']:
             pixmap = QPixmap(f"icons/{default.lower()}.png")
         else:

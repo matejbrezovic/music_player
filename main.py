@@ -35,6 +35,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
     def _setup_ui(self) -> None:
         self.central_widget = QWidget(self)
         self.central_widget_layout = QVBoxLayout()
+        self.central_widget_layout.setContentsMargins(0, 0, 0, 0)
         self.central_widget.setLayout(self.central_widget_layout)
         self.setCentralWidget(self.central_widget)
 

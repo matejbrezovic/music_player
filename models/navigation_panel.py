@@ -120,6 +120,7 @@ class GroupWidget(QFrame):
         self.subtitle_label.setStyleSheet("font-size: 10px;")
         self.image_label = QLabel()
         self.image_label.setFixedSize(60, 60)
+        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.artwork_pixmap = get_artwork_pixmap(self.tracks[0].file_path, group_type)
         self.image_label.setPixmap(self.artwork_pixmap.scaled(self.image_label.width() - 4,
                                                               self.image_label.height() - 4,

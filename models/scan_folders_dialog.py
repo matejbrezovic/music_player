@@ -24,9 +24,12 @@ class ScanFoldersDialog(QDialog):
         self.main_frame.setObjectName("main_frame")
         self.main_frame.setStyleSheet("QFrame#main_frame {border: 1px solid rgba(0, 0, 0, 0.3)}")
 
+        self.select_folders_dialog = SelectFoldersDialog(tuple(self.selected_folders))
+        self.select_folders_dialog.folders_selected.connect(self.update_selected_folders)
+
         self.choose_folders_button = QPushButton("Choose Folders")
-        self.choose_folders_button.clicked.connect(lambda: SelectFoldersDialog(self,
-                                                                               tuple(self.selected_folders)).exec())
+        self.choose_folders_button.clicked.connect(lambda: (self.select_folders_dialog.set_preselected_folders(
+                                                            self.selected_folders), self.select_folders_dialog.exec()))
         self.selected_folders_scroll_area = QScrollArea()
         self.selected_folders_widget = QWidget()
         self.selected_folders_widget_grid_layout = QGridLayout(self.selected_folders_widget)
@@ -99,11 +102,12 @@ class ScanFoldersDialog(QDialog):
 
 
 class SelectFoldersDialog(QDialog):
-    def __init__(self, parent: ScanFoldersDialog = None, preselected_folders: Tuple[str] = ()):
+    folders_selected = pyqtSignal(list)
+
+    def __init__(self, preselected_folders: Tuple[str] = ()):
         super().__init__()
         self.setWindowTitle("Choose Folders...")
         self.setFixedSize(500, 600)
-        self.parent = parent
         self.preselected_folders = preselected_folders
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(8, 8, 8, 8)
@@ -162,7 +166,12 @@ class SelectFoldersDialog(QDialog):
         self.vertical_layout.addWidget(self.bottom_widget)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
 
+    def exec(self):
         self.select_preselected_folders()
+        super().exec()
+
+    def set_preselected_folders(self, preselected_folders: Tuple[str]) -> None:
+        self.preselected_folders = preselected_folders
 
     def select_preselected_folders(self) -> None:
         def get_child_by_text(_item: QTreeWidgetItem, text: str) -> QTreeWidgetItem:
@@ -234,7 +243,7 @@ class SelectFoldersDialog(QDialog):
                     checked_items.extend(get_main_checked_items(item))
             return checked_items
 
-        self.parent.update_selected_folders([item.full_path for item in get_main_checked_items()])
+        self.folders_selected.emit([item.full_path for item in get_main_checked_items()])
         self.done(0)
 
 

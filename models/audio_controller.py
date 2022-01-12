@@ -78,7 +78,8 @@ class AudioController(QtWidgets.QFrame):
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.seek_slider_time_label = QLabel("0:00/0:00")
-        self.seek_slider_time_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
+        self.seek_slider_time_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
+                                                              QSizePolicy.Policy.Preferred))
         self.offset_label = QLabel(self.seek_slider_time_label.text())
         self.offset_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
         self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
@@ -86,7 +87,8 @@ class AudioController(QtWidgets.QFrame):
         self.audio_file_name_label.setMaximumWidth(400)
         self.seek_slider_time_label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 0)}")
         self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
+        self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
+                                                             QSizePolicy.Policy.Preferred))
         self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.name_time_label_container = QFrame()
@@ -272,7 +274,7 @@ class ImprovedSlider(QSlider):
 class SeekSlider(ImprovedSlider):
     def __init__(self, parent: AudioController, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parent = parent
+        self.parent = parent  # TODO remove self.parent
         self.backup_volume = self.parent.player.audio_output.volume()
         self.backup_action = -1
 

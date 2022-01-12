@@ -1,6 +1,8 @@
 import json
 from typing import List
 
+import mutagen.mp3
+
 from constants import *
 from data_models.track import Track
 from tag_manager import TagManager
@@ -35,7 +37,10 @@ class TracksRepository:
         tracks = []
         tag_manager = TagManager()
         for i, file_path in enumerate(file_paths):
-            loaded_file = tag_manager.load_file(file_path)
+            try:
+                loaded_file = tag_manager.load_file(file_path)
+            except (mutagen.mp3.HeaderNotFoundError, NotImplementedError):
+                continue
             tracks.append(Track(
                 i,
                 file_path,
@@ -44,7 +49,7 @@ class TracksRepository:
                 loaded_file["artist"].first,
                 loaded_file["composer"].first,
                 loaded_file["genre"].first,
-                loaded_file["year"].first if loaded_file["year"].first else None,
+                int(loaded_file["year"]) if int(loaded_file["year"]) else None,
                 int(loaded_file["#length"].first),
                 ""  # get_artwork_pixmap(file_path, "album")
             ))

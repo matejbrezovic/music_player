@@ -1,13 +1,10 @@
-import datetime
 import math
 from typing import List
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt, pyqtSignal, QSize
-
-from constants import *
 from PyQt6.QtWidgets import *
 
+from constants import *
 from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
 from tag_manager import TagManager
@@ -23,11 +20,6 @@ class InformationPanel(QtWidgets.QFrame):
         self.setObjectName("information_panel")
         self.setStyleSheet("QFrame#information_panel {background-color: rgba(255, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH * 1.8)
-
-        # policy = QSizePolicy()
-        # policy.setHorizontalStretch(0)
-        # policy.setVerticalStretch(0)
-        # self.setSizePolicy(policy)
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -62,7 +54,6 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_info_scroll_area.setWidgetResizable(True)
         self.track_info_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.track_info_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # self.track_info_scroll_area.scrollContentsBy(1, 1)
         self.track_info_scroll_area_widget = QWidget()
         self.track_info_scroll_area_widget_layout = QVBoxLayout(self.track_info_scroll_area_widget)
         self.track_info_scroll_area_widget_layout.setContentsMargins(0, 0, 0, 0)

@@ -1,1 +1,1 @@
-{"preselected_folders": ["/PerfLogs", "/Users/matey/Desktop", "/Users/matey/Music"]}
+{"preselected_folders": ["/home", "/Program Files (x86)/Caesium/lib/imageformats", "/Users/matey/Music"]}
