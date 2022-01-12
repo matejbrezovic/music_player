@@ -39,20 +39,22 @@ class TracksRepository:
         for i, file_path in enumerate(file_paths):
             try:
                 loaded_file = tag_manager.load_file(file_path)
-            except (mutagen.mp3.HeaderNotFoundError, NotImplementedError):
+                tracks.append(Track(
+                    i,
+                    file_path,
+                    file_path.rsplit("/")[-1],
+                    loaded_file["album"].first,
+                    loaded_file["artist"].first,
+                    loaded_file["composer"].first,
+                    loaded_file["genre"].first,
+                    int(loaded_file["year"]) if int(loaded_file["year"]) else None,
+                    int(loaded_file["#length"].first),
+                    ""  # get_artwork_pixmap(file_path, "album")
+                ))
+            except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError):
+                # TODO cannot convert '2020-10-26T20:39:57-04:00' to int type for year so ValueError (can be improved)
                 continue
-            tracks.append(Track(
-                i,
-                file_path,
-                file_path.rsplit("/")[-1],
-                loaded_file["album"].first,
-                loaded_file["artist"].first,
-                loaded_file["composer"].first,
-                loaded_file["genre"].first,
-                int(loaded_file["year"]) if int(loaded_file["year"]) else None,
-                int(loaded_file["#length"].first),
-                ""  # get_artwork_pixmap(file_path, "album")
-            ))
+
         return tracks
 
         

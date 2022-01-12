@@ -1,8 +1,9 @@
 from __future__ import annotations
 
 from typing import Union, List, Tuple
+
 from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QWidget, \
-    QTreeWidgetItem, QTreeWidget, QCheckBox, QSpacerItem
+    QTreeWidgetItem, QTreeWidget, QSpacerItem
 
 from config import Config
 from constants import *
@@ -10,13 +11,17 @@ from repositories.tracks_repository import TracksRepository
 from utils import *
 
 
+# TODO only overwrite files from folders which were scanned, not other ones; don't allow to proceed when no
+#  folders are checked
+
 class ScanFoldersDialog(QDialog):
     # noinspection PyTypeChecker
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setWindowTitle("Scan Folders for New Files")
         self.setFixedSize(700, 400)
-        self.selected_folders = []
+        self.selected_folders: List[str] = []
+        self.checked_folders: List[str] = []
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(5, 5, 5, 5)
 
@@ -24,12 +29,12 @@ class ScanFoldersDialog(QDialog):
         self.main_frame.setObjectName("main_frame")
         self.main_frame.setStyleSheet("QFrame#main_frame {border: 1px solid rgba(0, 0, 0, 0.3)}")
 
-        self.select_folders_dialog = SelectFoldersDialog(tuple(self.selected_folders))
+        self.select_folders_dialog = SelectFoldersDialog(tuple(self.checked_folders))
         self.select_folders_dialog.folders_selected.connect(self.update_selected_folders)
 
         self.choose_folders_button = QPushButton("Choose Folders")
         self.choose_folders_button.clicked.connect(lambda: (self.select_folders_dialog.set_preselected_folders(
-                                                            self.selected_folders), self.select_folders_dialog.exec()))
+                                                            self.checked_folders), self.select_folders_dialog.exec()))
         self.selected_folders_scroll_area = QScrollArea()
         self.selected_folders_widget = QWidget()
         self.selected_folders_widget_grid_layout = QGridLayout(self.selected_folders_widget)
@@ -88,11 +93,15 @@ class ScanFoldersDialog(QDialog):
             return
         delete_grid_layout_items(self.selected_folders_widget_grid_layout)
         for i, path in enumerate(paths):
-            checkbox = QCheckBox()
+            checkbox = PathCheckbox()
             checkbox.setCheckState(Qt.CheckState.Checked)
+            checkbox.set_path(path)
+            checkbox.state_changed.connect(lambda is_checked, checkbox_path: self.checked_folders.append(checkbox_path) if is_checked
+                                           else self.checked_folders.remove(checkbox_path))
             self.selected_folders_widget_grid_layout.addWidget(checkbox, i, 0)
             self.selected_folders_widget_grid_layout.addWidget(QLabel(path), i, 1)
             self.selected_folders.append(path)
+            self.checked_folders.append(path)
         self.selected_folders_widget_grid_layout.addItem(QSpacerItem(1, 1, QSizePolicy.Policy.Minimum,
                                                                      QSizePolicy.Policy.Expanding))
         config = Config()
@@ -178,6 +187,12 @@ class SelectFoldersDialog(QDialog):
             for child in [_item.child(i) for i in range(_item.childCount())]:
                 if child.text(0) == text:
                     return child
+
+        for i in range(self.dir_tree_widget.invisibleRootItem().childCount()):
+            item = self.dir_tree_widget.invisibleRootItem().child(i)
+            item.setCheckState(0, Qt.CheckState.Unchecked)
+            # noinspection PyTypeChecker
+            self.tree_item_changed(item)
 
         for path in self.preselected_folders:
             path_parts = path.split("/")

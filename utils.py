@@ -4,7 +4,7 @@ import mutagen
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
-from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout
+from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox
 from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
@@ -148,6 +148,20 @@ class HeaderSplitter(QSplitter):
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         self.resized.emit()
         super().resizeEvent(event)
+
+
+class PathCheckbox(QCheckBox):
+    state_changed = pyqtSignal(bool, str)
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.path = None
+        self.stateChanged.connect(lambda: self.state_changed.emit(True if self.checkState() == Qt.CheckState.Checked
+                                                                  else False, self.path))
+
+    def set_path(self, path: str) -> None:
+        self.path = path
+
 
 
 def get_artwork_pixmap(file_path: str, default: str = "album") -> QPixmap:
