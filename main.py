@@ -31,7 +31,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
     def __post__(self):
         self._setup_signals()
-        self.main_panel.track_view_widget.update_column_width()
+        # self.main_panel.track_view_widget.update_column_width()
 
     def _setup_ui(self) -> None:
         self.central_widget = QWidget(self)

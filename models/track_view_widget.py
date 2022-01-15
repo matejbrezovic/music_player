@@ -1,5 +1,7 @@
 from typing import List
 
+from PyQt6 import QtWidgets
+from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import *
 
 from data_models.track import Track
@@ -33,40 +35,51 @@ class TrackViewWidget(QFrame):
 
         self.header_splitter.splitterMoved.connect(self.update_column_width)
 
-        self.column_names = ["Artist", "Title", "Album", "Year", "Genre"]
+        self.column_names = ["", "Artist", "Title", "Album", "Year", "Genre"]
 
         for column_name in self.column_names:
             widget = ElidedLabel("   " + column_name)
             widget.setMinimumWidth(20)
             self.header_splitter.addWidget(widget)
 
+        self.header_splitter.widget(0).setStyleSheet("background-color: blue")
+        self.header_splitter.widget(0).setMaximumWidth(60)
+
         self.table_widget = TableWidget()
         self.table_widget.setColumnCount(len(self.column_names))
         self.table_widget.verticalHeader().setVisible(False)
-        self.table_widget.horizontalHeader().setVisible(False)
-        self.table_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # self.table_widget.horizontalHeader().setVisible(False)
+        # self.table_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        # self.table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_widget.setShowGrid(False)
         self.table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        # self.table_widget.horizontalHeader().setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.table_widget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_widget.itemClicked.connect(lambda item: (self.track_clicked.emit(item.track),
                                                             self.set_selected_row_index(self.table_widget.row(item))))
         self.table_widget.itemDoubleClicked.connect(lambda item: (self.track_double_clicked.emit(item.track),
-
                                                                   self.set_selected_row_index(self.table_widget.row(item
                                                                                                                     ))))
         self.table_widget.setStyleSheet(self.selection_stylesheet)
 
-        self.main_layout.addWidget(self.header_splitter)
+        # self.main_layout.addWidget(self.header_splitter)
         self.main_layout.addWidget(self.table_widget)
 
     def update_column_width(self) -> None:
         total_sizes = sum(self.header_splitter.sizes())
-        try:
-            for i in range(len(self.column_names)):
-                self.table_widget.setColumnWidth(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
-        except ZeroDivisionError:
-            pass
+        if not total_sizes:
+            return
+        print(self.header_splitter.sizes())
+        for i in range(len(self.column_names)):
+            print(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
+            self.table_widget.setColumnWidth(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
+
+    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
+        # self.table_widget.horizontalHeader().setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        # self.table_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+
+        super().resizeEvent(a0)
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self.table_widget.setRowCount(len(tracks))
@@ -76,7 +89,11 @@ class TrackViewWidget(QFrame):
         for i, track in enumerate(tracks):
             for j in range(len(self.column_names)):
                 item = QTableWidgetItem()
-                item_text = getattr(track, self.column_names[j].lower())
+                try:
+                    item_text = getattr(track, self.column_names[j].lower())
+                except AttributeError:
+                    item_text = ""
+                    item.setBackground(QColor(100, 20, 30))
                 item.setText(str(item_text) if item_text else "")
                 item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsEditable)
                 item.track = track
