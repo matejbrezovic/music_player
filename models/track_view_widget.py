@@ -1,7 +1,5 @@
 from typing import List
 
-from PyQt6.QtCore import QVariant, QPoint
-from PyQt6.QtGui import QColor, QBrush
 from PyQt6.QtWidgets import *
 
 from data_models.track import Track
@@ -52,8 +50,6 @@ class TrackViewWidget(QFrame):
         self.table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_widget.itemClicked.connect(lambda item: (self.track_clicked.emit(item.track),
-                                                            print("B"),
-                                                            self.set_row_background_color(self.selected_row_index, QColor(0, 0, 0, 0)),
                                                             self.set_selected_row_index(self.table_widget.row(item))))
         self.table_widget.itemDoubleClicked.connect(lambda item: (self.track_double_clicked.emit(item.track),
 
@@ -91,8 +87,6 @@ class TrackViewWidget(QFrame):
         self.selected_row_index = index
 
     def select_row_by_index(self, index: int) -> None:
-        # self.set_row_background_color(self.selected_row_index, self.selection_color)
-        # self.table_widget.setStyleSheet(self.selection_stylesheet)
         self.table_widget.selectRow(index)
         self.set_selected_row_index(index)
 
@@ -103,20 +97,7 @@ class TrackViewWidget(QFrame):
         self.select_row_by_index(self.displayed_tracks.index(track))
 
     def lose_focus(self) -> None:
-        self.table_widget.clearSelection()
-        # self.table_widget.clearSelection()
-        # self.table_widget.setStyleSheet(self.lost_focus_stylesheet)
-        self.set_row_background_color(self.selected_row_index, QColor(100, 20, 30))
-
-    def set_row_background_color(self, row: int, color) -> None:
-        # color.setRgb(100, 100, 20)
-        # print(color.getRgb())
-        # print(row, color)
-        for i in range(len(self.column_names)):  # TODO should be improved in the future
-            # self.table_widget.item(row, i).setSelected(False)
-            self.table_widget.item(row, i).setBackground(color)
-            # self.table_widget.item(row, i).setData(Qt.ItemDataRole.BackgroundRole, Qt.GlobalColor.gray)
-            # self.table_widget.repaint()
+        self.table_widget.setStyleSheet(self.lost_focus_stylesheet)
 
 
 class TableWidget(QTableWidget):
@@ -126,8 +107,5 @@ class TableWidget(QTableWidget):
         self.selection_stylesheet = f"selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black"
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        print("A")
         self.setStyleSheet(self.selection_stylesheet)
         super().mousePressEvent(event)
-
-
