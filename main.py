@@ -20,16 +20,17 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.add_files_dialog = AddFilesDialog()
 
         self._setup_ui()
-        self._setup_signals()
-
-        self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
-        self.add_files_dialog.finished.connect(self.navigation_panel.refresh_groups )
 
         self.setWindowTitle('music player v0.0.6')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
         self.show()
+
+        self.__post__()
+
+    def __post__(self):
+        self._setup_signals()
         self.main_panel.track_view_widget.update_column_width()
 
     def _setup_ui(self) -> None:
@@ -42,7 +43,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self._setup_panels()
         self._setup_menu_bar()
 
-    # noinspection PyTypeChecker
     def _setup_menu_bar(self) -> None:
         self.menu_bar = QtWidgets.QMenuBar(self)
         self.setMenuBar(self.menu_bar)
@@ -79,28 +79,42 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.central_widget_layout.addWidget(self.audio_controller)
 
     def _setup_signals(self) -> None:
-        self.main_panel.track_double_clicked.connect(lambda track: (self.audio_controller.set_playlist(
-                                                                    self.main_panel.displayed_tracks),
-                                                                    self.audio_controller.set_playlist_index(
-                                                                    self.audio_controller.current_playlist.index(
-                                                                        track)),
-                                                                    self.audio_controller.play()))
-        self.navigation_panel.group_clicked.connect(lambda tracks: (self.main_panel.display_tracks(tracks),
-                                                                    self.main_panel.select_track(
-                                                                        self.audio_controller.get_current_track())))
-        self.navigation_panel.group_double_clicked.connect(lambda tracks: (self.main_panel.display_tracks(tracks),
-                                                                           self.audio_controller.set_playlist(tracks),
-                                                                           self.audio_controller.play()))
-        self.audio_controller.updated_playing_track.connect(lambda track: (self.main_panel.select_track(track),
-                                                                           self.information_panel.
-                                                                           set_currently_playing_track(track)))
+        self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
+        self.add_files_dialog.finished.connect(self.navigation_panel.refresh_groups)
+
+        self.main_panel.track_clicked.connect(lambda: None)  # TODO
+
+        self.main_panel.track_double_clicked.connect(
+            lambda track: (self.audio_controller.set_playlist(
+                           self.main_panel.displayed_tracks),
+                           self.audio_controller.set_playlist_index(
+                               self.audio_controller.current_playlist.index(track)),
+                           self.audio_controller.play()))
+
+        self.navigation_panel.group_clicked.connect(
+            lambda tracks: (self.main_panel.display_tracks(tracks),
+                            self.main_panel.select_track(self.audio_controller.get_current_track())))  # TODO replace with set_playing
+
+        self.navigation_panel.group_double_clicked.connect(
+            lambda tracks: (self.main_panel.display_tracks(tracks),
+                            self.audio_controller.set_playlist(tracks),
+                            self.audio_controller.play()))
+
+        self.audio_controller.updated_playing_track.connect(
+            lambda track: (self.main_panel.select_track(track),
+                           self.information_panel.set_currently_playing_track(track)))
+
         self.audio_controller.paused.connect(self.information_panel.set_playing_track_paused)
         self.audio_controller.unpaused.connect(self.information_panel.set_playing_track_unpaused)
         self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
-        self.information_panel.track_double_clicked.connect(lambda track: (self.audio_controller.set_playlist_index(
-                                                                    self.audio_controller.current_playlist.index(
-                                                                        track)),
-                                                                    self.audio_controller.play()))
+
+        self.information_panel.track_clicked.connect(lambda: self.main_panel.lose_focus())
+
+        self.information_panel.track_double_clicked.connect(
+            lambda track: (self.audio_controller.set_playlist_index(
+                               self.audio_controller.current_playlist.index(track)),
+                           self.audio_controller.play(),
+                           self.main_panel.lose_focus()))
 
 
 if __name__ == '__main__':

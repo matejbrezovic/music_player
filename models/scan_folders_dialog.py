@@ -74,6 +74,9 @@ class ScanFoldersDialog(QDialog):
         config.load(DEFAULT_CONFIG_PATH)
         self.update_selected_folders(config.get_setting("preselected_folders"))
 
+    def exec(self) -> None:
+        super().exec()
+
     def proceed_button_clicked(self) -> None:
         config = Config()
         config.load(DEFAULT_CONFIG_PATH)

@@ -11,6 +11,7 @@ from tag_manager import TagManager
 
 
 class MainPanel(QtWidgets.QFrame):
+    track_clicked = pyqtSignal(Track)
     track_double_clicked = pyqtSignal(Track)
 
     def __init__(self, parent=None):
@@ -20,6 +21,7 @@ class MainPanel(QtWidgets.QFrame):
         self.setMinimumWidth(MAIN_PANEL_MIN_WIDTH)
         self.tag_manager = TagManager()
         self.track_view_widget = TrackViewWidget()
+        self.track_view_widget.track_clicked.connect(lambda track: self.track_clicked.emit(track))
         self.track_view_widget.track_double_clicked.connect(lambda track: self.track_double_clicked.emit(track))
 
         self.view_options = {
@@ -50,4 +52,6 @@ class MainPanel(QtWidgets.QFrame):
     def select_track(self, track: Track) -> None:
         self.track_view_widget.select_row_by_track(track)
 
+    def lose_focus(self) -> None:
+        self.track_view_widget.lose_focus()
 
