@@ -1,6 +1,7 @@
 from typing import List
 
 from PyQt6 import QtWidgets
+from PyQt6.QtCore import QSize
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import *
 
@@ -45,16 +46,26 @@ class TrackViewWidget(QFrame):
         self.header_splitter.widget(0).setStyleSheet("background-color: blue")
         self.header_splitter.widget(0).setMaximumWidth(60)
 
-        self.table_widget = TableWidget()
+        self.table_widget = CustomHeaderTableWidget()
         self.table_widget.setColumnCount(len(self.column_names))
         self.table_widget.verticalHeader().setVisible(False)
+        # self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        # self.table_widget.horizontalHeader()
+        # self.table_widget.horizontalHeader().
+        # self.table_widget.horizontalHeader().setMaximumWidth(200)
+        # self.table_widget.horizontalHeader().setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.table_widget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        # self.table_widget.horizontalHeader().setCascadingSectionResizes(True)
+        # self.table_widget.horizontalHeader().setSectionsMovable(True)
         # self.table_widget.horizontalHeader().setVisible(False)
         # self.table_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         # self.table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.table_widget.setShowGrid(False)
+        # self.table_widget.setShowGrid(False)
         self.table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        # self.table_widget
         # self.table_widget.horizontalHeader().setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        self.table_widget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
+        # self.table_widget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
+        # self.table_widget.resized.connect(lambda: self.table_widget.horizontalHeader().setMaximumWidth(self.table_widget.width()))
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_widget.itemClicked.connect(lambda item: (self.track_clicked.emit(item.track),
                                                             self.set_selected_row_index(self.table_widget.row(item))))
@@ -63,7 +74,10 @@ class TrackViewWidget(QFrame):
                                                                                                                     ))))
         self.table_widget.setStyleSheet(self.selection_stylesheet)
 
-        # self.main_layout.addWidget(self.header_splitter)
+        # for i in range(len(self.column_names)):
+        #     self.table_widget.horizontalHeader().add
+
+        self.main_layout.addWidget(self.header_splitter)
         self.main_layout.addWidget(self.table_widget)
 
     def update_column_width(self) -> None:
@@ -72,8 +86,10 @@ class TrackViewWidget(QFrame):
             return
         print(self.header_splitter.sizes())
         for i in range(len(self.column_names)):
+            # self.table_widget.horizontalHeader().setH
             print(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
-            self.table_widget.setColumnWidth(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
+            # self.table_widget.horizontalHeader().resizeSection(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
+            # self.table_widget.setColumnWidth(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
 
     def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
         # self.table_widget.horizontalHeader().setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
@@ -89,6 +105,7 @@ class TrackViewWidget(QFrame):
         for i, track in enumerate(tracks):
             for j in range(len(self.column_names)):
                 item = QTableWidgetItem()
+                # item.setSizeHint(QSize(20, 20))
                 try:
                     item_text = getattr(track, self.column_names[j].lower())
                 except AttributeError:
@@ -117,12 +134,4 @@ class TrackViewWidget(QFrame):
         self.table_widget.setStyleSheet(self.lost_focus_stylesheet)
 
 
-class TableWidget(QTableWidget):
-    def __init__(self, parent=None):
-        super().__init__(parent)
 
-        self.selection_stylesheet = f"selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black"
-
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        self.setStyleSheet(self.selection_stylesheet)
-        super().mousePressEvent(event)

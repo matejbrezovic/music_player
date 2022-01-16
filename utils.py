@@ -4,7 +4,8 @@ import mutagen
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
-from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox
+from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QTableWidget, \
+    QHeaderView
 from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
@@ -161,6 +162,43 @@ class PathCheckbox(QCheckBox):
 
     def set_path(self, path: str) -> None:
         self.path = path
+
+
+class ChangeStylesheetOnClickTableWidget(QTableWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.selection_stylesheet = f"selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black"
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        self.setStyleSheet(self.selection_stylesheet)
+        super().mousePressEvent(event)
+
+
+class CustomHeaderTableWidget(ChangeStylesheetOnClickTableWidget):
+    resized = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.horizontal_header = CustomHorizontalHeader()
+        self.setHorizontalHeader(self.horizontal_header)
+
+    def resizeEvent(self, e: QtGui.QResizeEvent) -> None:
+        self.resized.emit()
+
+
+class CustomHorizontalHeader(QHeaderView):
+    def __init__(self):
+        super().__init__(Qt.Orientation.Horizontal)
+        self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
+        # self.setStretchLastSection(True)
+        self.setSectionsClickable(True)
+        self.setMinimumSectionSize(20)
+
+        self.sectionResized.connect(self.section_resized)
+
+    def section_resized(self, section_index: int, _, new_width: int) -> None:
+        print(section_index, new_width)
+
 
 
 
