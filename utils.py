@@ -174,34 +174,6 @@ class ChangeStylesheetOnClickTableWidget(QTableWidget):
         super().mousePressEvent(event)
 
 
-class CustomHeaderTableWidget(ChangeStylesheetOnClickTableWidget):
-    resized = pyqtSignal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self.horizontal_header = CustomHorizontalHeader()
-        self.setHorizontalHeader(self.horizontal_header)
-
-    def resizeEvent(self, e: QtGui.QResizeEvent) -> None:
-        self.resized.emit()
-
-
-class CustomHorizontalHeader(QHeaderView):
-    def __init__(self):
-        super().__init__(Qt.Orientation.Horizontal)
-        self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-        # self.setStretchLastSection(True)
-        self.setSectionsClickable(True)
-        self.setMinimumSectionSize(20)
-
-        self.sectionResized.connect(self.section_resized)
-
-    def section_resized(self, section_index: int, _, new_width: int) -> None:
-        print(section_index, new_width)
-
-
-
-
 def get_artwork_pixmap(file_path: str, default: str = "album") -> QPixmap:
     class NoArtworkError(Exception):
         pass

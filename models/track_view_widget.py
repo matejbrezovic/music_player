@@ -1,8 +1,6 @@
 from typing import List
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QSize
-from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import *
 
 from data_models.track import Track
@@ -30,42 +28,30 @@ class TrackViewWidget(QFrame):
         self.header_splitter = HeaderSplitter()
         self.header_splitter.setOrientation(Qt.Orientation.Horizontal)
         self.header_splitter.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        self.header_splitter.setHandleWidth(0)
+        self.header_splitter.setHandleWidth(2)
         self.header_splitter.resized.connect(self.update_column_width)
-        self.track_info_splitter = QSplitter(Qt.Orientation.Horizontal)
 
         self.header_splitter.splitterMoved.connect(self.update_column_width)
 
         self.column_names = ["", "Artist", "Title", "Album", "Year", "Genre"]
 
         for column_name in self.column_names:
-            widget = ElidedLabel("   " + column_name)
+            widget = ElidedLabel("" + column_name)
             widget.setMinimumWidth(20)
             self.header_splitter.addWidget(widget)
 
-        self.header_splitter.widget(0).setStyleSheet("background-color: blue")
-        self.header_splitter.widget(0).setMaximumWidth(60)
+        self.header_splitter.widget(0).setFixedWidth(20)
 
-        self.table_widget = CustomHeaderTableWidget()
+        self.table_widget = ChangeStylesheetOnClickTableWidget()
+        self.table_widget.horizontalHeader().setMinimumSectionSize(20)
         self.table_widget.setColumnCount(len(self.column_names))
         self.table_widget.verticalHeader().setVisible(False)
-        # self.table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        # self.table_widget.horizontalHeader()
-        # self.table_widget.horizontalHeader().
-        # self.table_widget.horizontalHeader().setMaximumWidth(200)
-        # self.table_widget.horizontalHeader().setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.table_widget.horizontalHeader().setVisible(False)
+        self.table_widget.setShowGrid(False)
+        self.table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.table_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_widget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-        # self.table_widget.horizontalHeader().setCascadingSectionResizes(True)
-        # self.table_widget.horizontalHeader().setSectionsMovable(True)
-        # self.table_widget.horizontalHeader().setVisible(False)
-        # self.table_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # self.table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # self.table_widget.setShowGrid(False)
         self.table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        # self.table_widget
-        # self.table_widget.horizontalHeader().setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        # self.table_widget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustIgnored)
-        # self.table_widget.resized.connect(lambda: self.table_widget.horizontalHeader().setMaximumWidth(self.table_widget.width()))
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_widget.itemClicked.connect(lambda item: (self.track_clicked.emit(item.track),
                                                             self.set_selected_row_index(self.table_widget.row(item))))
@@ -74,9 +60,6 @@ class TrackViewWidget(QFrame):
                                                                                                                     ))))
         self.table_widget.setStyleSheet(self.selection_stylesheet)
 
-        # for i in range(len(self.column_names)):
-        #     self.table_widget.horizontalHeader().add
-
         self.main_layout.addWidget(self.header_splitter)
         self.main_layout.addWidget(self.table_widget)
 
@@ -84,18 +67,8 @@ class TrackViewWidget(QFrame):
         total_sizes = sum(self.header_splitter.sizes())
         if not total_sizes:
             return
-        print(self.header_splitter.sizes())
         for i in range(len(self.column_names)):
-            # self.table_widget.horizontalHeader().setH
-            print(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
-            # self.table_widget.horizontalHeader().resizeSection(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
-            # self.table_widget.setColumnWidth(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
-
-    def resizeEvent(self, a0: QtGui.QResizeEvent) -> None:
-        # self.table_widget.horizontalHeader().setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        # self.table_widget.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-
-        super().resizeEvent(a0)
+            self.table_widget.setColumnWidth(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self.table_widget.setRowCount(len(tracks))
@@ -105,14 +78,12 @@ class TrackViewWidget(QFrame):
         for i, track in enumerate(tracks):
             for j in range(len(self.column_names)):
                 item = QTableWidgetItem()
-                # item.setSizeHint(QSize(20, 20))
                 try:
                     item_text = getattr(track, self.column_names[j].lower())
                 except AttributeError:
-                    item_text = ""
-                    item.setBackground(QColor(100, 20, 30))
+                    item_text = None
                 item.setText(str(item_text) if item_text else "")
-                item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsEditable)
+                item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
                 item.track = track
                 self.table_widget.setItem(i, j, item)
             self.table_widget.setRowHeight(i, 22)
