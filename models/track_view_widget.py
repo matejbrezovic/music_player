@@ -22,7 +22,7 @@ class TrackViewWidget(QFrame):
         self.default_stylesheet = ""
         self.selected_row_index = 0
         self.playing_track = None
-        self.speaker_label = SpeakerLabel()
+        # self.speaker_label = SpeakerLabel()
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -79,7 +79,7 @@ class TrackViewWidget(QFrame):
         self.displayed_tracks = tracks
 
         for i, track in enumerate(tracks):
-            for j in range(len(self.column_names)):
+            for j in range(1, len(self.column_names)):
                 item = QTableWidgetItem()
                 try:
                     item_text = getattr(track, self.column_names[j].lower())
@@ -90,6 +90,7 @@ class TrackViewWidget(QFrame):
                 item.track = track
                 self.table_widget.setItem(i, j, item)
             self.table_widget.setRowHeight(i, 22)
+            self.table_widget.setCellWidget(i, 0, SpeakerLabel())
 
     def set_selected_row_index(self, index: int) -> None:
         self.selected_row_index = index
@@ -108,21 +109,41 @@ class TrackViewWidget(QFrame):
         self.table_widget.setStyleSheet(self.lost_focus_stylesheet)
 
     def set_playing_track(self, track: Track) -> None:
+        def reset_track_column() -> None:
+            for i in range(self.table_widget.rowCount()):
+                try:
+                    self.table_widget.cellWidget(i, 0).set_transparent()
+                    # print(i)
+                except AttributeError:
+                    pass
+        print(track.title)
+
+        reset_track_column()
         if track not in self.displayed_tracks:
             return
 
-        for i in range(self.table_widget.rowCount()):
-            widget = self.table_widget.cellWidget(i, 0)
-            if isinstance(widget, SpeakerLabel):
-                widget.deleteLater()
-                break
+            # widget = self.table_widget.cellWidget(i, 0)
+            # if isinstance(widget, SpeakerLabel):
+            #     widget.deleteLater()
+        print("AAAAAAAA")
 
-        self.speaker_label = SpeakerLabel()
+        # self.speaker_label = SpeakerLabel()
         self.playing_track = track
-        self.table_widget.setCellWidget(self.displayed_tracks.index(track), 0, self.speaker_label)
+        # print(self.displayed_tracks.index(track))
+        self.table_widget.cellWidget(self.displayed_tracks.index(track), 0).set_playing()
+        # self.select_row_by_index(self.displayed_tracks.index(track))
+        print("VVVVVVVVVVVVV")
 
     def pause_playing_track(self) -> None:
-        self.speaker_label.set_paused()
+        try:
+            self.table_widget.cellWidget(self.displayed_tracks.index(self.playing_track), 0).set_paused()
+        except ValueError:
+            pass
+        # self.speaker_label.set_paused()
 
     def unpause_playing_track(self) -> None:
-        self.speaker_label.set_playing()
+        try:
+            self.table_widget.cellWidget(self.displayed_tracks.index(self.playing_track), 0).set_playing()
+        except ValueError:
+            pass
+        # self.speaker_label.set_playing()

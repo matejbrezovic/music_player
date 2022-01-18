@@ -97,7 +97,8 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.navigation_panel.group_double_clicked.connect(
             lambda tracks: (self.main_panel.display_tracks(tracks),
                             self.audio_controller.set_playlist(tracks),
-                            self.audio_controller.play()))
+                            self.audio_controller.play(),
+                            self.main_panel.set_playing_track(self.audio_controller.get_current_track())))
 
         self.audio_controller.updated_playing_track.connect(
             lambda track: (self.main_panel.set_playing_track(track),
@@ -113,13 +114,19 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.information_panel.track_double_clicked.connect(
             lambda track: (self.audio_controller.set_playlist_index(
-                               self.audio_controller.current_playlist.index(track)),
+                            self.audio_controller.current_playlist.index(track)),
                            self.audio_controller.play(),
                            self.main_panel.lose_focus()))
 
 
+class App(QApplication):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
+        self.setStyle(QStyleFactory.create("windowsvista"))
+
+
 if __name__ == '__main__':
-    app = QtWidgets.QApplication(sys.argv)
-    app.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
+    app = App(sys.argv)
     mainWindow = MainWindowUi()
     sys.exit(app.exec())

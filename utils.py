@@ -195,6 +195,9 @@ class SpeakerLabel(QLabel):
                                                                  Qt.AspectRatioMode.KeepAspectRatio,
                                                                  Qt.TransformationMode.SmoothTransformation))
 
+    def set_transparent(self):
+        self.clear()
+
 
 def get_artwork_pixmap(file_path: str, default: str = "album") -> QPixmap:
     class NoArtworkError(Exception):
