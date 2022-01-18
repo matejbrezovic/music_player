@@ -1,5 +1,5 @@
 import math
-from typing import List
+from typing import List, Optional
 
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import *
@@ -20,6 +20,8 @@ class InformationPanel(QtWidgets.QFrame):
         self.setObjectName("information_panel")
         self.setStyleSheet("QFrame#information_panel {background-color: rgba(255, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH * 1.8)
+
+        self.playing_track_widget: Optional[TrackGroupWidget] = None
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -50,7 +52,6 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_info_widget_layout = QVBoxLayout(self.track_info_widget)
         self.track_info_widget_layout.setContentsMargins(0, 0, 0, 0)
         self.track_info_scroll_area = QScrollArea()
-        # self.track_info_scroll_area.setFixedSize(400, 500)
         self.track_info_scroll_area.setWidgetResizable(True)
         self.track_info_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.track_info_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -117,22 +118,15 @@ class InformationPanel(QtWidgets.QFrame):
             track_widget: TrackGroupWidget = self.playing_tracks_table_widget.cellWidget(i, 0)
             if track_widget.track == track:
                 track_widget.set_playing()
+                self.playing_track_widget = track_widget
             else:
                 track_widget.reset()
 
-    def set_playing_track_paused(self, track: Track) -> None:
-        for i in range(self.playing_tracks_table_widget.rowCount()):
-            track_widget: TrackGroupWidget = self.playing_tracks_table_widget.cellWidget(i, 0)
-            if track_widget.track == track:
-                track_widget.set_paused()
-                break
+    def pause_playing_track(self) -> None:
+        self.playing_track_widget.set_paused()
 
-    def set_playing_track_unpaused(self, track: Track) -> None:
-        for i in range(self.playing_tracks_table_widget.rowCount()):
-            track_widget: TrackGroupWidget = self.playing_tracks_table_widget.cellWidget(i, 0)
-            if track_widget.track == track:
-                track_widget.set_playing()
-                break
+    def unpause_playing_track(self) -> None:
+        self.playing_track_widget.set_playing()
 
 
 class TrackGroupWidget(QFrame):
@@ -145,6 +139,7 @@ class TrackGroupWidget(QFrame):
         self.subtitle = track.artist
         self.track = track
         self.tag_manager = TagManager()
+        self.speaker_label = SpeakerLabel()
         self.index = index
 
         self.default_stylesheet = ""  # "TrackGroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
@@ -186,7 +181,6 @@ class TrackGroupWidget(QFrame):
         self.vertical_layout.addWidget(self.subtitle_label)
 
         self.horizontal_layout = QtWidgets.QHBoxLayout(self)
-        # self.horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.horizontal_layout.setSpacing(2)
         self.horizontal_layout.setContentsMargins(0, 0, 0, 0)
         self.horizontal_layout.addWidget(self.image_label)
@@ -195,28 +189,16 @@ class TrackGroupWidget(QFrame):
 
     def set_playing(self) -> None:
         if self.horizontal_layout.count() == 3:
-            self.play_label = QLabel()
-            self.play_label.setContentsMargins(0, 1, 0, 0)
-            self.play_label.setAlignment(Qt.AlignmentFlag.AlignTop)
-            # self.play_label.setStyleSheet("background-color: red")
-            self.play_label.setFixedWidth(15)
-            self.horizontal_layout.insertWidget(1, self.play_label)
-        self.play_label.setPixmap(QPixmap("icons/speaker_playing.png").scaled(self.play_label.width(),
-                                                                              self.play_label.width(),
-                                  Qt.AspectRatioMode.KeepAspectRatio,
-                                  Qt.TransformationMode.SmoothTransformation))
-        self.horizontal_layout.insertWidget(1, self.play_label)
-        # self.horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+            self.horizontal_layout.insertWidget(1, self.speaker_label)
+        else:
+            self.speaker_label.set_playing()
 
     def set_paused(self) -> None:
-        self.play_label.setPixmap(QPixmap("icons/speaker_muted.png").scaled(self.play_label.width(),
-                                                                              self.play_label.width(),
-                                                                              Qt.AspectRatioMode.KeepAspectRatio,
-                                                                              Qt.TransformationMode.SmoothTransformation))
+        self.speaker_label.set_paused()
 
     def reset(self) -> None:
         if self.horizontal_layout.count() == 4:
-            self.horizontal_layout.itemAt(1).widget().deleteLater()
+            self.horizontal_layout.itemAt(1).widget().setParent(None)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         self.clicked.emit(self.index)

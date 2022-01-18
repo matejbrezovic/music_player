@@ -174,6 +174,28 @@ class ChangeStylesheetOnClickTableWidget(QTableWidget):
         super().mousePressEvent(event)
 
 
+class SpeakerLabel(QLabel):
+    def __init__(self, parent=None):
+        super(SpeakerLabel, self).__init__(parent)
+        self.setContentsMargins(0, 1, 0, 0)
+        self.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.setFixedWidth(15)
+
+        self.setPixmap(QPixmap("icons/speaker_playing.png").scaled(self.width(), self.width(),
+                                                                   Qt.AspectRatioMode.KeepAspectRatio,
+                                                                   Qt.TransformationMode.SmoothTransformation))
+
+    def set_playing(self):
+        self.setPixmap(QPixmap("icons/speaker_playing.png").scaled(self.width(), self.width(),
+                                                                   Qt.AspectRatioMode.KeepAspectRatio,
+                                                                   Qt.TransformationMode.SmoothTransformation))
+
+    def set_paused(self):
+        self.setPixmap(QPixmap("icons/speaker_muted.png").scaled(self.width(), self.width(),
+                                                                 Qt.AspectRatioMode.KeepAspectRatio,
+                                                                 Qt.TransformationMode.SmoothTransformation))
+
+
 def get_artwork_pixmap(file_path: str, default: str = "album") -> QPixmap:
     class NoArtworkError(Exception):
         pass

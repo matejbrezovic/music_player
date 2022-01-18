@@ -21,6 +21,9 @@ class TrackViewWidget(QFrame):
         self.lost_focus_stylesheet = f"selection-background-color: {self.lost_focus_color}; selection-color: black"
         self.default_stylesheet = ""
         self.selected_row_index = 0
+        self.playing_track = None
+        self.speaker_label = SpeakerLabel()
+
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -104,5 +107,22 @@ class TrackViewWidget(QFrame):
     def lose_focus(self) -> None:
         self.table_widget.setStyleSheet(self.lost_focus_stylesheet)
 
+    def set_playing_track(self, track: Track) -> None:
+        if track not in self.displayed_tracks:
+            return
 
+        for i in range(self.table_widget.rowCount()):
+            widget = self.table_widget.cellWidget(i, 0)
+            if isinstance(widget, SpeakerLabel):
+                widget.deleteLater()
+                break
 
+        self.speaker_label = SpeakerLabel()
+        self.playing_track = track
+        self.table_widget.setCellWidget(self.displayed_tracks.index(track), 0, self.speaker_label)
+
+    def pause_playing_track(self) -> None:
+        self.speaker_label.set_paused()
+
+    def unpause_playing_track(self) -> None:
+        self.speaker_label.set_playing()

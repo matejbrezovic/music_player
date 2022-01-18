@@ -21,7 +21,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self._setup_ui()
 
-        self.setWindowTitle('music player v0.0.6')
+        self.setWindowTitle('music player v0.0.7')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
@@ -85,15 +85,14 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.main_panel.track_clicked.connect(lambda: None)  # TODO
 
         self.main_panel.track_double_clicked.connect(
-            lambda track: (self.audio_controller.set_playlist(
-                           self.main_panel.displayed_tracks),
+            lambda track: (self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
                            self.audio_controller.set_playlist_index(
                                self.audio_controller.current_playlist.index(track)),
                            self.audio_controller.play()))
 
         self.navigation_panel.group_clicked.connect(
             lambda tracks: (self.main_panel.display_tracks(tracks),
-                            self.main_panel.select_track(self.audio_controller.get_current_track())))  # TODO replace with set_playing
+                            self.main_panel.set_playing_track(self.audio_controller.get_current_track())))
 
         self.navigation_panel.group_double_clicked.connect(
             lambda tracks: (self.main_panel.display_tracks(tracks),
@@ -101,11 +100,13 @@ class MainWindowUi(QtWidgets.QMainWindow):
                             self.audio_controller.play()))
 
         self.audio_controller.updated_playing_track.connect(
-            lambda track: (self.main_panel.select_track(track),
+            lambda track: (self.main_panel.set_playing_track(track),
                            self.information_panel.set_currently_playing_track(track)))
 
-        self.audio_controller.paused.connect(self.information_panel.set_playing_track_paused)
-        self.audio_controller.unpaused.connect(self.information_panel.set_playing_track_unpaused)
+        self.audio_controller.paused.connect(lambda: (self.information_panel.pause_playing_track(),
+                                                      self.main_panel.pause_playing_track()))
+        self.audio_controller.unpaused.connect(lambda: (self.information_panel.unpause_playing_track(),
+                                                        self.main_panel.unpause_playing_track()))
         self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
 
         self.information_panel.track_clicked.connect(lambda: self.main_panel.lose_focus())
