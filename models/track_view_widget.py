@@ -42,8 +42,10 @@ class TrackViewWidget(QFrame):
             widget.setMinimumWidth(20)
             self.header_splitter.addWidget(widget)
 
-        self.header_splitter.widget(1).setFixedWidth(16)
+        self.header_splitter.setCollapsible(0, False)
+        self.header_splitter.setCollapsible(1, False)
         self.header_splitter.widget(0).setFixedWidth(22)
+        self.header_splitter.widget(1).setFixedWidth(16)
 
         self.table_widget = ChangeStylesheetOnClickTableWidget()
         self.table_widget.horizontalHeader().setMinimumSectionSize(20)
@@ -89,16 +91,15 @@ class TrackViewWidget(QFrame):
                 item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
                 item.track = track
                 self.table_widget.setItem(i, j, item)
-                # item.setIcon(QIcon(track.artwork_pixmap))
 
             speaker_label = SpeakerLabel()
             speaker_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            image_label = ImageLabel()
+            image_label = ImageLabel(track.artwork_pixmap)
             # image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             image_label.setFixedSize(22, 22)
-            image_label.setPixmap(track.artwork_pixmap.scaled(self.width(), self.width(),
-                                                              Qt.AspectRatioMode.KeepAspectRatio,
-                                                              Qt.TransformationMode.SmoothTransformation))
+            # image_label.setPixmap(track.artwork_pixmap.scaled(self.width(), self.width(),
+            #                                                   Qt.AspectRatioMode.KeepAspectRatio,
+            #                                                   Qt.TransformationMode.SmoothTransformation))
             # image_label.show()
             self.table_widget.setCellWidget(i, 1, speaker_label)
             self.table_widget.setCellWidget(i, 0, image_label)
@@ -127,26 +128,15 @@ class TrackViewWidget(QFrame):
             for i in range(self.table_widget.rowCount()):
                 try:
                     self.table_widget.cellWidget(i, 1).set_transparent()
-                    # print(i)
                 except AttributeError:
                     pass
-        print(track.title)
 
         reset_track_column()
         if track not in self.displayed_tracks:
             return
 
-            # widget = self.table_widget.cellWidget(i, 0)
-            # if isinstance(widget, SpeakerLabel):
-            #     widget.deleteLater()
-        print("AAAAAAAA")
-
-        # self.speaker_label = SpeakerLabel()
         self.playing_track = track
-        # print(self.displayed_tracks.index(track))
         self.table_widget.cellWidget(self.displayed_tracks.index(track), 1).set_playing()
-        # self.select_row_by_index(self.displayed_tracks.index(track))
-        print("VVVVVVVVVVVVV")
 
     def pause_playing_track(self) -> None:
         try:

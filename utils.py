@@ -76,14 +76,22 @@ class ElidedLabel(QLabel):
 
 
 class ImageLabel(QLabel):
-    def __init__(self):
+    def __init__(self, pixmap: QPixmap):
         super().__init__()
-        self.pixmap = None
+        self.pixmap = pixmap
 
         size_policy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)  # Very important!
         size_policy.setHeightForWidth(True)
         size_policy.setWidthForHeight(True)
         self.setSizePolicy(size_policy)
+
+        if self.pixmap.width() != 0:
+            if self.pixmap.height() / self.pixmap.width() > self.height() / self.width():
+                self.pixmap = self.pixmap.scaledToHeight(self.height(), Qt.TransformationMode.SmoothTransformation)
+            else:
+                self.pixmap = self.pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation)
+
+        self.setPixmap(self.pixmap)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
@@ -97,16 +105,6 @@ class ImageLabel(QLabel):
                                                                 Qt.TransformationMode.SmoothTransformation)
 
                 self.setPixmap(displayed_image)
-
-    def setPixmap(self, pixmap: QPixmap):
-        self.pixmap = pixmap
-        if self.pixmap.width() != 0:
-            if self.pixmap.height() / self.pixmap.width() > self.height() / self.width():
-                self.pixmap = self.pixmap.scaledToHeight(self.height(), Qt.TransformationMode.SmoothTransformation)
-            else:
-                self.pixmap = self.pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation)
-
-        super().setPixmap(self.pixmap)
 
     def heightForWidth(self, width: int) -> int:
         return width
