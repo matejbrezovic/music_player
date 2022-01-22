@@ -63,7 +63,8 @@ class InformationPanel(QtWidgets.QFrame):
 
         self.currently_playing_track_title = ElidedLabel("No Track")
         self.currently_playing_track_info = ElidedLabel("No info")
-        self.currently_playing_track_image_label = ImageLabel(get_artwork_pixmap("", "album"))
+        self.currently_playing_track_image_label = ImageLabel()
+        self.currently_playing_track_image_label.setPixmap(get_artwork_pixmap("", "album"))
 
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_title)
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_info)
@@ -111,7 +112,8 @@ class InformationPanel(QtWidgets.QFrame):
         self.currently_playing_track_title.setText(track.title)
         self.currently_playing_track_info.setText(get_track_info(track))
         self.currently_playing_track_image_label.deleteLater()
-        self.currently_playing_track_image_label = ImageLabel(get_artwork_pixmap(track.file_path))
+        self.currently_playing_track_image_label = ImageLabel()
+        self.currently_playing_track_image_label.setPixmap(get_artwork_pixmap(track.file_path))
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_image_label)
 
         for i in range(self.playing_tracks_table_widget.rowCount()):
@@ -198,6 +200,7 @@ class TrackGroupWidget(QFrame):
 
     def reset(self) -> None:
         if self.horizontal_layout.count() == 4:
+            # noinspection PyTypeChecker
             self.horizontal_layout.itemAt(1).widget().setParent(None)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:

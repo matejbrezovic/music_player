@@ -1,6 +1,7 @@
 from typing import List
 
 from PyQt6 import QtWidgets
+from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import *
 
 from data_models.track import Track
@@ -22,7 +23,6 @@ class TrackViewWidget(QFrame):
         self.default_stylesheet = ""
         self.selected_row_index = 0
         self.playing_track = None
-        # self.speaker_label = SpeakerLabel()
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -33,17 +33,17 @@ class TrackViewWidget(QFrame):
         self.header_splitter.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
         self.header_splitter.setHandleWidth(2)
         self.header_splitter.resized.connect(self.update_column_width)
-
         self.header_splitter.splitterMoved.connect(self.update_column_width)
 
-        self.column_names = ["", "Artist", "Title", "Album", "Year", "Genre"]
+        self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
 
         for column_name in self.column_names:
             widget = ElidedLabel("" + column_name)
             widget.setMinimumWidth(20)
             self.header_splitter.addWidget(widget)
 
-        self.header_splitter.widget(0).setFixedWidth(20)
+        self.header_splitter.widget(1).setFixedWidth(16)
+        self.header_splitter.widget(0).setFixedWidth(22)
 
         self.table_widget = ChangeStylesheetOnClickTableWidget()
         self.table_widget.horizontalHeader().setMinimumSectionSize(20)
@@ -79,7 +79,7 @@ class TrackViewWidget(QFrame):
         self.displayed_tracks = tracks
 
         for i, track in enumerate(tracks):
-            for j in range(1, len(self.column_names)):
+            for j in range(len(self.column_names)):
                 item = QTableWidgetItem()
                 try:
                     item_text = getattr(track, self.column_names[j].lower())
@@ -89,8 +89,22 @@ class TrackViewWidget(QFrame):
                 item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
                 item.track = track
                 self.table_widget.setItem(i, j, item)
+                # item.setIcon(QIcon(track.artwork_pixmap))
+
+            speaker_label = SpeakerLabel()
+            speaker_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            image_label = ImageLabel()
+            # image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            image_label.setFixedSize(22, 22)
+            image_label.setPixmap(track.artwork_pixmap.scaled(self.width(), self.width(),
+                                                              Qt.AspectRatioMode.KeepAspectRatio,
+                                                              Qt.TransformationMode.SmoothTransformation))
+            # image_label.show()
+            self.table_widget.setCellWidget(i, 1, speaker_label)
+            self.table_widget.setCellWidget(i, 0, image_label)
+            # self.table_widget.item(i, 0).setIcon(QIcon(track.artwork_pixmap))
+
             self.table_widget.setRowHeight(i, 22)
-            self.table_widget.setCellWidget(i, 0, SpeakerLabel())
 
     def set_selected_row_index(self, index: int) -> None:
         self.selected_row_index = index
@@ -112,7 +126,7 @@ class TrackViewWidget(QFrame):
         def reset_track_column() -> None:
             for i in range(self.table_widget.rowCount()):
                 try:
-                    self.table_widget.cellWidget(i, 0).set_transparent()
+                    self.table_widget.cellWidget(i, 1).set_transparent()
                     # print(i)
                 except AttributeError:
                     pass
@@ -130,20 +144,20 @@ class TrackViewWidget(QFrame):
         # self.speaker_label = SpeakerLabel()
         self.playing_track = track
         # print(self.displayed_tracks.index(track))
-        self.table_widget.cellWidget(self.displayed_tracks.index(track), 0).set_playing()
+        self.table_widget.cellWidget(self.displayed_tracks.index(track), 1).set_playing()
         # self.select_row_by_index(self.displayed_tracks.index(track))
         print("VVVVVVVVVVVVV")
 
     def pause_playing_track(self) -> None:
         try:
-            self.table_widget.cellWidget(self.displayed_tracks.index(self.playing_track), 0).set_paused()
+            self.table_widget.cellWidget(self.displayed_tracks.index(self.playing_track), 1).set_paused()
         except ValueError:
             pass
         # self.speaker_label.set_paused()
 
     def unpause_playing_track(self) -> None:
         try:
-            self.table_widget.cellWidget(self.displayed_tracks.index(self.playing_track), 0).set_playing()
+            self.table_widget.cellWidget(self.displayed_tracks.index(self.playing_track), 1).set_playing()
         except ValueError:
             pass
         # self.speaker_label.set_playing()

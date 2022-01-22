@@ -4,6 +4,7 @@ from typing import List
 import mutagen.mp3
 
 from constants import *
+from utils import *
 from data_models.track import Track
 from tag_manager import TagManager
 
@@ -16,7 +17,10 @@ class TracksRepository:
         with open(DEFAULT_LOADED_TRACKS_FILE_PATH, "r") as f:
             try:
                 loaded_json = json.loads(f.read())
-                return [self._decode_track(t) for t in loaded_json]
+                tracks = [self._decode_track(t) for t in loaded_json]
+                for track in tracks:
+                    track.artwork_pixmap = get_artwork_pixmap(track.file_path)
+                return tracks
             except json.decoder.JSONDecodeError:
                 return []
 

@@ -26,7 +26,7 @@ class AudioPlayer(QMediaPlayer):
         self.fade_out_anim.setEasingCurve(QEasingCurve.Type.Linear)
         self.fade_out_anim.finished.connect(super().pause)
 
-    def play(self, fade=True) -> None:
+    def play(self, fade: bool = True) -> None:
         if self.position() and fade:
             self.fade_in_anim.setStartValue(0 if self.current_volume < FADE_IN_ANIM_START_VALUE
                                             else FADE_IN_ANIM_START_VALUE)
@@ -38,7 +38,7 @@ class AudioPlayer(QMediaPlayer):
             self.audioOutput().setVolume(self.current_volume)
         super().play()
 
-    def pause(self, fade=True) -> None:
+    def pause(self, fade: bool = True) -> None:
         self.current_volume = self.audio_output.volume()
         if self.position() and fade:
             self.fade_out_anim.setStartValue(self.current_volume)

@@ -1,4 +1,7 @@
 from dataclasses import dataclass
+from typing import Optional
+
+from PyQt6.QtGui import QPixmap
 
 
 @dataclass
@@ -13,4 +16,5 @@ class Track:
     year: int
     length: int
     artwork_path: str
+    artwork_pixmap: QPixmap = None
 
