@@ -2,6 +2,8 @@ import math
 from typing import List, Optional
 
 from PyQt6 import QtWidgets
+from PyQt6.QtCore import QEvent, QPoint
+from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import *
 
 from constants import *
@@ -21,6 +23,12 @@ class InformationPanel(QtWidgets.QFrame):
         self.setStyleSheet("QFrame#information_panel {background-color: rgba(255, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH * 1.8)
 
+        # TODO add this into constants to sync it between widgets ?
+        self.selection_color = "rgba(166, 223, 231, 0.8)"
+        self.lost_focus_color = "rgba(0, 0, 0, 0.2)"
+        self.selection_stylesheet = f"selection-background-color: {self.selection_color}; selection-color: black"
+        self.lost_focus_stylesheet = f"selection-background-color: {self.lost_focus_color}; selection-color: black"
+
         self.playing_track_widget: Optional[TrackGroupWidget] = None
 
         self.main_layout = QVBoxLayout(self)
@@ -31,7 +39,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_widget_layout = QVBoxLayout(self.playing_tracks_widget)
         self.playing_tracks_widget_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.playing_tracks_table_widget = QTableWidget()
+        self.playing_tracks_table_widget = ChangeStylesheetOnClickTableWidget()
         # self.playing_tracks_table_widget.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.playing_tracks_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.playing_tracks_table_widget.setColumnCount(1)
@@ -41,9 +49,9 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.playing_tracks_table_widget.setShowGrid(False)
         self.playing_tracks_table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.playing_tracks_table_widget.setStyleSheet(
-            "selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black")
+        self.playing_tracks_table_widget.setStyleSheet(self.selection_stylesheet)
         self.playing_tracks_table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        # self.playing_tracks_table_widget.cellClicked.connect(print)
 
         self.playing_tracks_widget_layout.addWidget(QLabel("Playing Tracks"))
         self.playing_tracks_widget_layout.addWidget(self.playing_tracks_table_widget)
@@ -94,7 +102,9 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_table_widget.setRowCount(len(tracks))
         for i, track in enumerate(tracks):
             track_group_widget = TrackGroupWidget(track, i)
-            track_group_widget.clicked.connect(self.row_clicked)
+            track_group_widget.clicked.connect(lambda row_index: (
+                                                        self.row_clicked(row_index)
+                                                                  ))
             track_group_widget.double_clicked.connect(self.row_double_clicked)
             self.playing_tracks_table_widget.setCellWidget(i, 0, track_group_widget)
             self.playing_tracks_table_widget.setRowHeight(i, track_group_widget.height())
@@ -129,6 +139,9 @@ class InformationPanel(QtWidgets.QFrame):
 
     def unpause_playing_track(self) -> None:
         self.playing_track_widget.set_playing()
+
+    def lose_focus(self) -> None:
+        self.playing_tracks_table_widget.setStyleSheet(self.lost_focus_stylesheet)
 
 
 class TrackGroupWidget(QFrame):
@@ -203,8 +216,8 @@ class TrackGroupWidget(QFrame):
             # noinspection PyTypeChecker
             self.horizontal_layout.itemAt(1).widget().setParent(None)
 
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        self.clicked.emit(self.index)
-
-    def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
-        self.double_clicked.emit(self.index)
+    # def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+    #     self.clicked.emit(self.index)
+    #
+    # def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
+    #     self.double_clicked.emit(self.index)

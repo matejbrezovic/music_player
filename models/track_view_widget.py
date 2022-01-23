@@ -1,7 +1,6 @@
 from typing import List
 
 from PyQt6 import QtWidgets
-from PyQt6.QtGui import QIcon
 from PyQt6.QtWidgets import *
 
 from data_models.track import Track
@@ -34,6 +33,7 @@ class TrackViewWidget(QFrame):
         self.header_splitter.setHandleWidth(2)
         self.header_splitter.resized.connect(self.update_column_width)
         self.header_splitter.splitterMoved.connect(self.update_column_width)
+        self.header_splitter.setStyleSheet("QSplitter::handle{background: red;}")
 
         self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
 
@@ -41,11 +41,6 @@ class TrackViewWidget(QFrame):
             widget = ElidedLabel("" + column_name)
             widget.setMinimumWidth(20)
             self.header_splitter.addWidget(widget)
-
-        self.header_splitter.setCollapsible(0, False)
-        self.header_splitter.setCollapsible(1, False)
-        self.header_splitter.widget(0).setFixedWidth(22)
-        self.header_splitter.widget(1).setFixedWidth(16)
 
         self.table_widget = ChangeStylesheetOnClickTableWidget()
         self.table_widget.horizontalHeader().setMinimumSectionSize(20)
@@ -65,10 +60,18 @@ class TrackViewWidget(QFrame):
                                                                                                                     ))))
         self.table_widget.setStyleSheet(self.selection_stylesheet)
 
+        self.header_splitter.setCollapsible(0, False)
+        self.header_splitter.setCollapsible(1, False)
+        self.header_splitter.widget(0).setFixedWidth(22)
+        self.header_splitter.widget(1).setFixedWidth(16)
+        self.table_widget.setColumnWidth(0, 22)
+        self.table_widget.setColumnWidth(1, 16)
+
         self.main_layout.addWidget(self.header_splitter)
         self.main_layout.addWidget(self.table_widget)
 
     def update_column_width(self) -> None:
+        print("N")
         total_sizes = sum(self.header_splitter.sizes())
         if not total_sizes:
             return
@@ -91,8 +94,10 @@ class TrackViewWidget(QFrame):
                 item.setFlags(Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEnabled)
                 item.track = track
                 self.table_widget.setItem(i, j, item)
+                # self.table_widget.setCellWidget(i, j, ElidedLabel(str(item_text))) # TODO for better text eliding
 
             speaker_label = SpeakerLabel()
+            # speaker_label.setFixedSize(22, 16)
             speaker_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             image_label = ImageLabel(track.artwork_pixmap)
             # image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)

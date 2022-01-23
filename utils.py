@@ -68,11 +68,11 @@ class ElidedLabel(QLabel):
         elided = metrics.elidedText(self.text(), Qt.TextElideMode.ElideRight, self.width())
         QPainter(self).drawText(self.rect(), self.alignment(), elided)
 
-    def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
-        self.clicked.emit(self)
-
-    def mouseDoubleClickEvent(self, ev: QtGui.QMouseEvent) -> None:
-        self.double_clicked.emit(self)
+    # def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
+    #     self.clicked.emit(self)
+    #
+    # def mouseDoubleClickEvent(self, ev: QtGui.QMouseEvent) -> None:
+    #     self.double_clicked.emit(self)
 
 
 class ImageLabel(QLabel):
@@ -168,10 +168,21 @@ class ChangeStylesheetOnClickTableWidget(QTableWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.selection_stylesheet = f"selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black"
+        # self.is_focused = self.styleSheet() == self.selection_stylesheet
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        self.setStyleSheet(self.selection_stylesheet)
+        # print("A")
+        if not self.styleSheet() == self.selection_stylesheet:
+            self.setStyleSheet(self.selection_stylesheet)
         super().mousePressEvent(event)
+
+    def set_selection_stylesheet(self):
+        self.setStyleSheet(self.selection_stylesheet)
+
+    # def mouseReleaseEvent(self, e: QtGui.QMouseEvent) -> None:
+    #     print("A")
+    #     self.setStyleSheet(self.selection_stylesheet)
+    #     super().mouseReleaseEvent(e)
 
 
 class SpeakerLabel(QLabel):

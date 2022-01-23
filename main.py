@@ -1,3 +1,9 @@
+# stop python from using internet
+# import socket
+# def guard(*args, **kwargs):
+#     raise Exception("I told you not to use the Internet!")
+# socket.socket = guard
+
 import sys
 
 from PyQt6 import QtWidgets
@@ -74,6 +80,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.horizontal_splitter.setStretchFactor(0, 0)
         self.horizontal_splitter.setStretchFactor(1, 1)
         self.horizontal_splitter.setStretchFactor(2, 0)
+        self.horizontal_splitter.setChildrenCollapsible(False)
 
         self.central_widget_layout.addWidget(self.horizontal_splitter)
         self.central_widget_layout.addWidget(self.audio_controller)
@@ -82,10 +89,11 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
         self.add_files_dialog.finished.connect(self.navigation_panel.refresh_groups)
 
-        self.main_panel.track_clicked.connect(lambda: None)  # TODO
+        self.main_panel.track_clicked.connect(lambda: self.information_panel.lose_focus())  # TODO
 
         self.main_panel.track_double_clicked.connect(
-            lambda track: (self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
+            lambda track: (self.information_panel.lose_focus(),
+                           self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
                            self.audio_controller.set_playlist_index(
                                self.audio_controller.current_playlist.index(track)),
                            self.audio_controller.play()))
@@ -100,6 +108,14 @@ class MainWindowUi(QtWidgets.QMainWindow):
                             self.audio_controller.play(),
                             self.main_panel.set_playing_track(self.audio_controller.get_current_track())))
 
+        self.information_panel.track_clicked.connect(lambda: self.main_panel.lose_focus())
+
+        self.information_panel.track_double_clicked.connect(
+            lambda track: (self.audio_controller.set_playlist_index(
+                self.audio_controller.current_playlist.index(track)),
+                           self.audio_controller.play(),
+                           self.main_panel.lose_focus()))
+
         self.audio_controller.updated_playing_track.connect(
             lambda track: (self.main_panel.set_playing_track(track),
                            self.information_panel.set_currently_playing_track(track)))
@@ -110,19 +126,12 @@ class MainWindowUi(QtWidgets.QMainWindow):
                                                         self.main_panel.unpause_playing_track()))
         self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
 
-        self.information_panel.track_clicked.connect(lambda: self.main_panel.lose_focus())
-
-        self.information_panel.track_double_clicked.connect(
-            lambda track: (self.audio_controller.set_playlist_index(
-                            self.audio_controller.current_playlist.index(track)),
-                           self.audio_controller.play(),
-                           self.main_panel.lose_focus()))
-
 
 class App(QApplication):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
+        # noinspection PyArgumentList
         self.setStyle(QStyleFactory.create("windowsvista"))
 
 
