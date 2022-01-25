@@ -42,7 +42,7 @@ class TrackViewWidget(QFrame):
             widget.setMinimumWidth(20)
             self.header_splitter.addWidget(widget)
 
-        self.table_widget = ChangeStylesheetOnClickTableWidget()
+        self.table_widget = ChangeStylesheetOnClickTableWidget(self)
         self.table_widget.horizontalHeader().setMinimumSectionSize(20)
         self.table_widget.setColumnCount(len(self.column_names))
         self.table_widget.verticalHeader().setVisible(False)
@@ -126,6 +126,8 @@ class TrackViewWidget(QFrame):
         self.select_row_by_index(self.displayed_tracks.index(track))
 
     def lose_focus(self) -> None:
+        print("L")
+        # self.table_widget.
         self.table_widget.setStyleSheet(self.lost_focus_stylesheet)
 
     def set_playing_track(self, track: Track) -> None:
@@ -156,3 +158,7 @@ class TrackViewWidget(QFrame):
         except ValueError:
             pass
         # self.speaker_label.set_playing()
+
+    # def focusInEvent(self, a0: QtGui.QFocusEvent) -> None:
+    #     print("Focus track view")
+    #     super().focusInEvent(a0)

@@ -1,7 +1,7 @@
 import datetime
 
 import mutagen
-from PyQt6 import QtGui
+from PyQt6 import QtGui, QtCore
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QTableWidget, \
@@ -169,6 +169,7 @@ class ChangeStylesheetOnClickTableWidget(QTableWidget):
         super().__init__(parent)
         self.selection_stylesheet = f"selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black"
         # self.is_focused = self.styleSheet() == self.selection_stylesheet
+        # self.currentCellChanged.connect(prev_row, prev_coll, curr_row, curr_col)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         # print("A")
@@ -183,6 +184,12 @@ class ChangeStylesheetOnClickTableWidget(QTableWidget):
     #     print("A")
     #     self.setStyleSheet(self.selection_stylesheet)
     #     super().mouseReleaseEvent(e)
+
+    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+        print("FOCUS")
+        if self.parent():
+            QtCore.QCoreApplication.sendEvent(self.parent(), event)
+        super().focusInEvent(event)
 
 
 class SpeakerLabel(QLabel):

@@ -2,8 +2,6 @@ import math
 from typing import List, Optional
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QEvent, QPoint
-from PyQt6.QtGui import QMouseEvent
 from PyQt6.QtWidgets import *
 
 from constants import *
@@ -28,6 +26,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.lost_focus_color = "rgba(0, 0, 0, 0.2)"
         self.selection_stylesheet = f"selection-background-color: {self.selection_color}; selection-color: black"
         self.lost_focus_stylesheet = f"selection-background-color: {self.lost_focus_color}; selection-color: black"
+        self.playing_tracks: List[Track] = []
 
         self.playing_track_widget: Optional[TrackGroupWidget] = None
 
@@ -40,6 +39,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_widget_layout.setContentsMargins(0, 0, 0, 0)
 
         self.playing_tracks_table_widget = ChangeStylesheetOnClickTableWidget()
+        # self.playing_tracks_table_widget.setStyleSheet(f"selection-background-color: rgba(0, 0, 0, 0); selection-color: black")
         # self.playing_tracks_table_widget.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.playing_tracks_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.playing_tracks_table_widget.setColumnCount(1)
@@ -51,6 +51,10 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.playing_tracks_table_widget.setStyleSheet(self.selection_stylesheet)
         self.playing_tracks_table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.playing_tracks_table_widget.cellClicked.connect(lambda row, _: self.track_clicked.emit(self.playing_tracks[row]))
+        self.playing_tracks_table_widget.cellDoubleClicked.connect(
+            lambda row, _: self.track_double_clicked.emit(self.playing_tracks[row]))
+        # self.playing_tracks_table_widget.currentCellChanged(lambda prev, _, curr, __: self.playing_tracks_table_widget.setBackgroundRole(QPalette.ColorRole.Base))
         # self.playing_tracks_table_widget.cellClicked.connect(print)
 
         self.playing_tracks_widget_layout.addWidget(QLabel("Playing Tracks"))
@@ -98,6 +102,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_double_clicked.emit(self.playing_tracks_table_widget.cellWidget(row_index, 0).track)
 
     def set_playing_tracks(self, tracks: List[Track]) -> None:
+        self.playing_tracks = tracks
         self.playing_tracks_table_widget.clearSelection()
         self.playing_tracks_table_widget.setRowCount(len(tracks))
         for i, track in enumerate(tracks):
@@ -143,6 +148,9 @@ class InformationPanel(QtWidgets.QFrame):
     def lose_focus(self) -> None:
         self.playing_tracks_table_widget.setStyleSheet(self.lost_focus_stylesheet)
 
+    # def get_focus(self) -> None:
+    #
+
 
 class TrackGroupWidget(QFrame):
     clicked = pyqtSignal(int)
@@ -165,11 +173,11 @@ class TrackGroupWidget(QFrame):
 
         self.title_label = ElidedLabel(self.title)
         self.title_label.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.title_label.clicked.connect(self.mousePressEvent)
-        self.title_label.double_clicked.connect(self.mouseDoubleClickEvent)
+        # self.title_label.clicked.connect(self.mousePressEvent)
+        # self.title_label.double_clicked.connect(self.mouseDoubleClickEvent)
         self.subtitle_label = ElidedLabel(self.subtitle)
-        self.subtitle_label.clicked.connect(self.mousePressEvent)
-        self.subtitle_label.double_clicked.connect(self.mouseDoubleClickEvent)
+        # self.subtitle_label.clicked.connect(self.mousePressEvent)
+        # self.subtitle_label.double_clicked.connect(self.mouseDoubleClickEvent)
         self.subtitle_label.setStyleSheet("font-size: 10px;")
         self.image_label = QLabel()
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
