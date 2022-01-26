@@ -60,7 +60,3 @@ class MainPanel(QtWidgets.QFrame):
 
     def unpause_playing_track(self) -> None:
         self.track_view_widget.unpause_playing_track()
-
-    def lose_focus(self) -> None:
-        self.track_view_widget.lose_focus()
-

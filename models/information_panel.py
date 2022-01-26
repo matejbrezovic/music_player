@@ -158,10 +158,6 @@ class InformationPanel(QtWidgets.QFrame):
     def unpause_playing_track(self) -> None:
         self.playing_track_widget.set_playing()
 
-    def lose_focus(self) -> None:
-        ...
-        # self.playing_tracks_table_widget.setStyleSheet(self.lost_focus_stylesheet)
-
 
 class TrackGroupWidget(QFrame):
     clicked = pyqtSignal(int)

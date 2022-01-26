@@ -131,10 +131,6 @@ class TrackViewWidget(QFrame):
             return
         self.select_row_by_index(self.displayed_tracks.index(track))
 
-    def lose_focus(self) -> None:
-        ...
-        # self.table_widget.setStyleSheet(self.lost_focus_stylesheet)
-
     def set_playing_track(self, track: Track) -> None:
         def reset_track_column() -> None:
             for i in range(self.table_widget.rowCount()):
