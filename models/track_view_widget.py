@@ -1,3 +1,4 @@
+import typing
 from typing import List
 
 from PyQt6 import QtWidgets
@@ -5,6 +6,8 @@ from PyQt6.QtWidgets import *
 
 from data_models.track import Track
 from utils import *
+from constants import *
+import global_timer
 
 
 class TrackViewWidget(QFrame):
@@ -15,10 +18,10 @@ class TrackViewWidget(QFrame):
         super().__init__(parent)
         self.displayed_tracks: List[Track] = []
         self.loaded_displays = {}
-        self.selection_color = "rgba(166, 223, 231, 0.8)"
-        self.lost_focus_color = "rgba(0, 0, 0, 0.2)"
-        self.selection_stylesheet = f"selection-background-color: {self.selection_color}; selection-color: black"
-        self.lost_focus_stylesheet = f"selection-background-color: {self.lost_focus_color}; selection-color: black"
+        # self.selection_color = "rgba(166, 223, 231, 0.8)"
+        # self.lost_focus_color = "rgba(0, 0, 0, 0.2)"
+        # self.selection_stylesheet = f"selection-background-color: {self.selection_color}; selection-color: black"
+        # self.lost_focus_stylesheet = f"selection-background-color: {self.lost_focus_color}; selection-color: black"
         self.default_stylesheet = ""
         self.selected_row_index = 0
         self.playing_track = None
@@ -53,12 +56,15 @@ class TrackViewWidget(QFrame):
         self.table_widget.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.table_widget.itemClicked.connect(lambda item: (self.track_clicked.emit(item.track),
-                                                            self.set_selected_row_index(self.table_widget.row(item))))
-        self.table_widget.itemDoubleClicked.connect(lambda item: (self.track_double_clicked.emit(item.track),
-                                                                  self.set_selected_row_index(self.table_widget.row(item
-                                                                                                                    ))))
-        self.table_widget.setStyleSheet(self.selection_stylesheet)
+        self.table_widget.itemClicked.connect(
+            lambda item: (self.track_clicked.emit(item.track),
+                          self.set_selected_row_index(self.table_widget.row(item))))
+        self.table_widget.itemDoubleClicked.connect(self.double_clicked)
+
+        self.table_widget.setStyleSheet(SELECTION_STYLESHEET)
+
+        self._focus_frame = FocusFrame(self.table_widget)
+        self._focus_frame.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
         self.header_splitter.setCollapsible(0, False)
         self.header_splitter.setCollapsible(1, False)
@@ -68,10 +74,15 @@ class TrackViewWidget(QFrame):
         self.table_widget.setColumnWidth(1, 16)
 
         self.main_layout.addWidget(self.header_splitter)
-        self.main_layout.addWidget(self.table_widget)
+        self.main_layout.addWidget(self._focus_frame)
+
+    def double_clicked(self, item: QTableWidgetItem):
+        global_timer.timer_init()
+        global_timer.start()
+        self.track_double_clicked.emit(item.track)
+        self.set_selected_row_index(self.table_widget.row(item))
 
     def update_column_width(self) -> None:
-        print("N")
         total_sizes = sum(self.header_splitter.sizes())
         if not total_sizes:
             return
@@ -99,16 +110,11 @@ class TrackViewWidget(QFrame):
             speaker_label = SpeakerLabel()
             # speaker_label.setFixedSize(22, 16)
             speaker_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            image_label = ImageLabel(track.artwork_pixmap)
-            # image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            image_label = ImageLabel(track.artwork_pixmap) if track.artwork_pixmap else QLabel("-")
+            image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             image_label.setFixedSize(22, 22)
-            # image_label.setPixmap(track.artwork_pixmap.scaled(self.width(), self.width(),
-            #                                                   Qt.AspectRatioMode.KeepAspectRatio,
-            #                                                   Qt.TransformationMode.SmoothTransformation))
-            # image_label.show()
             self.table_widget.setCellWidget(i, 1, speaker_label)
             self.table_widget.setCellWidget(i, 0, image_label)
-            # self.table_widget.item(i, 0).setIcon(QIcon(track.artwork_pixmap))
 
             self.table_widget.setRowHeight(i, 22)
 
@@ -126,15 +132,14 @@ class TrackViewWidget(QFrame):
         self.select_row_by_index(self.displayed_tracks.index(track))
 
     def lose_focus(self) -> None:
-        print("L")
-        # self.table_widget.
-        self.table_widget.setStyleSheet(self.lost_focus_stylesheet)
+        ...
+        # self.table_widget.setStyleSheet(self.lost_focus_stylesheet)
 
     def set_playing_track(self, track: Track) -> None:
         def reset_track_column() -> None:
             for i in range(self.table_widget.rowCount()):
                 try:
-                    self.table_widget.cellWidget(i, 1).set_transparent()
+                    typing.cast(SpeakerLabel, self.table_widget.cellWidget(i, 1)).set_transparent()
                 except AttributeError:
                     pass
 
@@ -143,22 +148,12 @@ class TrackViewWidget(QFrame):
             return
 
         self.playing_track = track
-        self.table_widget.cellWidget(self.displayed_tracks.index(track), 1).set_playing()
+        typing.cast(SpeakerLabel, self.table_widget.cellWidget(self.displayed_tracks.index(track), 1)).set_playing()
 
     def pause_playing_track(self) -> None:
-        try:
-            self.table_widget.cellWidget(self.displayed_tracks.index(self.playing_track), 1).set_paused()
-        except ValueError:
-            pass
-        # self.speaker_label.set_paused()
+        typing.cast(SpeakerLabel, self.table_widget.cellWidget(
+            self.displayed_tracks.index(self.playing_track), 1)).set_paused()
 
     def unpause_playing_track(self) -> None:
-        try:
-            self.table_widget.cellWidget(self.displayed_tracks.index(self.playing_track), 1).set_playing()
-        except ValueError:
-            pass
-        # self.speaker_label.set_playing()
-
-    # def focusInEvent(self, a0: QtGui.QFocusEvent) -> None:
-    #     print("Focus track view")
-    #     super().focusInEvent(a0)
+        typing.cast(SpeakerLabel, self.table_widget.cellWidget(
+            self.displayed_tracks.index(self.playing_track), 1)).set_playing()

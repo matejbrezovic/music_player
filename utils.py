@@ -1,15 +1,17 @@
 import datetime
+from typing import Optional
 
 import mutagen
 from PyQt6 import QtGui, QtCore
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QTableWidget, \
-    QHeaderView
+    QHeaderView, QHBoxLayout, QVBoxLayout, QWidget
 from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
 from PIL.ImageQt import ImageQt
+from constants import *
 
 
 def classify(module):
@@ -164,32 +166,34 @@ class PathCheckbox(QCheckBox):
         self.path = path
 
 
+class FocusFrame(QFrame):
+    def __init__(self, focus_receiver: QWidget, parent=None):
+        super().__init__(parent)
+        self.focus_receiver = focus_receiver
+        self.layout = QVBoxLayout(self)
+        self.layout.setContentsMargins(0, 0, 0, 0)
+        self.setContentsMargins(0, 0, 0, 0)
+        self.layout.addWidget(focus_receiver)
+        self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+
+    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+        self.focus_receiver.focusInEvent(event)
+
+    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+        self.focus_receiver.focusOutEvent(event)
+
+
 class ChangeStylesheetOnClickTableWidget(QTableWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.selection_stylesheet = f"selection-background-color: rgba(166, 223, 231, 0.8); selection-color: black"
-        # self.is_focused = self.styleSheet() == self.selection_stylesheet
-        # self.currentCellChanged.connect(prev_row, prev_coll, curr_row, curr_col)
-
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        # print("A")
-        if not self.styleSheet() == self.selection_stylesheet:
-            self.setStyleSheet(self.selection_stylesheet)
-        super().mousePressEvent(event)
-
-    def set_selection_stylesheet(self):
-        self.setStyleSheet(self.selection_stylesheet)
-
-    # def mouseReleaseEvent(self, e: QtGui.QMouseEvent) -> None:
-    #     print("A")
-    #     self.setStyleSheet(self.selection_stylesheet)
-    #     super().mouseReleaseEvent(e)
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        print("FOCUS")
-        if self.parent():
-            QtCore.QCoreApplication.sendEvent(self.parent(), event)
+        self.setStyleSheet(SELECTION_STYLESHEET)
         super().focusInEvent(event)
+
+    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+        self.setStyleSheet(LOST_FOCUS_STYLESHEET)
+        super().focusOutEvent(event)
 
 
 class SpeakerLabel(QLabel):
@@ -217,7 +221,7 @@ class SpeakerLabel(QLabel):
         self.clear()
 
 
-def get_artwork_pixmap(file_path: str, default: str = "album") -> QPixmap:
+def get_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
     class NoArtworkError(Exception):
         pass
 
@@ -235,11 +239,14 @@ def get_artwork_pixmap(file_path: str, default: str = "album") -> QPixmap:
             except (mutagen.mp4.MP4StreamInfoError, KeyError):
                 raise NoArtworkError
     except (AttributeError, NoArtworkError, MutagenError, TypeError):
-        if default.lower() in ['album', 'artist', 'composer', 'folder']:
-            pixmap = QPixmap(f"icons/{default.lower()}.png")
-        else:
-            pixmap = QPixmap("icons/misc.png")
+        return None
     return pixmap
+
+
+def get_default_artwork_pixmap(default_type: str) -> QPixmap:
+    if default_type.lower() in ['album', 'artist', 'composer', 'folder']:
+        return QPixmap(f"icons/{default_type.lower()}.png")
+    return QPixmap("icons/misc.png")
 
 
 def get_formatted_time(track_duration: int) -> str:

@@ -9,6 +9,7 @@ from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
 from tag_manager import TagManager
 from utils import *
+from constants import *
 
 
 class NavigationPanel(QFrame):
@@ -29,7 +30,7 @@ class NavigationPanel(QFrame):
             4: "Genre",
             5: "Year"
         }
-        self.group_table_widget = QTableWidget()
+        self.group_table_widget = ChangeStylesheetOnClickTableWidget(self)
         self.group_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.group_table_widget.setColumnCount(1)
         self.group_table_widget.verticalHeader().setVisible(False)
@@ -38,9 +39,11 @@ class NavigationPanel(QFrame):
         self.group_table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.group_table_widget.setShowGrid(False)
         self.group_table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.group_table_widget.setStyleSheet("selection-background-color: rgba(166, 223, 231, 0.8); "
-                                              "selection-color: black")
+        self.group_table_widget.setStyleSheet(SELECTION_STYLESHEET)
         self.group_table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+
+        self._focus_frame = FocusFrame(self.group_table_widget)
+        self._focus_frame.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
         self.group_combo_box = QtWidgets.QComboBox()
         self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
@@ -50,8 +53,7 @@ class NavigationPanel(QFrame):
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vertical_layout.addWidget(self.group_combo_box)
-        # noinspection PyTypeChecker
-        self.vertical_layout.addWidget(self.group_table_widget)
+        self.vertical_layout.addWidget(self._focus_frame)
 
     def row_clicked(self, row_index: int) -> None:
         self.group_table_widget.setCurrentCell(row_index, 0)
@@ -121,7 +123,9 @@ class GroupWidget(QFrame):
         self.image_label = QLabel()
         self.image_label.setFixedSize(60, 60)
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.artwork_pixmap = get_artwork_pixmap(self.tracks[0].file_path, group_type)
+        self.artwork_pixmap = get_artwork_pixmap(self.tracks[0].file_path)
+        if not self.artwork_pixmap:
+            self.artwork_pixmap = get_default_artwork_pixmap(group_type)
         self.image_label.setPixmap(self.artwork_pixmap.scaled(self.image_label.width() - 4,
                                                               self.image_label.height() - 4,
                                                               Qt.AspectRatioMode.KeepAspectRatio,

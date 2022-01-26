@@ -17,6 +17,8 @@ from models.information_panel import InformationPanel
 from models.main_panel import MainPanel
 from models.navigation_panel import NavigationPanel
 
+import global_timer
+
 
 class MainWindowUi(QtWidgets.QMainWindow):
     def __init__(self):
@@ -92,11 +94,13 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.main_panel.track_clicked.connect(lambda: self.information_panel.lose_focus())  # TODO
 
         self.main_panel.track_double_clicked.connect(
-            lambda track: (self.information_panel.lose_focus(),
+            lambda track: (
+
                            self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
                            self.audio_controller.set_playlist_index(
                                self.audio_controller.current_playlist.index(track)),
-                           self.audio_controller.play()))
+                           self.audio_controller.play(),
+                           ))
 
         self.navigation_panel.group_clicked.connect(
             lambda tracks: (self.main_panel.display_tracks(tracks),

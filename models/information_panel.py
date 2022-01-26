@@ -10,6 +10,8 @@ from repositories.tracks_repository import TracksRepository
 from tag_manager import TagManager
 from utils import *
 
+import global_timer
+
 
 class InformationPanel(QtWidgets.QFrame):
     track_clicked = pyqtSignal(Track)
@@ -22,10 +24,10 @@ class InformationPanel(QtWidgets.QFrame):
         self.setMinimumWidth(PANEL_MIN_WIDTH * 1.8)
 
         # TODO add this into constants to sync it between widgets ?
-        self.selection_color = "rgba(166, 223, 231, 0.8)"
-        self.lost_focus_color = "rgba(0, 0, 0, 0.2)"
-        self.selection_stylesheet = f"selection-background-color: {self.selection_color}; selection-color: black"
-        self.lost_focus_stylesheet = f"selection-background-color: {self.lost_focus_color}; selection-color: black"
+        # self.selection_color = "rgba(166, 223, 231, 0.8)"
+        # self.lost_focus_color = "rgba(0, 0, 0, 0.2)"
+        # self.selection_stylesheet = f"selection-background-color: {self.selection_color}; selection-color: black"
+        # self.lost_focus_stylesheet = f"selection-background-color: {self.lost_focus_color}; selection-color: black"
         self.playing_tracks: List[Track] = []
 
         self.playing_track_widget: Optional[TrackGroupWidget] = None
@@ -38,9 +40,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_widget_layout = QVBoxLayout(self.playing_tracks_widget)
         self.playing_tracks_widget_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.playing_tracks_table_widget = ChangeStylesheetOnClickTableWidget()
-        # self.playing_tracks_table_widget.setStyleSheet(f"selection-background-color: rgba(0, 0, 0, 0); selection-color: black")
-        # self.playing_tracks_table_widget.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.playing_tracks_table_widget = ChangeStylesheetOnClickTableWidget(self)
         self.playing_tracks_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         self.playing_tracks_table_widget.setColumnCount(1)
         self.playing_tracks_table_widget.verticalHeader().setVisible(False)
@@ -49,16 +49,18 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.playing_tracks_table_widget.setShowGrid(False)
         self.playing_tracks_table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        self.playing_tracks_table_widget.setStyleSheet(self.selection_stylesheet)
-        self.playing_tracks_table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.playing_tracks_table_widget.cellClicked.connect(lambda row, _: self.track_clicked.emit(self.playing_tracks[row]))
+        self.playing_tracks_table_widget.setStyleSheet(SELECTION_STYLESHEET)
+        # self.playing_tracks_table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.playing_tracks_table_widget.cellClicked.connect(
+            lambda row, _: self.track_clicked.emit(self.playing_tracks[row]))
         self.playing_tracks_table_widget.cellDoubleClicked.connect(
             lambda row, _: self.track_double_clicked.emit(self.playing_tracks[row]))
-        # self.playing_tracks_table_widget.currentCellChanged(lambda prev, _, curr, __: self.playing_tracks_table_widget.setBackgroundRole(QPalette.ColorRole.Base))
-        # self.playing_tracks_table_widget.cellClicked.connect(print)
+
+        self._focus_frame = FocusFrame(self.playing_tracks_table_widget)
+        self._focus_frame.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
         self.playing_tracks_widget_layout.addWidget(QLabel("Playing Tracks"))
-        self.playing_tracks_widget_layout.addWidget(self.playing_tracks_table_widget)
+        self.playing_tracks_widget_layout.addWidget(self._focus_frame)
 
         self.track_info_widget = QFrame()
         self.track_info_widget_layout = QVBoxLayout(self.track_info_widget)
@@ -74,8 +76,12 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_info_scroll_area.setWidget(self.track_info_scroll_area_widget)
 
         self.currently_playing_track_title = ElidedLabel("No Track")
-        self.currently_playing_track_info = ElidedLabel("No info")
-        self.currently_playing_track_image_label = ImageLabel(get_artwork_pixmap("", "album"))
+        self.currently_playing_track_info = ElidedLabel("No Info")
+
+        artwork_pixmap = get_artwork_pixmap("")
+        if not artwork_pixmap:
+            artwork_pixmap = get_default_artwork_pixmap("album")
+        self.currently_playing_track_image_label = ImageLabel(artwork_pixmap)
         # self.currently_playing_track_image_label.setPixmap()
 
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_title)
@@ -86,11 +92,14 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_info_widget_layout.addWidget(QLabel("Track Information"))
         self.track_info_widget_layout.addWidget(self.track_info_scroll_area)
 
+
+
         self.vertical_splitter.addWidget(self.playing_tracks_widget)
         self.vertical_splitter.addWidget(self.track_info_widget)
         self.vertical_splitter.setSizes([1, 1])
         self.main_layout.addWidget(self.vertical_splitter)
         self.set_playing_tracks(TracksRepository().get_tracks())
+        self.artwork_pixmap = QPixmap(f"icons/album.png")
         # self.set_currently_playing_track(TracksRepository().get_tracks()[0])
 
     def row_clicked(self, row_index: int) -> None:
@@ -102,17 +111,18 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_double_clicked.emit(self.playing_tracks_table_widget.cellWidget(row_index, 0).track)
 
     def set_playing_tracks(self, tracks: List[Track]) -> None:
+        global_timer.timer_init()
+        global_timer.start()
         self.playing_tracks = tracks
         self.playing_tracks_table_widget.clearSelection()
         self.playing_tracks_table_widget.setRowCount(len(tracks))
         for i, track in enumerate(tracks):
             track_group_widget = TrackGroupWidget(track, i)
-            track_group_widget.clicked.connect(lambda row_index: (
-                                                        self.row_clicked(row_index)
-                                                                  ))
+            track_group_widget.clicked.connect(lambda row_index: (self.row_clicked(row_index)))
             track_group_widget.double_clicked.connect(self.row_double_clicked)
             self.playing_tracks_table_widget.setCellWidget(i, 0, track_group_widget)
             self.playing_tracks_table_widget.setRowHeight(i, track_group_widget.height())
+        global_timer.stop()
 
     def set_currently_playing_track(self, track: Track) -> None:
         def get_track_info(track: Track) -> str:
@@ -127,7 +137,10 @@ class InformationPanel(QtWidgets.QFrame):
         self.currently_playing_track_title.setText(track.title)
         self.currently_playing_track_info.setText(get_track_info(track))
         self.currently_playing_track_image_label.deleteLater()
-        self.currently_playing_track_image_label = ImageLabel(get_artwork_pixmap(track.file_path))
+        artwork_pixmap = get_artwork_pixmap(track.file_path)
+        if not artwork_pixmap:
+            artwork_pixmap = self.artwork_pixmap
+        self.currently_playing_track_image_label = ImageLabel(artwork_pixmap)
         # self.currently_playing_track_image_label.setPixmap(get_artwork_pixmap(track.file_path))
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_image_label)
 
@@ -146,10 +159,8 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_track_widget.set_playing()
 
     def lose_focus(self) -> None:
-        self.playing_tracks_table_widget.setStyleSheet(self.lost_focus_stylesheet)
-
-    # def get_focus(self) -> None:
-    #
+        ...
+        # self.playing_tracks_table_widget.setStyleSheet(self.lost_focus_stylesheet)
 
 
 class TrackGroupWidget(QFrame):
@@ -183,7 +194,9 @@ class TrackGroupWidget(QFrame):
         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         # self.image_label.setStyleSheet("background-color: green")
         self.image_label.setFixedSize(60, 60)
-        self.artwork_pixmap = get_artwork_pixmap(track.file_path, "album")
+        self.artwork_pixmap = get_artwork_pixmap(track.file_path)
+        if not self.artwork_pixmap:
+            self.artwork_pixmap = get_default_artwork_pixmap("album")
         self.image_label.setPixmap(self.artwork_pixmap.scaled(self.image_label.width() - 4,
                                                               self.image_label.height() - 4,
                                                               Qt.AspectRatioMode.KeepAspectRatio,

@@ -21,6 +21,16 @@ STARTING_AUDIO_VOLUME = 50
 
 DEFAULT_AUDIO_PATH = "/home/matey/Music"
 
+# Table widgets constants
+
+SELECTION_COLOR = "rgba(166, 223, 231, 0.8)"
+LOST_FOCUS_COLOR = "rgba(0, 0, 0, 0.2)"
+
+SELECTION_STYLESHEET = f"QTableWidget {{selection-background-color: {SELECTION_COLOR}; " \
+                       f"selection-color: black; border: 0px; outline: 0}} "
+LOST_FOCUS_STYLESHEET = f"QTableWidget {{selection-background-color: {LOST_FOCUS_COLOR}; " \
+                        f"selection-color: black; border: 0px}} "
+
 # Audio settings
 
 FADE_IN_ANIM_KEY_VALUE = 0.04
