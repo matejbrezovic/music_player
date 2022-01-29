@@ -159,6 +159,8 @@ class AudioController(QtWidgets.QFrame):
         self.player.setPosition(position)
 
     def set_playlist(self, playlist: List[Union[Track, str]]) -> None:
+        if playlist == self.current_playlist.playlist:
+            return
         self.current_playlist.set_playlist(playlist)
         self.updated_playlist.emit(playlist)
 

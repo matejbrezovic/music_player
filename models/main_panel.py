@@ -46,6 +46,8 @@ class MainPanel(QtWidgets.QFrame):
         ...
 
     def display_tracks(self, tracks: List[Track]) -> None:
+        if self.displayed_tracks == tracks:
+            return
         self.track_view_widget.set_tracks(tracks)
         self.displayed_tracks = tracks
 

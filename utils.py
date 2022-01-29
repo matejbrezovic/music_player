@@ -12,6 +12,7 @@ from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
 from PIL.ImageQt import ImageQt
 from constants import *
+import global_timer
 
 
 def classify(module):
@@ -177,7 +178,10 @@ class FocusFrame(QFrame):
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+        global_timer.timer_init()
+        global_timer.start()
         self.focus_receiver.focusInEvent(event)
+        global_timer.stop()
 
     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
         self.focus_receiver.focusOutEvent(event)

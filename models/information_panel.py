@@ -1,4 +1,5 @@
 import math
+import time
 from typing import List, Optional
 
 from PyQt6 import QtWidgets
@@ -40,21 +41,24 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_widget_layout = QVBoxLayout(self.playing_tracks_widget)
         self.playing_tracks_widget_layout.setContentsMargins(0, 0, 0, 0)
 
-        self.playing_tracks_table_widget = ChangeStylesheetOnClickTableWidget(self)
-        self.playing_tracks_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
-        self.playing_tracks_table_widget.setColumnCount(1)
-        self.playing_tracks_table_widget.verticalHeader().setVisible(False)
-        self.playing_tracks_table_widget.horizontalHeader().setVisible(False)
+        self.playing_tracks_table_widget = QListWidget(self)
+        # self.playing_tracks_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        # self.playing_tracks_table_widget.setColumnCount(1)
+        # self.playing_tracks_table_widget.verticalHeader().setVisible(False)
+        # self.playing_tracks_table_widget.horizontalHeader().setVisible(False)
         self.playing_tracks_table_widget.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.playing_tracks_table_widget.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.playing_tracks_table_widget.setShowGrid(False)
+        # self.playing_tracks_table_widget.setShowGrid(False)
         self.playing_tracks_table_widget.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.playing_tracks_table_widget.setStyleSheet(SELECTION_STYLESHEET)
-        # self.playing_tracks_table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-        self.playing_tracks_table_widget.cellClicked.connect(
-            lambda row, _: self.track_clicked.emit(self.playing_tracks[row]))
-        self.playing_tracks_table_widget.cellDoubleClicked.connect(
-            lambda row, _: self.track_double_clicked.emit(self.playing_tracks[row]))
+        self.playing_tracks_table_widget.setLayoutMode(QListView.LayoutMode.Batched)
+        self.playing_tracks_table_widget.setBatchSize(1)
+        self.playing_tracks_table_widget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.playing_tracks_table_widget.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        # self.playing_tracks_table_widget.cellClicked.connect(
+        #     lambda row, _: self.track_clicked.emit(self.playing_tracks[row]))
+        # self.playing_tracks_table_widget.cellDoubleClicked.connect(
+        #     lambda row, _: self.track_double_clicked.emit(self.playing_tracks[row]))
 
         self._focus_frame = FocusFrame(self.playing_tracks_table_widget)
         self._focus_frame.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
@@ -92,8 +96,6 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_info_widget_layout.addWidget(QLabel("Track Information"))
         self.track_info_widget_layout.addWidget(self.track_info_scroll_area)
 
-
-
         self.vertical_splitter.addWidget(self.playing_tracks_widget)
         self.vertical_splitter.addWidget(self.track_info_widget)
         self.vertical_splitter.setSizes([1, 1])
@@ -111,18 +113,28 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_double_clicked.emit(self.playing_tracks_table_widget.cellWidget(row_index, 0).track)
 
     def set_playing_tracks(self, tracks: List[Track]) -> None:
-        global_timer.timer_init()
-        global_timer.start()
+        # global_timer.timer_init()
+        # global_timer.start()
         self.playing_tracks = tracks
+        self.playing_tracks_table_widget.clear()
         self.playing_tracks_table_widget.clearSelection()
-        self.playing_tracks_table_widget.setRowCount(len(tracks))
+        # self.playing_tracks_table_widget.setRowCount(len(tracks))
+        print(len(tracks))
+        start = time.time()
         for i, track in enumerate(tracks):
             track_group_widget = TrackGroupWidget(track, i)
-            track_group_widget.clicked.connect(lambda row_index: (self.row_clicked(row_index)))
-            track_group_widget.double_clicked.connect(self.row_double_clicked)
-            self.playing_tracks_table_widget.setCellWidget(i, 0, track_group_widget)
-            self.playing_tracks_table_widget.setRowHeight(i, track_group_widget.height())
-        global_timer.stop()
+            # track_group_widget.clicked.connect(lambda row_index: (self.row_clicked(row_index)))
+            # track_group_widget.double_clicked.connect(self.row_double_clicked)
+            # self.playing_tracks_table_widget.setCellWidget(i, 0, track_group_widget)
+            # self.playing_tracks_table_widget.setRowHeight(i, track_group_widget.height())
+            # list_widget_item = QListWidgetItem(self.playing_tracks_table_widget)
+            # # Set size hint
+            # list_widget_item.setSizeHint(track_group_widget.sizeHint())
+            #
+            # self.playing_tracks_table_widget.addItem(list_widget_item)
+            # self.playing_tracks_table_widget.setItemWidget(list_widget_item, track_group_widget)
+        print("Creating objects:", time.time() - start)
+        # global_timer.stop()
 
     def set_currently_playing_track(self, track: Track) -> None:
         def get_track_info(track: Track) -> str:
@@ -144,8 +156,8 @@ class InformationPanel(QtWidgets.QFrame):
         # self.currently_playing_track_image_label.setPixmap(get_artwork_pixmap(track.file_path))
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_image_label)
 
-        for i in range(self.playing_tracks_table_widget.rowCount()):
-            track_widget: TrackGroupWidget = self.playing_tracks_table_widget.cellWidget(i, 0)
+        for i in range(self.playing_tracks_table_widget.count()):
+            track_widget: TrackGroupWidget = self.playing_tracks_table_widget.itemWidget(self.playing_tracks_table_widget.item(i))
             if track_widget.track == track:
                 track_widget.set_playing()
                 self.playing_track_widget = track_widget

@@ -91,7 +91,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
         self.add_files_dialog.finished.connect(self.navigation_panel.refresh_groups)
 
-        self.main_panel.track_clicked.connect(lambda: ...)  # TODO
+        # self.main_panel.track_clicked.connect(lambda: ...)  # TODO
 
         self.main_panel.track_double_clicked.connect(
             lambda track: (
@@ -112,7 +112,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
                             self.audio_controller.play(),
                             self.main_panel.set_playing_track(self.audio_controller.get_current_track())))
 
-        self.information_panel.track_clicked.connect(lambda: ...)
+        # self.information_panel.track_clicked.connect(lambda: ...)
 
         self.information_panel.track_double_clicked.connect(
             lambda track: (self.audio_controller.set_playlist_index(
