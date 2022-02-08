@@ -8,6 +8,7 @@ from constants import *
 from data_models.track import Track
 from models.track_view_widget import TrackViewWidget
 from tag_manager import TagManager
+import time
 
 
 class MainPanel(QtWidgets.QFrame):
@@ -46,10 +47,12 @@ class MainPanel(QtWidgets.QFrame):
         ...
 
     def display_tracks(self, tracks: List[Track]) -> None:
+        start = time.time()
         if self.displayed_tracks == tracks:
             return
         self.track_view_widget.set_tracks(tracks)
         self.displayed_tracks = tracks
+        print("Tracks displayed in:", time.time() - start)
 
     def select_track(self, track: Track) -> None:
         self.track_view_widget.select_row_by_track(track)

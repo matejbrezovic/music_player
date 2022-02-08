@@ -113,6 +113,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_double_clicked.emit(self.playing_tracks_table_widget.cellWidget(row_index, 0).track)
 
     def set_playing_tracks(self, tracks: List[Track]) -> None:
+        return
         # global_timer.timer_init()
         # global_timer.start()
         self.playing_tracks = tracks
@@ -133,7 +134,7 @@ class InformationPanel(QtWidgets.QFrame):
             #
             # self.playing_tracks_table_widget.addItem(list_widget_item)
             # self.playing_tracks_table_widget.setItemWidget(list_widget_item, track_group_widget)
-        print("Creating objects:", time.time() - start)
+        print("Creating objects:", time.time() - start) 
         # global_timer.stop()
 
     def set_currently_playing_track(self, track: Track) -> None:

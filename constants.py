@@ -49,5 +49,7 @@ DATABASE_PATH = os.path.abspath("database/test_database.db")
 # Settings constants
 
 
-DEFAULT_CONFIG_PATH = os.getcwd() + "/settings/config.txt"
-DEFAULT_LOADED_TRACKS_FILE_PATH = os.getcwd() + "/settings/tracks.txt"
+pre = "C:/My Files/My Projects/"
+
+DEFAULT_CONFIG_PATH = pre + "music_player/settings/config.txt"
+DEFAULT_LOADED_TRACKS_FILE_PATH = pre + "music_player/settings/tracks.txt"

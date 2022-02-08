@@ -2,6 +2,7 @@ import typing
 from typing import List
 
 from PyQt6 import QtWidgets
+from PyQt6.QtCore import QModelIndex
 from PyQt6.QtWidgets import *
 
 from data_models.track import Track
