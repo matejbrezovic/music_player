@@ -20,7 +20,7 @@ class TracksRepository:
                 tracks = [self._decode_track(t) for t in loaded_json]
                 for track in tracks:
                     track.artwork_pixmap = get_artwork_pixmap(track.file_path)
-                return tracks * 10
+                return tracks * 100
             except json.decoder.JSONDecodeError:
                 return []
 
