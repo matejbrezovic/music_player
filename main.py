@@ -103,14 +103,13 @@ class MainWindowUi(QtWidgets.QMainWindow):
                            ))
 
         self.navigation_panel.group_clicked.connect(
-            lambda tracks: (self.main_panel.display_tracks(tracks),
-                            self.main_panel.set_playing_track(self.audio_controller.get_current_track())))
+            lambda tracks: (self.main_panel.display_tracks(tracks)))
 
         self.navigation_panel.group_double_clicked.connect(
             lambda tracks: (self.main_panel.display_tracks(tracks),
                             self.audio_controller.set_playlist(tracks),
-                            self.audio_controller.play(),
-                            self.main_panel.set_playing_track(self.audio_controller.get_current_track())))
+                            self.audio_controller.play()))
+                            # self.main_panel.set_playing_track(self.audio_controller.get_current_track())))
 
         # self.information_panel.track_clicked.connect(lambda: ...)
 
@@ -120,14 +119,14 @@ class MainWindowUi(QtWidgets.QMainWindow):
                            self.audio_controller.play()))
 
         self.audio_controller.updated_playing_track.connect(
-            lambda track: (self.main_panel.set_playing_track(track),
-                           self.information_panel.set_currently_playing_track(track)))
+            lambda track: (self.main_panel.set_playing_track(track),))
+                           # self.information_panel.set_currently_playing_track(track)))
 
-        self.audio_controller.paused.connect(lambda: (self.information_panel.pause_playing_track(),
-                                                      self.main_panel.pause_playing_track()))
-        self.audio_controller.unpaused.connect(lambda: (self.information_panel.unpause_playing_track(),
-                                                        self.main_panel.unpause_playing_track()))
-        self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
+        self.audio_controller.paused.connect(lambda: (self.main_panel.pause_playing_track()),)
+                                             # .information_panel.pause_playing_track())
+        self.audio_controller.unpaused.connect(lambda: (self.main_panel.unpause_playing_track()),)
+                                                  #      self.information_panel.unpause_playing_track())
+        # self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
 
 
 class App(QApplication):

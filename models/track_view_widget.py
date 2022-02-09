@@ -53,7 +53,6 @@ class TrackViewWidget(QFrame):
         self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.table_view.setIconSize(QSize(22, 22))
-        # self.table_view.setColumnWidth(0, 22)
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.set_new_tracks.connect(self.update_column_width)
 
@@ -74,7 +73,6 @@ class TrackViewWidget(QFrame):
         self.table_view.setColumnWidth(0, 22)
         self.table_view.setColumnWidth(1, 16)
 
-
         self.main_layout.addWidget(self.header_splitter)
         self.main_layout.addWidget(self._focus_frame)
 
@@ -94,17 +92,9 @@ class TrackViewWidget(QFrame):
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self.table_view.set_tracks(tracks)
-
-        # speaker_label = SpeakerLabel()
-        # # speaker_label.setFixedSize(22, 16)
-        # speaker_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # image_label = ImageLabel(track.artwork_pixmap) if track.artwork_pixmap else QLabel("-")
-        # image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # image_label.setFixedSize(22, 22)
-        # self.table_widget.setCellWidget(i, 1, speaker_label)
-        # self.table_widget.setCellWidget(i, 0, image_label)
-        #
-        # self.table_widget.setRowHeight(i, 22)
+        self.displayed_tracks = tracks
+        index = self.displayed_tracks.index(self.playing_track) if self.playing_track in self.displayed_tracks else None
+        self.table_view.set_playing_track_index(index)
 
     def set_selected_row_index(self, index: int) -> None:
         self.selected_row_index = index
@@ -120,27 +110,14 @@ class TrackViewWidget(QFrame):
         self.select_row_by_index(self.displayed_tracks.index(track))
 
     def set_playing_track(self, track: Track) -> None:
-        return
-        def reset_track_column() -> None:
-            for i in range(self.table_view.rowCount()):
-                try:
-                    typing.cast(SpeakerLabel, self.table_view.cellWidget(i, 1)).set_transparent()
-                except AttributeError:
-                    pass
-
-        reset_track_column()
         if track not in self.displayed_tracks:
             return
-
         self.playing_track = track
-        typing.cast(SpeakerLabel, self.table_view.cellWidget(self.displayed_tracks.index(track), 1)).set_playing()
+        self.table_view.set_playing_track_index(self.displayed_tracks.index(track))
+        self.table_view.set_unpaused()
 
     def pause_playing_track(self) -> None:
-        return
-        typing.cast(SpeakerLabel, self.table_view.cellWidget(
-            self.displayed_tracks.index(self.playing_track), 1)).set_paused()
+        self.table_view.set_paused()
 
     def unpause_playing_track(self) -> None:
-        return
-        typing.cast(SpeakerLabel, self.table_view.cellWidget(
-            self.displayed_tracks.index(self.playing_track), 1)).set_playing()
+        self.table_view.set_unpaused()

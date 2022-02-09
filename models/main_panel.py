@@ -58,6 +58,7 @@ class MainPanel(QtWidgets.QFrame):
         self.track_view_widget.select_row_by_track(track)
 
     def set_playing_track(self, track: Track) -> None:
+        print("SET")
         self.track_view_widget.set_playing_track(track)
 
     def pause_playing_track(self) -> None:

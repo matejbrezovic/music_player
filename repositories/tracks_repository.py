@@ -1,4 +1,5 @@
 import json
+from random import randint
 from typing import List
 
 import mutagen.mp3
@@ -20,7 +21,11 @@ class TracksRepository:
                 tracks = [self._decode_track(t) for t in loaded_json]
                 for track in tracks:
                     track.artwork_pixmap = get_artwork_pixmap(track.file_path)
-                return tracks * 100
+
+                tracks = tracks * 100
+                # for track in tracks:
+                #     track.track_id = randint(1, 10000000)
+                return tracks
             except json.decoder.JSONDecodeError:
                 return []
 
