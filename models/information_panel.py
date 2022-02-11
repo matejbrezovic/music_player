@@ -48,7 +48,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.information_table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.information_table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.information_table_view.setShowGrid(False)
-        self.information_table_view.verticalHeader().setDefaultSectionSize(default_row_height + 4)
+        self.information_table_view.verticalHeader().setDefaultSectionSize((default_row_height + 4) // 2)
         self.information_table_view.horizontalHeader().setDefaultSectionSize(default_row_height + 4)
         self.information_table_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         self.information_table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
@@ -60,11 +60,15 @@ class InformationPanel(QtWidgets.QFrame):
         self.information_table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.information_table_view.setStyleSheet(SELECTION_STYLESHEET)
         self.information_table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.information_table_view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         self.information_table_view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         # self.playing_tracks_table_widget.cellClicked.connect(
         #     lambda row, _: self.track_clicked.emit(self.playing_tracks[row]))
         # self.playing_tracks_table_widget.cellDoubleClicked.connect(
         #     lambda row, _: self.track_double_clicked.emit(self.playing_tracks[row]))
+
+
+
 
         self._focus_frame = FocusFrame(self.information_table_view)
         self._focus_frame.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
