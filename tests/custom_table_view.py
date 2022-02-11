@@ -38,7 +38,6 @@ class TableModel(QtCore.QAbstractTableModel):
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole):
         if not self._tracks:
-            print("NOTT")
             return None
 
         if role == Qt.ItemDataRole.TextAlignmentRole and not index.column():
@@ -49,19 +48,21 @@ class TableModel(QtCore.QAbstractTableModel):
                 icon = QIcon(self._tracks[index.row()].artwork_pixmap)
                 return icon if icon else None
             elif index.column() == 1:
-                # print("X:", index.row(), self.playing_track_index)
-                if self.playing_track_index is None:
-                    return
-                # print("X:", index, "Playing", self.playing_track_index)
-                if index.row() == self.playing_track_index:
-                    if self.is_playing:
-                        return QPixmap("icons/speaker_playing.png").scaled(16, 22,
-                                                                         Qt.AspectRatioMode.KeepAspectRatio,
-                                                                         Qt.TransformationMode.SmoothTransformation)
-                    elif not self.is_playing:
-                        return QPixmap("icons/speaker_muted.png").scaled(16, 22,
-                                                                         Qt.AspectRatioMode.KeepAspectRatio,
-                                                                         Qt.TransformationMode.SmoothTransformation)
+                return index.model().index(index.row(), 1).data(Qt.ItemDataRole.DecorationRole)
+
+            #     # print("X:", index.row(), self.playing_track_index)
+            #     if self.playing_track_index is None:
+            #         return
+            #     # print("X:", index, "Playing", self.playing_track_index)
+            #     if index.row() == self.playing_track_index:
+            #         if self.is_playing:
+            #             return QPixmap("icons/speaker_playing.png").scaled(16, 22,
+            #                                                              Qt.AspectRatioMode.KeepAspectRatio,
+            #                                                              Qt.TransformationMode.SmoothTransformation)
+            #         elif not self.is_playing:
+            #             return QPixmap("icons/speaker_muted.png").scaled(16, 22,
+            #                                                              Qt.AspectRatioMode.KeepAspectRatio,
+            #                                                              Qt.TransformationMode.SmoothTransformation)
 
         if role == Qt.ItemDataRole.DisplayRole:
             if not index.column():
@@ -76,29 +77,34 @@ class TableModel(QtCore.QAbstractTableModel):
     def columnCount(self, index: QModelIndex = QModelIndex):
         return len(self.column_names)
 
-    def set_paused(self) -> None:
-        if self.playing_track_index is None:
-            return
+    # def set_paused(self) -> None:
+    #     if self.playing_track_index is None:
+    #         return
+    #
+    #     self.is_playing = False
+    #     self.dataChanged.emit(self.index(self.playing_track_index - 1, 1),
+    #                           self.index(self.playing_track_index + 1, 1))
+    #
+    # def set_unpaused(self) -> None:
+    #     if self.playing_track_index is None:
+    #         return
+    #
+    #     self.is_playing = True
+    #     self.dataChanged.emit(self.index(self.playing_track_index - 1, 1),
+    #                           self.index(self.playing_track_index + 1  , 1))
+    #
+    # def set_playing(self, index: int) -> None:
+    #     if self.playing_track_index is None:
+    #         return
+    #     print("Set playing")
+    #     self.dataChanged.emit(self.index(index - 1, 1), self.index(index, 1))
 
-        self.is_playing = False
-        self.dataChanged.emit(self.index(self.playing_track_index - 1, 1), self.index(self.playing_track_index + 1, 1))
-
-    def set_unpaused(self) -> None:
-        if self.playing_track_index is None:
-            return
-
-        self.is_playing = True
-        self.dataChanged.emit(self.index(self.playing_track_index - 1, 1), self.index(self.playing_track_index + 1  , 1))
-
-    def set_playing(self, index: int) -> None:
-        if self.playing_track_index is None:
-            return
-        print("Set playing")
-        self.dataChanged.emit(self.index(index - 1, 1), self.index(index, 1))
-
-    def set_playing_track_index(self, index: Optional[int]) -> None:
-        self.playing_track_index = index
-        print("Playing track index: ", index)
+    # def set_playing_track_index(self, index: Optional[int]) -> None:
+    #     if self.playing_track_index is not None:
+    #         self.dataChanged.emit(self.index(self.playing_track_index, 1),
+    #                               self.index(self.playing_track_index, 1))
+    #     self.playing_track_index = index
+    #     print("Playing track index: ", index)
 
 
 class TableView(QTableView):
@@ -108,6 +114,7 @@ class TableView(QTableView):
         super().__init__(parent)
         self.verticalHeader().setDefaultSectionSize(22)
         self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
+        self.playing_track_index = None
         self.table_model = TableModel()
         self.setModel(self.table_model)
 
@@ -116,15 +123,42 @@ class TableView(QTableView):
         self.set_new_tracks.emit()
 
     def set_playing_track_index(self, index: Optional[int]) -> None:
-        self.table_model.set_playing_track_index(index)
+        self.playing_track_index = index
+
+        # if isinstance(self.playing_track_index, int):
+        #     self.table_model.clearItemData(self.table_model.index(self.playing_track_index, 1))
         if isinstance(index, int):
-            self.table_model.set_playing(index)
+            self.table_model.setData(self.table_model.index(index, 1),
+                                     QPixmap("icons/speaker_playing.png").scaled(16, 22,
+                                                                                 Qt.AspectRatioMode.KeepAspectRatio,
+                                                                                 Qt.TransformationMode.SmoothTransformation),
+                                     role=Qt.ItemDataRole.DecorationRole
+                                     )
+            print(self.table_model.index(index, 1).data(Qt.ItemDataRole.DecorationRole))
+            self.table_model.dataChanged.emit(self.table_model.index(0, 1),
+                                              self.table_model.index(self.table_model.rowCount(QModelIndex()) - 1, 1))
+
+            print(self.table_model.index(index, 1).data(Qt.ItemDataRole.DecorationRole))
 
     def set_paused(self) -> None:
-        self.table_model.set_paused()
+        self.table_model.setData(self.table_model.index(self.playing_track_index, 1),
+                                 QPixmap("icons/speaker_muted.png").scaled(16, 22,
+                                                                           Qt.AspectRatioMode.KeepAspectRatio,
+                                                                           Qt.TransformationMode.SmoothTransformation),
+                                 role=Qt.ItemDataRole.DecorationRole
+                                 )
+        self.table_model.dataChanged.emit(self.table_model.index(0, 1),
+                                          self.table_model.index(self.table_model.rowCount(QModelIndex()) - 1, 1))
 
     def set_unpaused(self) -> None:
-        self.table_model.set_unpaused()
+        self.table_model.setData(self.table_model.index(self.playing_track_index, 1),
+                                 QPixmap("icons/speaker_playing.png").scaled(16, 22,
+                                                                           Qt.AspectRatioMode.KeepAspectRatio,
+                                                                           Qt.TransformationMode.SmoothTransformation),
+                                 role=Qt.ItemDataRole.DecorationRole
+                                 )
+        self.table_model.dataChanged.emit(self.table_model.index(0, 1),
+                                          self.table_model.index(self.table_model.rowCount(QModelIndex()) - 1, 1))
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
         self.setStyleSheet(SELECTION_STYLESHEET)
