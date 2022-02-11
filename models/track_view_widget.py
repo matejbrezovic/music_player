@@ -1,13 +1,10 @@
-import typing
 from typing import List
 
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import *
 
-import global_timer
-from constants import *
-from custom_table_view import TableView
+from models.track_table_view import TrackTableView
 from data_models.track import Track
 from utils import *
 
@@ -43,7 +40,7 @@ class TrackViewWidget(QFrame):
             widget.setMinimumWidth(20)
             self.header_splitter.addWidget(widget)
 
-        self.table_view = TableView(self)
+        self.table_view = TrackTableView(self)
         self.table_view.horizontalHeader().setMinimumSectionSize(20)
         self.table_view.verticalHeader().setVisible(False)
         self.table_view.horizontalHeader().setVisible(False)

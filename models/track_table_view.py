@@ -12,7 +12,7 @@ from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
 
 
-class TableModel(QtCore.QAbstractTableModel):
+class TrackTableModel(QtCore.QAbstractTableModel):
     def __init__(self):
         super().__init__()
         self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
@@ -20,13 +20,15 @@ class TableModel(QtCore.QAbstractTableModel):
         self.is_playing = False
         self.playing_track_index: Optional[int] = None
 
-        self.playing_speaker_pixmap = QPixmap("icons/speaker_playing.png").scaled(22, 22,
-                                                                   Qt.AspectRatioMode.KeepAspectRatio,
-                                                                   Qt.TransformationMode.SmoothTransformation)
+        self.playing_speaker_pixmap = QPixmap("icons/speaker_playing.png").scaled(
+            16, 22,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation)
 
-        self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png").scaled(22, 22,
-                                                                         Qt.AspectRatioMode.KeepAspectRatio,
-                                                                         Qt.TransformationMode.SmoothTransformation)
+        self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png").scaled(
+            16, 22,
+            Qt.AspectRatioMode.KeepAspectRatio,
+            Qt.TransformationMode.SmoothTransformation)
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self.layoutAboutToBeChanged.emit()
@@ -52,13 +54,9 @@ class TableModel(QtCore.QAbstractTableModel):
                     return
                 if index.row() == self.playing_track_index:
                     if self.is_playing:
-                        return QPixmap("icons/speaker_playing.png").scaled(16, 22,
-                                                                         Qt.AspectRatioMode.KeepAspectRatio,
-                                                                         Qt.TransformationMode.SmoothTransformation)
+                        return self.playing_speaker_pixmap
                     elif not self.is_playing:
-                        return QPixmap("icons/speaker_muted.png").scaled(16, 22,
-                                                                         Qt.AspectRatioMode.KeepAspectRatio,
-                                                                         Qt.TransformationMode.SmoothTransformation)
+                        return self.muted_speaker_pixmap
 
         if role == Qt.ItemDataRole.DisplayRole:
             if not index.column():
@@ -86,20 +84,20 @@ class TableModel(QtCore.QAbstractTableModel):
     def set_playing_track_index(self, index: Optional[int]) -> None:
         self.playing_track_index = index
         print("Playing track index: ", index)
-        if self.playing_track_index is None:
-            return
-        print("Set playing")
-        self.dataChanged.emit(self.index(index - 1, 1), self.index(index, 1))
+        if self.playing_track_index is not None:
+            print("Set playing")
+            self.dataChanged.emit(self.index(0, 1),
+                                  self.index(self.rowCount(), 1))
 
 
-class TableView(QTableView):
+class TrackTableView(QTableView):
     set_new_tracks = pyqtSignal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.verticalHeader().setDefaultSectionSize(22)
         self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
-        self._table_model = TableModel()
+        self._table_model = TrackTableModel()
         self.setModel(self._table_model)
 
     def set_tracks(self, tracks: List[Track]) -> None:
@@ -128,7 +126,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.table_widget = TableView()
+        self.table_widget = TrackTableView(self)
 
         self.table_widget.horizontalHeader().setMinimumSectionSize(20)
         self.table_widget.verticalHeader().setVisible(False)
@@ -146,6 +144,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print(f"Test loaded in: {time.time() - start:.6f} s")
 
         self.setCentralWidget(self.table_widget)
+
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)

@@ -119,14 +119,14 @@ class MainWindowUi(QtWidgets.QMainWindow):
                            self.audio_controller.play()))
 
         self.audio_controller.updated_playing_track.connect(
-            lambda track: (self.main_panel.set_playing_track(track),))
-                           # self.information_panel.set_currently_playing_track(track)))
+            lambda track: (self.main_panel.set_playing_track(track),
+                           self.information_panel.set_currently_playing_track(track)))
 
         self.audio_controller.paused.connect(lambda: (self.main_panel.pause_playing_track()),)
                                              # .information_panel.pause_playing_track())
         self.audio_controller.unpaused.connect(lambda: (self.main_panel.unpause_playing_track()),)
                                                   #      self.information_panel.unpause_playing_track())
-        # self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
+        self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
 
 
 class App(QApplication):

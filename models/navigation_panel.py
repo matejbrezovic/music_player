@@ -1,3 +1,4 @@
+import time
 from collections import defaultdict
 from typing import List
 
@@ -64,6 +65,7 @@ class NavigationPanel(QFrame):
         self.group_double_clicked.emit(self.group_table_widget.cellWidget(row_index, 0).tracks)
 
     def _load_groups(self, key: int = 0) -> None:
+        start = time.time()
         self.groups = defaultdict(lambda: [])
         self.group_widgets = []
 
@@ -77,6 +79,7 @@ class NavigationPanel(QFrame):
                 self.groups[group_key].append(track)
 
         self.groups = {x: self.groups[x] for x in sorted(self.groups)}
+        print("Groups created in:", time.time() - start)
         self.group_table_widget.setRowCount(len(self.groups))
         for i, group in enumerate(self.groups):
             title = group
@@ -88,6 +91,7 @@ class NavigationPanel(QFrame):
             group_widget.double_clicked.connect(self.row_double_clicked)
             self.group_table_widget.setCellWidget(i, 0, group_widget)
             self.group_table_widget.setRowHeight(i, group_widget.height())
+        print("Groups fully displayed in:", time.time() - start)
 
     def group_key_changed(self, new_key: int) -> None:
         self._load_groups(new_key)
