@@ -48,7 +48,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.information_table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.information_table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.information_table_view.setShowGrid(False)
-        self.information_table_view.verticalHeader().setDefaultSectionSize((default_row_height + 4) // 2)
+        self.information_table_view.verticalHeader().setDefaultSectionSize(default_row_height + 4)
         self.information_table_view.horizontalHeader().setDefaultSectionSize(default_row_height + 4)
         self.information_table_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         self.information_table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)

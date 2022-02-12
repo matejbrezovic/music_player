@@ -200,7 +200,7 @@ class ChangeStylesheetOnClickTableWidget(QTableWidget):
         super().focusOutEvent(event)
 
 
-class SpeakerLabel(QLabel):
+class SpeakerLabel(QLabel): # TODO remove
     def __init__(self, parent=None):
         super(SpeakerLabel, self).__init__(parent)
         self.setContentsMargins(0, 1, 0, 0)
