@@ -83,9 +83,9 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 
     def set_playing_track_index(self, index: Optional[int]) -> None:
         self.playing_track_index = index
-        print("Playing track index: ", index)
+        # print("Playing track index: ", index)
         if self.playing_track_index is not None:
-            print("Set playing")
+            # print("Set playing")
             self.dataChanged.emit(self.index(0, 1),
                                   self.index(self.rowCount(), 1))
 

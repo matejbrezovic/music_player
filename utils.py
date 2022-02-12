@@ -178,12 +178,14 @@ class FocusFrame(QFrame):
         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        global_timer.timer_init()
-        global_timer.start()
+        # global_timer.timer_init()
+        # global_timer.start()
+        print("GOT FOCUS")
         self.focus_receiver.focusInEvent(event)
-        global_timer.stop()
+        # global_timer.stop()
 
     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+        print("LOST FOCUS")
         self.focus_receiver.focusOutEvent(event)
 
 

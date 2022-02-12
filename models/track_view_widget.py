@@ -48,7 +48,7 @@ class TrackViewWidget(QFrame):
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-        self.table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        self.table_view.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.table_view.setIconSize(QSize(22, 22))
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.set_new_tracks.connect(self.update_column_width)

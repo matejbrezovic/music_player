@@ -26,9 +26,9 @@ DEFAULT_AUDIO_PATH = "/home/matey/Music"
 SELECTION_COLOR = "rgba(166, 223, 231, 0.8)"
 LOST_FOCUS_COLOR = "rgba(0, 0, 0, 0.2)"
 
-SELECTION_STYLESHEET = f"QTableWidget {{selection-background-color: {SELECTION_COLOR}; " \
+SELECTION_STYLESHEET = f"QTableView {{selection-background-color: {SELECTION_COLOR}; " \
                        f"selection-color: black; border: 0px; outline: 0}} "
-LOST_FOCUS_STYLESHEET = f"QTableWidget {{selection-background-color: {LOST_FOCUS_COLOR}; " \
+LOST_FOCUS_STYLESHEET = f"QTableView {{selection-background-color: {LOST_FOCUS_COLOR}; " \
                         f"selection-color: black; border: 0px}} "
 
 # Audio settings

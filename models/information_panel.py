@@ -5,6 +5,7 @@ from typing import List, Optional
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import *
+from PyQt6.QtGui import QPalette
 
 from constants import *
 from data_models.track import Track
@@ -33,7 +34,7 @@ class InformationPanel(QtWidgets.QFrame):
         # self.lost_focus_stylesheet = f"selection-background-color: {self.lost_focus_color}; selection-color: black"
         self.playing_tracks: List[Track] = []
 
-        self.playing_track_widget: Optional[TrackGroupWidget] = None
+        # self.playing_track_widget: Optional[TrackGroupWidget] = None
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -57,18 +58,20 @@ class InformationPanel(QtWidgets.QFrame):
         # self.information_table_view.horizontalHeader().setFixed(0, default_row_height + 4)
         self.information_table_view.verticalHeader().setVisible(False)
         self.information_table_view.horizontalHeader().setVisible(False)
-        self.information_table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-        self.information_table_view.setStyleSheet(SELECTION_STYLESHEET)
+        self.information_table_view.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        # self.information_table_view.setStyleSheet(SELECTION_STYLESHEET)
         self.information_table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
-        self.information_table_view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
-        self.information_table_view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        # self.information_table_view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+        # self.information_table_view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         # self.playing_tracks_table_widget.cellClicked.connect(
         #     lambda row, _: self.track_clicked.emit(self.playing_tracks[row]))
         # self.playing_tracks_table_widget.cellDoubleClicked.connect(
         #     lambda row, _: self.track_double_clicked.emit(self.playing_tracks[row]))
 
-
-
+        # p = QPalette()
+        # p.setColor(QPalette.ColorGroup.Inactive, QPalette.ColorRole.Highlight, p.color(QPalette.ColorGroup.Active, QPalette.ColorRole.Highlight))
+        # self.information_table_view.setPalette(p)
+        # self.information_table_view.setStyleSheet(SELECTION_STYLESHEET)
 
         self._focus_frame = FocusFrame(self.information_table_view)
         self._focus_frame.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
@@ -161,88 +164,90 @@ class InformationPanel(QtWidgets.QFrame):
         #         track_widget.reset()
 
     def pause_playing_track(self) -> None:
+        return
         self.playing_track_widget.set_paused()
 
     def unpause_playing_track(self) -> None:
+        return
         self.playing_track_widget.set_playing()
 
 
-class TrackGroupWidget(QFrame):
-    clicked = pyqtSignal(int)
-    double_clicked = pyqtSignal(int)
-
-    def __init__(self, track: Track, index: int):
-        super().__init__()
-        self.title = track.title
-        self.subtitle = track.artist
-        self.track = track
-        self.tag_manager = TagManager()
-        self.speaker_label = SpeakerLabel()
-        self.index = index
-
-        self.default_stylesheet = ""  # "TrackGroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
-        # self.selected_stylesheet = "TrackGroupWidget {background-color: rgba(0, 0, 0, 0.3)}"
-        self.setStyleSheet(self.default_stylesheet)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.setFixedHeight(60)
-
-        self.title_label = ElidedLabel(self.title)
-        self.title_label.setAlignment(Qt.AlignmentFlag.AlignTop)
-        # self.title_label.clicked.connect(self.mousePressEvent)
-        # self.title_label.double_clicked.connect(self.mouseDoubleClickEvent)
-        self.subtitle_label = ElidedLabel(self.subtitle)
-        # self.subtitle_label.clicked.connect(self.mousePressEvent)
-        # self.subtitle_label.double_clicked.connect(self.mouseDoubleClickEvent)
-        self.subtitle_label.setStyleSheet("font-size: 10px;")
-        self.image_label = QLabel()
-        self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # self.image_label.setStyleSheet("background-color: green")
-        self.image_label.setFixedSize(60, 60)
-        self.artwork_pixmap = get_artwork_pixmap(track.file_path)
-        if not self.artwork_pixmap:
-            self.artwork_pixmap = get_default_artwork_pixmap("album")
-        self.image_label.setPixmap(self.artwork_pixmap.scaled(self.image_label.width() - 4,
-                                                              self.image_label.height() - 4,
-                                                              Qt.AspectRatioMode.KeepAspectRatio,
-                                                              Qt.TransformationMode.SmoothTransformation))
-
-        self.time_label = QLabel(format_seconds(self.track.length))
-        # self.time_label.setStyleSheet("background-color: red")
-        self.time_label.setFixedWidth(40)
-        self.time_label.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.time_label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-
-        self.text_widget = QWidget()
-        self.vertical_layout = QtWidgets.QVBoxLayout(self.text_widget)
-        self.vertical_layout.setContentsMargins(0, 0, 0, 0)
-        self.vertical_layout.setSpacing(0)
-        self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.vertical_layout.addWidget(self.title_label)
-        self.vertical_layout.addWidget(self.subtitle_label)
-
-        self.horizontal_layout = QtWidgets.QHBoxLayout(self)
-        self.horizontal_layout.setSpacing(2)
-        self.horizontal_layout.setContentsMargins(0, 0, 0, 0)
-        self.horizontal_layout.addWidget(self.image_label)
-        self.horizontal_layout.addWidget(self.text_widget)
-        self.horizontal_layout.addWidget(self.time_label)
-
-    def set_playing(self) -> None:
-        if self.horizontal_layout.count() == 3:
-            self.horizontal_layout.insertWidget(1, self.speaker_label)
-        else:
-            self.speaker_label.set_playing()
-
-    def set_paused(self) -> None:
-        self.speaker_label.set_paused()
-
-    def reset(self) -> None:
-        if self.horizontal_layout.count() == 4:
-            # noinspection PyTypeChecker
-            self.horizontal_layout.itemAt(1).widget().setParent(None)
-
-    # def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-    #     self.clicked.emit(self.index)
-    #
-    # def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
-    #     self.double_clicked.emit(self.index)
+# class TrackGroupWidget(QFrame):
+#     clicked = pyqtSignal(int)
+#     double_clicked = pyqtSignal(int)
+#
+#     def __init__(self, track: Track, index: int):
+#         super().__init__()
+#         self.title = track.title
+#         self.subtitle = track.artist
+#         self.track = track
+#         self.tag_manager = TagManager()
+#         self.speaker_label = SpeakerLabel()
+#         self.index = index
+#
+#         self.default_stylesheet = ""  # "TrackGroupWidget {background-color: rgba(18, 178, 255, 0.3)}"
+#         # self.selected_stylesheet = "TrackGroupWidget {background-color: rgba(0, 0, 0, 0.3)}"
+#         self.setStyleSheet(self.default_stylesheet)
+#         self.setContentsMargins(0, 0, 0, 0)
+#         self.setFixedHeight(60)
+#
+#         self.title_label = ElidedLabel(self.title)
+#         self.title_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+#         # self.title_label.clicked.connect(self.mousePressEvent)
+#         # self.title_label.double_clicked.connect(self.mouseDoubleClickEvent)
+#         self.subtitle_label = ElidedLabel(self.subtitle)
+#         # self.subtitle_label.clicked.connect(self.mousePressEvent)
+#         # self.subtitle_label.double_clicked.connect(self.mouseDoubleClickEvent)
+#         self.subtitle_label.setStyleSheet("font-size: 10px;")
+#         self.image_label = QLabel()
+#         self.image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+#         # self.image_label.setStyleSheet("background-color: green")
+#         self.image_label.setFixedSize(60, 60)
+#         self.artwork_pixmap = get_artwork_pixmap(track.file_path)
+#         if not self.artwork_pixmap:
+#             self.artwork_pixmap = get_default_artwork_pixmap("album")
+#         self.image_label.setPixmap(self.artwork_pixmap.scaled(self.image_label.width() - 4,
+#                                                               self.image_label.height() - 4,
+#                                                               Qt.AspectRatioMode.KeepAspectRatio,
+#                                                               Qt.TransformationMode.SmoothTransformation))
+#
+#         self.time_label = QLabel(format_seconds(self.track.length))
+#         # self.time_label.setStyleSheet("background-color: red")
+#         self.time_label.setFixedWidth(40)
+#         self.time_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+#         self.time_label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+#
+#         self.text_widget = QWidget()
+#         self.vertical_layout = QtWidgets.QVBoxLayout(self.text_widget)
+#         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
+#         self.vertical_layout.setSpacing(0)
+#         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+#         self.vertical_layout.addWidget(self.title_label)
+#         self.vertical_layout.addWidget(self.subtitle_label)
+#
+#         self.horizontal_layout = QtWidgets.QHBoxLayout(self)
+#         self.horizontal_layout.setSpacing(2)
+#         self.horizontal_layout.setContentsMargins(0, 0, 0, 0)
+#         self.horizontal_layout.addWidget(self.image_label)
+#         self.horizontal_layout.addWidget(self.text_widget)
+#         self.horizontal_layout.addWidget(self.time_label)
+#
+#     def set_playing(self) -> None:
+#         if self.horizontal_layout.count() == 3:
+#             self.horizontal_layout.insertWidget(1, self.speaker_label)
+#         else:
+#             self.speaker_label.set_playing()
+#
+#     def set_paused(self) -> None:
+#         self.speaker_label.set_paused()
+#
+#     def reset(self) -> None:
+#         if self.horizontal_layout.count() == 4:
+#             # noinspection PyTypeChecker
+#             self.horizontal_layout.itemAt(1).widget().setParent(None)
+#
+#     # def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+#     #     self.clicked.emit(self.index)
+#     #
+#     # def mouseDoubleClickEvent(self, a0: QtGui.QMouseEvent) -> None:
+#     #     self.double_clicked.emit(self.index)
