@@ -1,8 +1,8 @@
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QItemSelectionModel, QItemSelection
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QItemSelectionModel, QItemSelection, QAbstractItemModel
 from PyQt6.QtWidgets import QListView, QTableView
 
 from constants import *
@@ -56,6 +56,25 @@ class InformationTableModel(QtCore.QAbstractTableModel):
         self._playing_track_index = index
 
 
+# class CustomSelectionModel(QItemSelectionModel):
+#     def __init__(self, model: QAbstractItemModel, parent=None):
+#         super().__init__(parent)
+#         self._table_model = model
+#         self.setModel(model)
+#
+#     def select(self, index: Union[QModelIndex, QItemSelection], command: QItemSelectionModel.SelectionFlag):
+#         if isinstance(index, QItemSelection):
+#             return
+#
+#         if index.row() % 2 == 0:
+#             selection = QItemSelection(self._table_model.index(index.row(), 0),
+#                                        self._table_model.index(index.row() + 1, 2))
+#         else:
+#             selection = QItemSelection(self._table_model.index(index.row() - 1, 0),
+#                                        self._table_model.index(index.row(), 2))
+#         super().select(selection, QItemSelectionModel.SelectionFlag.Select)
+
+
 class InformationTableView(QTableView):
     set_new_tracks = pyqtSignal()
 
@@ -63,17 +82,19 @@ class InformationTableView(QTableView):
         super().__init__(parent)
         self._table_model = InformationTableModel()
         self.setModel(self._table_model)
-        self.clicked.connect(lambda index: self.selectionModel().select(*self.get_selection_params(index)))
+        # self.setSelectionModel(CustomSelectionModel(self._table_model))
 
-    def get_selection_params(self, index: QModelIndex) -> Tuple[QItemSelection, QItemSelectionModel.SelectionFlag]:
-        if index.row() % 2 == 0:
-            return (QItemSelection(self._table_model.index(index.row(), 0),
-                    self._table_model.index(index.row() + 1, 2)),
-                    QItemSelectionModel.SelectionFlag.Select)
-        else:
-            return (QItemSelection(self._table_model.index(index.row() - 1, 0),
-                    self._table_model.index(index.row(), 2)),
-                    QItemSelectionModel.SelectionFlag.Select)
+        # self.clicked.connect(lambda index: self.selectionModel().select(*self.get_selection_params(index)))
+
+    # def get_selection_params(self, index: QModelIndex) -> Tuple[QItemSelection, QItemSelectionModel.SelectionFlag]:
+    #     if index.row() % 2 == 0:
+    #         return (QItemSelection(self._table_model.index(index.row(), 0),
+    #                 self._table_model.index(index.row() + 1, 2)),
+    #                 QItemSelectionModel.SelectionFlag.Select)
+    #     else:
+    #         return (QItemSelection(self._table_model.index(index.row() - 1, 0),
+    #                 self._table_model.index(index.row(), 2)),
+    #                 QItemSelectionModel.SelectionFlag.Select)
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._table_model.set_tracks(tracks)
