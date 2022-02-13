@@ -115,7 +115,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.information_panel.track_double_clicked.connect(
             lambda track: (self.audio_controller.set_playlist_index(
-                self.audio_controller.current_playlist.index(track)),
+                            self.audio_controller.current_playlist.index(track)),
                            self.audio_controller.play()))
 
         self.audio_controller.updated_playing_track.connect(

@@ -1,10 +1,10 @@
-from typing import List
+from typing import List, Any
 
-from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
-from PyQt6.QtGui import QIcon, QPixmap, QBrush, QPen, QColor
-from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QFrame, \
-    QStyledItemDelegate, QStyle
+from PyQt6 import QtCore
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QVariant
+from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter
+from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate, \
+    QStyle, QStyleOptionViewItem
 
 from constants import *
 from data_models.track import Track
@@ -18,7 +18,7 @@ class InformationTableModel(QtCore.QAbstractTableModel):
         self._tracks = []
         self._playing_track_index = None
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole):
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if not self._tracks:
             return None
 
@@ -27,18 +27,9 @@ class InformationTableModel(QtCore.QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DecorationRole:
             if not index.column():
-                # print(index.row())
                 artwork_pixmap = self._tracks[index.row()].artwork_pixmap
                 artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
-                icon = QIcon(artwork_pixmap)
                 return artwork_pixmap
-
-        # if role == Qt.ItemDataRole.BackgroundRole:
-        #     if index.column():
-        #         return
-        #
-        #     brush = QBrush(Qt.GlobalColor.red)
-        #     return brush
 
         if role == Qt.ItemDataRole.DisplayRole:
             if index.column() != 1:
@@ -52,9 +43,9 @@ class InformationTableModel(QtCore.QAbstractTableModel):
                                                                       track.artist,
                                                                       format_seconds(track.length)))
 
-            return QtCore.QVariant()
+            return QVariant()
 
-    def rowCount(self, index: QModelIndex = QModelIndex):
+    def rowCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(self._tracks)
 
     def columnCount(self, parent: QModelIndex = QModelIndex) -> int:
@@ -78,12 +69,13 @@ class MyDelegate(QStyledItemDelegate):
         self._table_view: QTableView = parent
         self._tracks: List[Track] = []
 
-    def paint(self, painter, option, index):
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         painter.save()
         # set background color
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
             print("SETTING COLOR")
+            print("HAS FOCUS", self._table_view.hasFocus())
             if self._table_view.hasFocus():
                 painter.setBrush(QBrush(SELECTION_QCOLOR))
             else:
@@ -101,9 +93,9 @@ class MyDelegate(QStyledItemDelegate):
             text = display_value.toString()
             painter.drawText(option.rect, Qt.AlignmentFlag.AlignLeft, text)
         elif decoration_value:
-            # print(option.rect, option.rect.size())
             rect = option.rect
-            rect.setRect(option.rect.left() + 2, option.rect.top() + 2, option.rect.width() - 4, option.rect.height() - 4)
+            rect.setRect(option.rect.left() + 2, option.rect.top() + 2,
+                         option.rect.width() - 4, option.rect.height() - 4)
 
             pixmap = decoration_value.scaled(rect.width(), rect.height(),
                                              Qt.AspectRatioMode.KeepAspectRatio,
@@ -119,6 +111,8 @@ class MyDelegate(QStyledItemDelegate):
 
 class InformationTableView(QTableView):
     set_new_tracks = pyqtSignal()
+    track_clicked = pyqtSignal(Track)
+    track_double_clicked = pyqtSignal(Track)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -126,10 +120,15 @@ class InformationTableView(QTableView):
         self._table_delegate = MyDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
+        self._tracks: List[Track] = []
+
+        self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()]))
+        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()]))
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._table_model.set_tracks(tracks)
         self._table_delegate.set_tracks(tracks)
+        self._tracks = tracks
         self.set_new_tracks.emit()
 
     def set_currently_playing_track_index(self, index: int) -> None:
@@ -140,18 +139,6 @@ class InformationTableView(QTableView):
 
     def set_unpaused(self) -> None:
         ...
-
-    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        # self.setFocus()
-        print("Got Focus")
-        # self.setStyleSheet(SELECTION_STYLESHEET)
-        super().focusInEvent(event)
-
-    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-        # self.setStyleSheet(LOST_FOCUS_STYLESHEET)
-        print("Lost Focus")
-        super().focusOutEvent(event)
-
 
 
 class TrackInfoWidget(QWidget):

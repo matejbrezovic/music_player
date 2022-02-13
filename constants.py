@@ -28,7 +28,7 @@ DEFAULT_AUDIO_PATH = "/home/matey/Music"
 SELECTION_COLOR = "rgba(166, 223, 231, 0.8)"
 LOST_FOCUS_COLOR = "rgba(0, 0, 0, 0.2)"
 SELECTION_QCOLOR = QColor(166, 223, 231)
-LOST_FOCUS_QCOLOR = QColor(0, 0, 0, 0.2)
+LOST_FOCUS_QCOLOR = QColor(0, 0, 0, 50)
 # SELECTION_QCOLOR.setRgba()
 
 # SELECTION_STYLESHEET = f"QTableView::item:selected {{background-color: rgba(0, 0, 0, 0); " \
