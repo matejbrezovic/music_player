@@ -87,16 +87,6 @@ class InformationPanel(QtWidgets.QFrame):
         self.artwork_pixmap = QPixmap(f"icons/album.png")
         # self.set_currently_playing_track(TracksRepository().get_tracks())
 
-    # def row_clicked(self, row_index: int) -> None:
-    #     return
-    #     self.information_table_view.setCurrentCell(row_index, 0)
-    #     self.track_clicked.emit(self.information_table_view.cellWidget(row_index, 0).track)
-    #
-    # def row_double_clicked(self, row_index: int) -> None:
-    #     return
-    #     self.information_table_view.setCurrentCell(row_index, 0)
-    #     self.track_double_clicked.emit(self.information_table_view.cellWidget(row_index, 0).track)
-
     def set_playing_tracks(self, tracks: List[Track]) -> None:
         # global_timer.timer_init()
         # global_timer.start()

@@ -53,13 +53,10 @@ class TrackViewWidget(QFrame):
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.set_new_tracks.connect(self.update_column_width)
 
-        self.table_view.clicked.connect(lambda model_index: self.track_clicked.emit(self.displayed_tracks[model_index.row()]))
-        self.table_view.doubleClicked.connect(lambda model_index: self.double_clicked(model_index.row())) # TODO optimize?
-
-        # self.table_widget.itemClicked.connect(
-        #     lambda item: (self.track_clicked.emit(item.track),
-        #                   self.set_selected_row_index(self.table_widget.row(item))))
-        # self.table_widget.itemDoubleClicked.connect(self.double_clicked)
+        self.table_view.clicked.connect(lambda model_index: self.track_clicked.emit(
+                                                            self.displayed_tracks[model_index.row()]))
+        self.table_view.doubleClicked.connect(lambda model_index: self.track_double_clicked.emit(
+                                                                  self.displayed_tracks[model_index.row()]))
 
         self.table_view.setStyleSheet(SELECTION_STYLESHEET)
 
@@ -76,14 +73,13 @@ class TrackViewWidget(QFrame):
         self.main_layout.addWidget(self.header_splitter)
         self.main_layout.addWidget(self._focus_frame)
 
-    def double_clicked(self, new_index: int) -> None:
-        # global_timer.timer_init()
-        # global_timer.start()
-        self.track_double_clicked.emit(self.displayed_tracks[new_index])
-        # self.set_selected_row_index(self.table_widget.row(item))
+    # def double_clicked(self, new_index: int) -> None:
+    #     # global_timer.timer_init()
+    #     # global_timer.start()
+    #     self.track_double_clicked.emit(self.displayed_tracks[new_index])
+    #     # self.set_selected_row_index(self.table_widget.row(item))
 
     def update_column_width(self) -> None:
-        # print(f"Updated column width {self.header_splitter.sizes()}")
         total_sizes = sum(self.header_splitter.sizes())
         if not total_sizes:
             return

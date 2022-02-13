@@ -22,7 +22,7 @@ class TracksRepository:
                 for track in tracks:
                     track.artwork_pixmap = get_artwork_pixmap(track.file_path)
 
-                tracks = tracks * 10
+                tracks = tracks * 1000
                 # for track in tracks:
                 #     track.track_id = randint(1, 10000000)
                 return tracks

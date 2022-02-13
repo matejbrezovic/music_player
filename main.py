@@ -109,7 +109,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
             lambda tracks: (self.main_panel.display_tracks(tracks),
                             self.audio_controller.set_playlist(tracks),
                             self.audio_controller.play()))
-                            # self.main_panel.set_playing_track(self.audio_controller.get_current_track())))
 
         # self.information_panel.track_clicked.connect(lambda: ...)
 
