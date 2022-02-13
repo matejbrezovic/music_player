@@ -58,9 +58,10 @@ class InformationPanel(QtWidgets.QFrame):
         # self.information_table_view.horizontalHeader().setFixed(0, default_row_height + 4)
         self.information_table_view.verticalHeader().setVisible(False)
         self.information_table_view.horizontalHeader().setVisible(False)
-        self.information_table_view.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.information_table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         # self.information_table_view.setStyleSheet(SELECTION_STYLESHEET)
         self.information_table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        # self.information_table_view.setSelectionMode(QAbstractItemView.SelectionMode.ContainsItemBoundingRect)
         # self.information_table_view.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
         # self.information_table_view.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         # self.playing_tracks_table_widget.cellClicked.connect(
@@ -73,11 +74,11 @@ class InformationPanel(QtWidgets.QFrame):
         # self.information_table_view.setPalette(p)
         # self.information_table_view.setStyleSheet(SELECTION_STYLESHEET)
 
-        self._focus_frame = FocusFrame(self.information_table_view)
-        self._focus_frame.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        # self._focus_frame = FocusFrame(self.information_table_view)
+        # self._focus_frame.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.playing_tracks_widget_layout.addWidget(QLabel("Playing Tracks"))
-        self.playing_tracks_widget_layout.addWidget(self._focus_frame)
+        self.playing_tracks_widget_layout.addWidget(self.information_table_view)
 
         self.track_info_widget = QFrame()
         self.track_info_widget_layout = QVBoxLayout(self.track_info_widget)
@@ -112,7 +113,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.vertical_splitter.addWidget(self.track_info_widget)
         self.vertical_splitter.setSizes([1, 1])
         self.main_layout.addWidget(self.vertical_splitter)
-        self.set_playing_tracks(TracksRepository().get_tracks())
+        # self.set_playing_tracks(TracksRepository().get_tracks())
         self.artwork_pixmap = QPixmap(f"icons/album.png")
         # self.set_currently_playing_track(TracksRepository().get_tracks()[0])
 

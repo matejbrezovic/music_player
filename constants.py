@@ -1,5 +1,7 @@
 import os
 
+from PyQt6.QtGui import QColor
+
 SUPPORTED_AUDIO_FORMATS = ["mp3", "m4a", "ogg"]
 
 # Gui constants
@@ -25,11 +27,25 @@ DEFAULT_AUDIO_PATH = "/home/matey/Music"
 
 SELECTION_COLOR = "rgba(166, 223, 231, 0.8)"
 LOST_FOCUS_COLOR = "rgba(0, 0, 0, 0.2)"
+SELECTION_QCOLOR = QColor(166, 223, 231)
+LOST_FOCUS_QCOLOR = QColor(0, 0, 0, 0.2)
+# SELECTION_QCOLOR.setRgba()
+
+# SELECTION_STYLESHEET = f"QTableView::item:selected {{background-color: rgba(0, 0, 0, 0); " \
+#                        f"selection-color: rgba(0, 0, 0, 0); border: 0px; outline: 0}}"
+# # SELECTION_STYLESHEET += f"QTableView::item:inactive {{background-color: {LOST_FOCUS_COLOR}}}"
+# LOST_FOCUS_STYLESHEET = SELECTION_STYLESHEET
+
 
 SELECTION_STYLESHEET = f"QTableView {{selection-background-color: {SELECTION_COLOR}; " \
-                       f"selection-color: black; border: 0px; outline: 0}} "
+                       f"selection-color: black; border: 0px; outline: 0}}"
+
+# SELECTION_STYLESHEET += f"QTableView::icon:normal {{color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0)}}"
+
 LOST_FOCUS_STYLESHEET = f"QTableView {{selection-background-color: {LOST_FOCUS_COLOR}; " \
-                        f"selection-color: black; border: 0px}} "
+                        f"selection-color: black; border: 0px}}"
+
+
 
 # Audio settings
 

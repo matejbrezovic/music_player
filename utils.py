@@ -167,7 +167,7 @@ class PathCheckbox(QCheckBox):
         self.path = path
 
 
-class FocusFrame(QFrame):
+class FocusFrame(QFrame): # TODO remove, better fix found
     def __init__(self, focus_receiver: QWidget, parent=None):
         super().__init__(parent)
         self.focus_receiver = focus_receiver

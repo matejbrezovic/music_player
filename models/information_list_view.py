@@ -2,8 +2,9 @@ from typing import List
 
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
-from PyQt6.QtGui import QIcon, QPixmap
-from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QFrame
+from PyQt6.QtGui import QIcon, QPixmap, QBrush, QPen, QColor
+from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QFrame, \
+    QStyledItemDelegate, QStyle
 
 from constants import *
 from data_models.track import Track
@@ -30,7 +31,14 @@ class InformationTableModel(QtCore.QAbstractTableModel):
                 artwork_pixmap = self._tracks[index.row()].artwork_pixmap
                 artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
                 icon = QIcon(artwork_pixmap)
-                return icon if icon else None
+                return artwork_pixmap
+
+        # if role == Qt.ItemDataRole.BackgroundRole:
+        #     if index.column():
+        #         return
+        #
+        #     brush = QBrush(Qt.GlobalColor.red)
+        #     return brush
 
         if role == Qt.ItemDataRole.DisplayRole:
             if index.column() != 1:
@@ -64,6 +72,88 @@ class InformationTableModel(QtCore.QAbstractTableModel):
         self._playing_track_index = index
 
 
+class MyDelegate(QStyledItemDelegate):
+    def __init__(self, parent: QTableView = None):
+        super().__init__(parent)
+        self._table_view: QTableView = parent
+        self._tracks: List[Track] = []
+
+    def paint(self, painter, option, index):
+        painter.save()
+        # set background color
+        painter.setPen(QPen(Qt.PenStyle.NoPen))
+        if option.state & QStyle.StateFlag.State_Selected:
+            print("SETTING COLOR")
+            if self._table_view.hasFocus():
+                painter.setBrush(QBrush(SELECTION_QCOLOR))
+            else:
+                painter.setBrush(QBrush(LOST_FOCUS_QCOLOR))
+        else:
+            painter.setBrush(QBrush(Qt.GlobalColor.white))
+        painter.drawRect(option.rect)
+
+        # set text color
+        painter.setPen(QPen(Qt.GlobalColor.black))
+        display_value = index.data(Qt.ItemDataRole.DisplayRole)
+        decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
+
+        if display_value and display_value.isValid():
+            text = display_value.toString()
+            painter.drawText(option.rect, Qt.AlignmentFlag.AlignLeft, text)
+        elif decoration_value:
+            # print(option.rect, option.rect.size())
+            rect = option.rect
+            rect.setRect(option.rect.left() + 2, option.rect.top() + 2, option.rect.width() - 4, option.rect.height() - 4)
+
+            pixmap = decoration_value.scaled(rect.width(), rect.height(),
+                                             Qt.AspectRatioMode.KeepAspectRatio,
+                                             Qt.TransformationMode.SmoothTransformation)
+
+            painter.drawPixmap(rect, pixmap)
+
+        painter.restore()
+
+    def set_tracks(self, tracks: List[Track]) -> None:
+        self._tracks = tracks
+
+
+class InformationTableView(QTableView):
+    set_new_tracks = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self._table_model = InformationTableModel(self)
+        self._table_delegate = MyDelegate(self)
+        self.setModel(self._table_model)
+        self.setItemDelegate(self._table_delegate)
+
+    def set_tracks(self, tracks: List[Track]) -> None:
+        self._table_model.set_tracks(tracks)
+        self._table_delegate.set_tracks(tracks)
+        self.set_new_tracks.emit()
+
+    def set_currently_playing_track_index(self, index: int) -> None:
+        self._table_model.set_currently_playing_track_index(index)
+
+    def set_paused(self) -> None:
+        ...
+
+    def set_unpaused(self) -> None:
+        ...
+
+    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+        # self.setFocus()
+        print("Got Focus")
+        # self.setStyleSheet(SELECTION_STYLESHEET)
+        super().focusInEvent(event)
+
+    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+        # self.setStyleSheet(LOST_FOCUS_STYLESHEET)
+        print("Lost Focus")
+        super().focusOutEvent(event)
+
+
+
 class TrackInfoWidget(QWidget):
     def __init__(self, title: str, artist: str, duration: str, parent=None):
         super().__init__(parent)
@@ -94,33 +184,3 @@ class TrackInfoWidget(QWidget):
 
         self.v_layout.addWidget(self.upper_widget)
         self.v_layout.addWidget(ElidedLabel(artist))
-
-
-class InformationTableView(QTableView):
-    set_new_tracks = pyqtSignal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-        self._table_model = InformationTableModel(self)
-        self.setModel(self._table_model)
-
-    def set_tracks(self, tracks: List[Track]) -> None:
-        self._table_model.set_tracks(tracks)
-        self.set_new_tracks.emit()
-
-    def set_currently_playing_track_index(self, index: int) -> None:
-        self._table_model.set_currently_playing_track_index(index)
-
-    def set_paused(self) -> None:
-        ...
-
-    def set_unpaused(self) -> None:
-        ...
-
-    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        self.setStyleSheet(SELECTION_STYLESHEET)
-        super().focusInEvent(event)
-
-    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-        self.setStyleSheet(LOST_FOCUS_STYLESHEET)
-        super().focusOutEvent(event)
