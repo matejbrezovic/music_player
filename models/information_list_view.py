@@ -1,8 +1,8 @@
 from typing import List, Any
 
-from PyQt6 import QtCore
+from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QVariant
-from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter
+from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QIcon
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate, \
     QStyle, QStyleOptionViewItem
 
@@ -29,7 +29,9 @@ class InformationTableModel(QtCore.QAbstractTableModel):
             if not index.column():
                 artwork_pixmap = self._tracks[index.row()].artwork_pixmap
                 artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
-                return artwork_pixmap
+                icon = QIcon(artwork_pixmap)
+                icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
+                return icon
 
         if role == Qt.ItemDataRole.DisplayRole:
             if index.column() != 1:
@@ -70,12 +72,13 @@ class MyDelegate(QStyledItemDelegate):
         self._tracks: List[Track] = []
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        super().paint(painter, option, index)
         painter.save()
         # set background color
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
-            print("SETTING COLOR")
-            print("HAS FOCUS", self._table_view.hasFocus())
+            # print("SETTING COLOR")
+            # print("HAS FOCUS", self._table_view.hasFocus())
             if self._table_view.hasFocus():
                 painter.setBrush(QBrush(SELECTION_QCOLOR))
             else:
@@ -84,15 +87,10 @@ class MyDelegate(QStyledItemDelegate):
             painter.setBrush(QBrush(Qt.GlobalColor.white))
         painter.drawRect(option.rect)
 
-        # set text color
-        painter.setPen(QPen(Qt.GlobalColor.black))
-        display_value = index.data(Qt.ItemDataRole.DisplayRole)
-        decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
 
-        if display_value and display_value.isValid():
-            text = display_value.toString()
-            painter.drawText(option.rect, Qt.AlignmentFlag.AlignLeft, text)
-        elif decoration_value:
+        # painter.setBrush(QBrush(SELECTION_QCOLOR))
+        if index.data(Qt.ItemDataRole.DecorationRole):
+            decoration_value = index.data(Qt.ItemDataRole.DecorationRole).pixmap(50, 50)
             rect = option.rect
             rect.setRect(option.rect.left() + 2, option.rect.top() + 2,
                          option.rect.width() - 4, option.rect.height() - 4)
@@ -103,7 +101,27 @@ class MyDelegate(QStyledItemDelegate):
 
             painter.drawPixmap(rect, pixmap)
 
-        painter.restore()
+
+        # # set text color
+        # painter.setPen(QPen(Qt.GlobalColor.black))
+        # display_value = index.data(Qt.ItemDataRole.DisplayRole)
+        # decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
+        #
+        # if display_value and display_value.isValid():
+        #     text = display_value.toString()
+        #     painter.drawText(option.rect, Qt.AlignmentFlag.AlignLeft, text)
+        # elif decoration_value:
+        #     rect = option.rect
+        #     rect.setRect(option.rect.left() + 2, option.rect.top() + 2,
+        #                  option.rect.width() - 4, option.rect.height() - 4)
+        #
+        #     pixmap = decoration_value.scaled(rect.width(), rect.height(),
+        #                                      Qt.AspectRatioMode.KeepAspectRatio,
+        #                                      Qt.TransformationMode.SmoothTransformation)
+        #
+        #     painter.drawPixmap(rect, pixmap)
+        #
+        # painter.restore()
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks

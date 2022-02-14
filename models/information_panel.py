@@ -1,6 +1,7 @@
 import math
 from typing import List
 
+from PyQt6.QtCore import QSize
 from PyQt6 import QtWidgets
 from PyQt6.QtWidgets import *
 
@@ -39,6 +40,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.information_table_view.horizontalHeader().setDefaultSectionSize(default_row_height + 4)
         self.information_table_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         self.information_table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
+        self.information_table_view.setIconSize(QSize(default_row_height - 6, default_row_height - 6))
         self.information_table_view.setWordWrap(False)
         self.information_table_view.verticalHeader().setVisible(False)
         self.information_table_view.horizontalHeader().setVisible(False)
