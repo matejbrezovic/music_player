@@ -77,8 +77,6 @@ class MyDelegate(QStyledItemDelegate):
         # set background color
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
-            # print("SETTING COLOR")
-            # print("HAS FOCUS", self._table_view.hasFocus())
             if self._table_view.hasFocus():
                 painter.setBrush(QBrush(SELECTION_QCOLOR))
             else:
@@ -87,8 +85,6 @@ class MyDelegate(QStyledItemDelegate):
             painter.setBrush(QBrush(Qt.GlobalColor.white))
         painter.drawRect(option.rect)
 
-
-        # painter.setBrush(QBrush(SELECTION_QCOLOR))
         if index.data(Qt.ItemDataRole.DecorationRole):
             decoration_value = index.data(Qt.ItemDataRole.DecorationRole).pixmap(50, 50)
             rect = option.rect
@@ -100,28 +96,6 @@ class MyDelegate(QStyledItemDelegate):
                                              Qt.TransformationMode.SmoothTransformation)
 
             painter.drawPixmap(rect, pixmap)
-
-
-        # # set text color
-        # painter.setPen(QPen(Qt.GlobalColor.black))
-        # display_value = index.data(Qt.ItemDataRole.DisplayRole)
-        # decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
-        #
-        # if display_value and display_value.isValid():
-        #     text = display_value.toString()
-        #     painter.drawText(option.rect, Qt.AlignmentFlag.AlignLeft, text)
-        # elif decoration_value:
-        #     rect = option.rect
-        #     rect.setRect(option.rect.left() + 2, option.rect.top() + 2,
-        #                  option.rect.width() - 4, option.rect.height() - 4)
-        #
-        #     pixmap = decoration_value.scaled(rect.width(), rect.height(),
-        #                                      Qt.AspectRatioMode.KeepAspectRatio,
-        #                                      Qt.TransformationMode.SmoothTransformation)
-        #
-        #     painter.drawPixmap(rect, pixmap)
-        #
-        # painter.restore()
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks
