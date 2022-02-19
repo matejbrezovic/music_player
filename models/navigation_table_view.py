@@ -18,7 +18,7 @@ class NavigationListModel(QtCore.QAbstractTableModel):
 
 
 class NavigationListView(QListView):
-    set_new_tracks = pyqtSignal()
+    set_new_groups = pyqtSignal()  # TODO maybe redundant
 
     def __init__(self, parent=None):
         super().__init__(parent)

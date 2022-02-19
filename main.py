@@ -27,11 +27,13 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.scan_folders_dialog = ScanFoldersDialog()
         self.add_files_dialog = AddFilesDialog()
 
+        TracksRepository().create_groups()
         self._setup_ui()
 
-        self.setWindowTitle('music player v0.0.7')
+        self.setWindowTitle('music player v0.0.8')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
+
 
         self.show()
 
@@ -39,6 +41,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
     def __post__(self):
         self._setup_signals()
+
         # self.main_panel.track_view_widget.update_column_width()
 
     def _setup_ui(self) -> None:

@@ -1,4 +1,5 @@
 import os
+from collections import defaultdict
 
 from PyQt6.QtGui import QColor
 
@@ -29,18 +30,10 @@ SELECTION_COLOR = "rgba(166, 223, 231, 0.8)"
 LOST_FOCUS_COLOR = "rgba(0, 0, 0, 0.2)"
 SELECTION_QCOLOR = QColor(166, 223, 231)
 LOST_FOCUS_QCOLOR = QColor(0, 0, 0, 50)
-# SELECTION_QCOLOR.setRgba()
-
-# SELECTION_STYLESHEET = f"QTableView::item:selected {{background-color: rgba(0, 0, 0, 0); " \
-#                        f"selection-color: rgba(0, 0, 0, 0); border: 0px; outline: 0}}"
-# # SELECTION_STYLESHEET += f"QTableView::item:inactive {{background-color: {LOST_FOCUS_COLOR}}}"
-# LOST_FOCUS_STYLESHEET = SELECTION_STYLESHEET
 
 
 SELECTION_STYLESHEET = f"QTableView {{selection-background-color: {SELECTION_COLOR}; " \
                        f"selection-color: black; border: 0px; outline: 0}}"
-
-# SELECTION_STYLESHEET += f"QTableView::icon:normal {{color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0)}}"
 
 LOST_FOCUS_STYLESHEET = f"QTableView {{selection-background-color: {LOST_FOCUS_COLOR}; " \
                         f"selection-color: black; border: 0px}}"
@@ -55,6 +48,16 @@ FADE_OUT_ANIM_KEY_VALUE = FADE_IN_ANIM_KEY_VALUE
 FADE_OUT_ANIM_END_VALUE = 0
 
 # TRACKS = [DEFAULT_AUDIO_PATH + "/" + name for name in os.listdir(DEFAULT_AUDIO_PATH)]
+
+
+# Navigation panel groups
+
+ALBUM_GROUPS = defaultdict(list)
+ARTIST_GROUPS = defaultdict(list)
+COMPOSER_GROUPS = defaultdict(list)
+FOLDER_GROUPS = defaultdict(list)
+GENRE_GROUPS = defaultdict(list)
+YEAR_GROUPS = defaultdict(list)
 
 
 # Database settings

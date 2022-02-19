@@ -1,4 +1,5 @@
 import json
+from collections import defaultdict
 from random import randint
 from typing import List
 
@@ -12,7 +13,25 @@ from tag_manager import TagManager
 
 class TracksRepository:
     def __init__(self):
-        ...
+
+        self.group_options = {
+            0: "Album",
+            1: "Artist",
+            2: "Composer",
+            3: "Folder",
+            4: "Genre",
+            5: "Year"
+        }
+
+
+    def create_groups(self) -> None:
+        tracks = self.get_tracks()
+        for track in tracks:
+            ALBUM_GROUPS[track.album].append(track)
+            ARTIST_GROUPS[track.artist].append(track)
+            COMPOSER_GROUPS[track.composer].append(track)
+            FOLDER_GROUPS[track.file_path.split("/" if "/" in track.file_path else "\\")[-2]].append(track)
+            GENRE_GROUPS[track.genre].append(track)
 
     def get_tracks(self) -> List[Track]:
         with open(DEFAULT_LOADED_TRACKS_FILE_PATH, "r") as f:
@@ -22,12 +41,28 @@ class TracksRepository:
                 for track in tracks:
                     track.artwork_pixmap = get_artwork_pixmap(track.file_path)
 
-                tracks = tracks * 1000
-                # for track in tracks:
-                #     track.track_id = randint(1, 10000000)
+                tracks = tracks * 100_000
+                # for i, track in enumerate(tracks):
+                #     track.track_id = i
+                #     tracks[i] = track
                 return tracks
             except json.decoder.JSONDecodeError:
                 return []
+
+    # def get_groups(self, group_key: str) -> List[List[Track]]:
+    #     groups = defaultdict(list)
+    #
+    # def update_groups(self):
+    #
+
+    def get_track_ids(self) -> List[int]:  # TODO maybe redundant
+        return [track.track_id for track in self.get_tracks()]
+
+    def get_track_by_id(self, track_id: int) -> Optional[Track]:
+        for track in self.get_tracks():
+            if track.track_id == track_id:
+                return track
+        return None
 
     def save_tracks(self, tracks: List[Track]) -> None:
         with open(DEFAULT_LOADED_TRACKS_FILE_PATH, "w") as f:

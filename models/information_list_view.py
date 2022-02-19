@@ -44,7 +44,6 @@ class InformationTableModel(QtCore.QAbstractTableModel):
                 self.table_view.setIndexWidget(index, TrackInfoWidget(track.title,
                                                                       track.artist,
                                                                       format_seconds(track.length)))
-
             return QVariant()
 
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
