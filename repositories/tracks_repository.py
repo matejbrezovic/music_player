@@ -4,6 +4,7 @@ from random import randint
 from typing import List
 
 import mutagen.mp3
+from PyQt6 import QtWidgets
 
 from constants import *
 from utils import *
@@ -23,7 +24,6 @@ class TracksRepository:
             5: "Year"
         }
 
-
     def create_groups(self) -> None:
         tracks = self.get_tracks()
         for track in tracks:
@@ -38,10 +38,11 @@ class TracksRepository:
             try:
                 loaded_json = json.loads(f.read())
                 tracks = [self._decode_track(t) for t in loaded_json]
-                for track in tracks:
-                    track.artwork_pixmap = get_artwork_pixmap(track.file_path)
+                if QtWidgets.QApplication.instance() is not None:
+                    for track in tracks:
+                        track.artwork_pixmap = get_artwork_pixmap(track.file_path)
 
-                tracks = tracks * 100_000
+                tracks = tracks * 10000
                 # for i, track in enumerate(tracks):
                 #     track.track_id = i
                 #     tracks[i] = track

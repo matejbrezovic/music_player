@@ -32,14 +32,14 @@ class NavigationPanel(QFrame):
             5: "Year"
         }
 
-        self.group_mapping = {
-            "album": ALBUM_GROUPS,
-            "artist": ARTIST_GROUPS,
-            "composer": COMPOSER_GROUPS,
-            "folder": FOLDER_GROUPS,
-            "genre": GENRE_GROUPS,
-            "year": YEAR_GROUPS
-        }
+        # self.group_mapping = {
+        #     "album": ALBUM_GROUPS,
+        #     "artist": ARTIST_GROUPS,
+        #     "composer": COMPOSER_GROUPS,
+        #     "folder": FOLDER_GROUPS,
+        #     "genre": GENRE_GROUPS,
+        #     "year": YEAR_GROUPS
+        # }
 
         self.group_table_widget = ChangeStylesheetOnClickTableWidget(self)
         self.group_table_widget.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
@@ -77,21 +77,20 @@ class NavigationPanel(QFrame):
     def _load_groups(self, key: int = 0) -> None:
         start = time.time()
         self.groups = defaultdict(lambda: [])
-        # self.group_widgets = []
 
         tracks = TracksRepository().get_tracks()
 
-        # for track in tracks:
-        #     if self.group_options[key].lower() != "folder":
-        #         group_key = str(getattr(track, self.group_options[key].lower()))
-        #         self.groups["[Unknown]" if group_key == "None" else (group_key if len(group_key) > 0
-        #                     else ("[Empty]" if key == 0 else "[Unknown]"))].append(track)
-        #     else:
-        #         group_key = track.file_path.split("/" if "/" in track.file_path else "\\")[-2]
-        #         self.groups[group_key].append(track)
-        #
-        # # self.groups = {x: self.groups[x] for x in sorted(self.groups)}
-        self.groups = self.group_mapping[self.group_options[key].lower()]
+        for track in tracks:
+            if self.group_options[key].lower() != "folder":
+                group_key = str(getattr(track, self.group_options[key].lower()))
+                self.groups["[Unknown]" if group_key == "None" else (group_key if len(group_key) > 0
+                            else ("[Empty]" if key == 0 else "[Unknown]"))].append(track)
+            else:
+                group_key = track.file_path.split("/" if "/" in track.file_path else "\\")[-2]
+                self.groups[group_key].append(track)
+
+        self.groups = {x: self.groups[x] for x in sorted(self.groups)}
+        # self.groups = self.group_mapping[self.group_options[key].lower()]
 
         print("Groups created in:", time.time() - start)
         self.group_table_widget.setRowCount(len(self.groups))

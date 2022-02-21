@@ -9,17 +9,30 @@ class TracksRepository(BaseRepository):
     def __init__(self):
         super().__init__()
         
-    def add_track(self, track: Track):
+    def add_track(self, track: Track) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute('''INSERT INTO tracks VALUES (?, ?, ?, ?, ?, ?)''', (None,
-                                                                            track.name,
-                                                                            track.album,
-                                                                            track.artist,
-                                                                            track.composer,
-                                                                            track.genre,
-                                                                            track.artwork_path))
+        cursor.execute('''INSERT INTO tracks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)''', (None,
+                                                                                     track.file_path,
+                                                                                     track.title,
+                                                                                     track.album,
+                                                                                     track.artist,
+                                                                                     track.composer,
+                                                                                     track.genre,
+                                                                                     track.year,
+                                                                                     track.length
+                                                                                     ))
+        conn.commit()
+        conn.close()
+
+    def get_tracks_grouped_by(self, group_key: str):
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        output = cursor.execute(f"SELECT * FROM tracks GROUP BY '%{group_key}%'")
+        print(output)
+        for row in cursor.fetchall():
+            print(row)
 
     def get_all_tracks(self) -> List[Track]:
         conn = self.get_connection()
@@ -31,32 +44,37 @@ class TracksRepository(BaseRepository):
         for row in cursor.fetchall():
             tracks.append(Track(
                 track_id=row["track_id"],
-                name=row["name"],
+                file_path=row["file_path"],
+                title=row["title"],
                 album=row["album"],
                 artist=row["artist"],
                 composer=row["composer"],
                 genre=row["genre"],
-                artwork_path=row["artwork_path"]
+                year=row["year"],
+                length=row["length"]
+                # artwork_path=row["artwork_path"]
             )
             )
 
         return tracks
 
-    def get_track_by_name(self, name: str) -> Track:
+    def get_track_by_title(self, title: str) -> Track:
         conn = self.get_connection()
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        selected_track = cursor.execute(f"SELECT * FROM tracks WHERE name LIKE '%{name}%'").fetchone()
+        selected_row = cursor.execute(f"SELECT * FROM tracks WHERE name LIKE '%{title}%'").fetchone()
 
         return Track(
-            track_id=selected_track["track_id"],
-            name=selected_track["name"],
-            album=selected_track["album"],
-            artist=selected_track["artist"],
-            composer=selected_track["composer"],
-            genre=selected_track["genre"],
-            artwork_path=selected_track["artwork_path"]
+            track_id=selected_row["track_id"],
+            file_path=selected_row["file_path"],
+            title=selected_row["title"],
+            album=selected_row["album"],
+            artist=selected_row["artist"],
+            composer=selected_row["composer"],
+            genre=selected_row["genre"],
+            year=selected_row["year"],
+            length=selected_row["length"]
         )
 
     def get_track_by_id(self, track_id: int) -> Track:
@@ -68,12 +86,14 @@ class TracksRepository(BaseRepository):
 
         return Track(
             track_id=row["track_id"],
-            name=row["name"],
+            file_path=row["file_path"],
+            title=row["title"],
             album=row["album"],
             artist=row["artist"],
             composer=row["composer"],
             genre=row["genre"],
-            artwork_path=row["artwork_path"]
+            year=row["year"],
+            length=row["length"]
         )
 
     def drop_track_by_id(self, track_id: int) -> None:

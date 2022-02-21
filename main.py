@@ -27,7 +27,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.scan_folders_dialog = ScanFoldersDialog()
         self.add_files_dialog = AddFilesDialog()
 
-        TracksRepository().create_groups()
+        # TracksRepository().create_groups()
         self._setup_ui()
 
         self.setWindowTitle('music player v0.0.8')

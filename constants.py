@@ -60,15 +60,13 @@ GENRE_GROUPS = defaultdict(list)
 YEAR_GROUPS = defaultdict(list)
 
 
+pre = "C:/My Files/My Projects/"
+
 # Database settings
 
-DATABASE_PATH = os.path.abspath("database/test_database.db")
-
+DATABASE_PATH = pre + "music_player/database/test.db"
 
 # Settings constants
-
-
-pre = "C:/My Files/My Projects/"
 
 DEFAULT_CONFIG_PATH = pre + "music_player/settings/config.txt"
 DEFAULT_LOADED_TRACKS_FILE_PATH = pre + "music_player/settings/tracks.txt"
