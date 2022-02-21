@@ -27,7 +27,8 @@ class AudioController(QtWidgets.QFrame):
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
         self.current_playlist = AudioPlaylist()
-        self.current_playlist.set_playlist(TracksRepository().get_tracks())
+        self.current_playlist.set_playlist(TracksRepository().get_tracks_by("artist", "Alan Walker"))
+        # print("asd")
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 
         self.player = AudioPlayer(self)
@@ -148,6 +149,8 @@ class AudioController(QtWidgets.QFrame):
         self.main_layout.addWidget(self.left_part)
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
+
+        print("SASA")
 
     def change_audio_order(self) -> None:
         self.current_playlist.change_mode()

@@ -230,7 +230,7 @@ class SpeakerLabel(QLabel): # TODO remove
 def get_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
     class NoArtworkError(Exception):
         pass
-
+    # return None
     pixmap = QPixmap()
     try:
         try:

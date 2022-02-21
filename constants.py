@@ -70,3 +70,6 @@ DATABASE_PATH = pre + "music_player/database/test.db"
 
 DEFAULT_CONFIG_PATH = pre + "music_player/settings/config.txt"
 DEFAULT_LOADED_TRACKS_FILE_PATH = pre + "music_player/settings/tracks.txt"
+
+
+TEST_TRACKS = []

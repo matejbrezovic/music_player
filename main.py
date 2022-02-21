@@ -52,6 +52,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         self._setup_panels()
+        # print("SSSS")
         self._setup_menu_bar()
 
     def _setup_menu_bar(self) -> None:
@@ -71,10 +72,13 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
     def _setup_panels(self) -> None:
         self.navigation_panel = NavigationPanel(self)
+        print("A")
         self.main_panel = MainPanel(self)
+        print("B")
         self.information_panel = InformationPanel(self)
+        print("C")
         self.audio_controller = AudioController(self)
-
+        print("D")
         self.horizontal_splitter = FixedHorizontalSplitter()
 
         self.horizontal_splitter.addWidget(self.navigation_panel)

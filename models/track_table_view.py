@@ -60,6 +60,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DisplayRole:
             if not index.column():
+                # print(index.row())
                 return "-"
 
             value = self.column_names[index.column()].lower()
@@ -101,6 +102,7 @@ class TrackTableView(QTableView):
         self.setModel(self._table_model)
 
     def set_tracks(self, tracks: List[Track]) -> None:
+        # self._table_model.set_tracks(tracks)
         self._table_model.set_tracks(tracks)
         self.set_new_tracks.emit()
 

@@ -15,7 +15,7 @@ class InformationTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self.table_view = parent
-        self._tracks = []
+        self._tracks: List[Track] = []
         self._playing_track_index = None
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
