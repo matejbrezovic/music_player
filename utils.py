@@ -63,7 +63,11 @@ class ElidedLabel(QLabel):
     double_clicked = pyqtSignal(QLabel)
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        # print(args)
+        # print(*args)
+        # print(tuple(map(str, args)))
+        # print(*tuple(map(str, *args)))
+        super().__init__(*tuple(map(str, args)) if args else "", **kwargs)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
 
     def paintEvent(self, event) -> None:
