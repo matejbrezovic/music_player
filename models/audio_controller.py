@@ -150,7 +150,7 @@ class AudioController(QtWidgets.QFrame):
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
 
-        print("SASA")
+        # print("SASA")
 
     def change_audio_order(self) -> None:
         self.current_playlist.change_mode()

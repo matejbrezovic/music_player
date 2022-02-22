@@ -5,9 +5,10 @@ from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QVariant
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import QListView, QTableView, QWidget, QVBoxLayout, QHBoxLayout
 
+import global_timer
 from constants import *
 from data_models.navigation_group import NavigationGroup
-from repositories.tracks_repository import TracksRepository
+from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import ElidedLabel
 
 
@@ -99,12 +100,14 @@ class NavigationTableView(QTableView):
 
         self.clicked.connect(self.temp)
         self.doubleClicked.connect(lambda index: self.group_double_clicked.emit(
-            TracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)))
+            CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)))
 
     def temp(self, index):
-        tracks = TracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
+        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
         # print(tracks)
         # TEST_TRACKS = tracks
+        global_timer.timer_init()
+        global_timer.start()
         self.group_clicked.emit(tracks)
 
     def set_group_key(self, key: str) -> None:

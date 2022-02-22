@@ -7,6 +7,7 @@ from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
 from PyQt6.QtGui import QIcon, QPixmap
 from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView
 
+import global_timer
 from constants import *
 from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
@@ -31,12 +32,14 @@ class TrackTableModel(QtCore.QAbstractTableModel):
             Qt.TransformationMode.SmoothTransformation)
 
     def set_tracks(self, tracks: List[Track]) -> None:
+        # global_timer.print_elapsed_time()
         self.layoutAboutToBeChanged.emit()
         self._tracks = tracks
         self.layoutChanged.emit()
         self.dataChanged.emit(self.createIndex(0, 0),
                               self.createIndex(self.rowCount(),
                                                self.columnCount()))
+        global_timer.print_elapsed_time()
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole):
         if not self._tracks:

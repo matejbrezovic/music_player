@@ -25,6 +25,10 @@ class Timer:
         self._start_time = None
         print(f"Elapsed time: {elapsed_time:0.4f} seconds")
 
+    def print_elapsed_time(self):
+        elapsed_time = time.perf_counter() - self._start_time
+        print(f"Elapsed time: {elapsed_time:0.4f} seconds")
+
 def timer_init():
     global timer
     timer = Timer()
@@ -34,4 +38,7 @@ def start():
 
 def stop():
     timer.stop()
+
+def print_elapsed_time():
+    timer.print_elapsed_time()
 

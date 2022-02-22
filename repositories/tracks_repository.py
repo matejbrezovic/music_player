@@ -8,13 +8,11 @@ from repositories.base_repository import BaseRepository
 from data_models.track import Track
 from utils import get_artwork_pixmap
 
-import pandas as pd
-
 
 class TracksRepository(BaseRepository):
     def __init__(self):
         super().__init__()
-        
+
     def add_track(self, track: Track) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()

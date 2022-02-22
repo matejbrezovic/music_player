@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabe
 
 from constants import *
 from data_models.track import Track
-from utils import ElidedLabel, format_seconds
+from utils import ElidedLabel, format_seconds, get_artwork_pixmap
 
 
 class InformationTableModel(QtCore.QAbstractTableModel):
@@ -17,6 +17,8 @@ class InformationTableModel(QtCore.QAbstractTableModel):
         self.table_view = parent
         self._tracks: List[Track] = []
         self._playing_track_index = None
+
+        self.loaded_tracks_num = 0
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if not self._tracks:
@@ -27,7 +29,7 @@ class InformationTableModel(QtCore.QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DecorationRole:
             if not index.column():
-                artwork_pixmap = self._tracks[index.row()].artwork_pixmap
+                artwork_pixmap = None #  get_artwork_pixmap(self._tracks[index.row()].file_path)
                 artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
                 icon = QIcon(artwork_pixmap)
                 icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
@@ -36,7 +38,16 @@ class InformationTableModel(QtCore.QAbstractTableModel):
         if role == Qt.ItemDataRole.DisplayRole:
             if index.column() != 1:
                 return None
+
             track = self._tracks[index.row()]
+            # return track.title
+
+            return TrackInfoWidget(track.title,
+                                   track.artist,
+                                   format_seconds(track.length))
+
+            # OLD
+
             widget_id = f"{track.title}{track.artist}{format_seconds(track.length)}"
             index_widget = self.table_view.indexWidget(index)
 
@@ -46,11 +57,41 @@ class InformationTableModel(QtCore.QAbstractTableModel):
                                                                       format_seconds(track.length)))
             return QVariant()
 
+    def canFetchMore(self, index: QModelIndex) -> bool:
+        if index.isValid():
+            return False
+        return self.loaded_tracks_num < len(self._tracks)
+
+    def fetchMore(self, index: QModelIndex) -> None:
+        remainder = len(self._tracks) - self.loaded_tracks_num
+        items_to_fetch = min(100, remainder)
+        print("To fetch:", items_to_fetch)
+        if items_to_fetch <= 0:
+            return
+
+        self.beginInsertRows(index, self.loaded_tracks_num, self.loaded_tracks_num + items_to_fetch - 1)
+        self.loaded_tracks_num += items_to_fetch
+        self.endInsertRows()
+        # self.numb
+
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(self._tracks)
 
-    def columnCount(self, parent: QModelIndex = QModelIndex) -> int:
+    def columnCount(self, index: QModelIndex = QModelIndex) -> int:
         return 2
+
+    # def canFetchMore(self, parent: QModelIndex) -> bool:
+    #     return True
+    #
+    # def fetchMore(self, index: QModelIndex) -> None:
+    #     if index.isValid():
+    #         return
+    #     current_len = len(self.nodes)
+    #     target_len = min(current_len + self.batch_size, self.max_num_nodes)
+    #     self.beginInsertRows(index, current_len, target_len - 1)
+    #     for i in range(current_len, target_len):
+    #         self.nodes.append('node ' + str(i))
+    #     self.endInsertRows()
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self.layoutAboutToBeChanged.emit()
@@ -72,7 +113,7 @@ class MyDelegate(QStyledItemDelegate):
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         super().paint(painter, option, index)
-        painter.save()
+        # painter.save()
         # set background color
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
@@ -95,6 +136,25 @@ class MyDelegate(QStyledItemDelegate):
                                              Qt.TransformationMode.SmoothTransformation)
 
             painter.drawPixmap(rect, pixmap)
+
+        # print(index.column())
+        if index.column() == 1:
+            track = self._tracks[index.row()]
+            track_info_widget = TrackInfoWidget(track.title,
+                                                track.artist,
+                                                format_seconds(track.length))
+
+            track_info_widget.setGeometry(option.rect)
+
+            painter.save()
+            painter.translate(option.rect.x(), option.rect.y())
+
+            track_info_widget.render(painter)
+
+            painter.restore()
+
+
+            print(index.row())
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks
@@ -162,3 +222,6 @@ class TrackInfoWidget(QWidget):
 
         self.v_layout.addWidget(self.upper_widget)
         self.v_layout.addWidget(ElidedLabel(artist))
+
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+        # self.setStyleSheet("background:transparent;")

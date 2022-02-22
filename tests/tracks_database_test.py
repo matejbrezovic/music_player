@@ -15,12 +15,13 @@ def main():
     # rep.get_track_counts_grouped_by("artist")
 
     start = time.time()
-    tracks = rep.get_tracks_by("album", None)
+    # tracks = rep.get_tracks_by("album", None)
     print(len(tracks))
     # rep.get_tracks_by()
 
-    # for track in tracks:
-    #     rep.add_track(track)
+    for track in tracks:
+        print(track)
+        rep.add_track(track)
     # rep.add_track(track)
 
     # got_track = rep.get_track_by_id(1)

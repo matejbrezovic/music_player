@@ -11,7 +11,7 @@ from constants import *
 from data_models.navigation_group import NavigationGroup
 from data_models.track import Track
 from models.navigation_table_view import NavigationTableView
-from repositories.tracks_repository import TracksRepository
+from repositories.cached_tracks_repository import CachedTracksRepository
 from tag_manager import TagManager
 from utils import *
 from constants import *
@@ -82,8 +82,8 @@ class NavigationPanel(QFrame):
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:
-            tracks = TracksRepository().get_tracks_by(group_key, group_title)
-            pixmap = get_artwork_pixmap(tracks[0].file_path)
+            # tracks = CachedTracksRepository().get_tracks_by(group_key, group_title)
+            pixmap = None  # get_artwork_pixmap(tracks[0].file_path)
 
             group_key = group_key.lower()
             if not pixmap:
@@ -102,7 +102,7 @@ class NavigationPanel(QFrame):
         start = time.time()
         self.groups: List[NavigationGroup] = []
 
-        for title, count in TracksRepository().get_track_counts_grouped_by(self.group_options[key]):
+        for title, count in CachedTracksRepository().get_track_counts_grouped_by(self.group_options[key]):
             pixmap = get_group_pixmap(self.group_options[key], title)
             self.groups.append(NavigationGroup(title, count, pixmap))
 
