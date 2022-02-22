@@ -45,6 +45,9 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         if not self._tracks:
             return None
 
+        if index.column() == 0:
+            print(index.row())
+
         if role == Qt.ItemDataRole.TextAlignmentRole and not index.column():
             return Qt.AlignmentFlag.AlignCenter
 

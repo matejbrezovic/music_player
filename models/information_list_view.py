@@ -29,33 +29,33 @@ class InformationTableModel(QtCore.QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DecorationRole:
             if not index.column():
-                artwork_pixmap = None #  get_artwork_pixmap(self._tracks[index.row()].file_path)
+                artwork_pixmap = get_artwork_pixmap(self._tracks[index.row()].file_path)
                 artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
                 icon = QIcon(artwork_pixmap)
                 icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
                 return icon
 
-        if role == Qt.ItemDataRole.DisplayRole:
-            if index.column() != 1:
-                return None
-
-            track = self._tracks[index.row()]
-            # return track.title
-
-            return TrackInfoWidget(track.title,
-                                   track.artist,
-                                   format_seconds(track.length))
-
-            # OLD
-
-            widget_id = f"{track.title}{track.artist}{format_seconds(track.length)}"
-            index_widget = self.table_view.indexWidget(index)
-
-            if not index_widget or index_widget.id != widget_id:
-                self.table_view.setIndexWidget(index, TrackInfoWidget(track.title,
-                                                                      track.artist,
-                                                                      format_seconds(track.length)))
-            return QVariant()
+        # if role == Qt.ItemDataRole.DisplayRole:
+        #     if index.column() != 1:
+        #         return None
+        #
+        #     track = self._tracks[index.row()]
+        #     # return track.title
+        #
+        #     return TrackInfoWidget(track.title,
+        #                            track.artist,
+        #                            format_seconds(track.length))
+        #
+        #     # OLD
+        #
+        #     widget_id = f"{track.title}{track.artist}{format_seconds(track.length)}"
+        #     index_widget = self.table_view.indexWidget(index)
+        #
+        #     if not index_widget or index_widget.id != widget_id:
+        #         self.table_view.setIndexWidget(index, TrackInfoWidget(track.title,
+        #                                                               track.artist,
+        #                                                               format_seconds(track.length)))
+        #     return QVariant()
 
     def canFetchMore(self, index: QModelIndex) -> bool:
         if index.isValid():
@@ -137,7 +137,6 @@ class MyDelegate(QStyledItemDelegate):
 
             painter.drawPixmap(rect, pixmap)
 
-        # print(index.column())
         if index.column() == 1:
             track = self._tracks[index.row()]
             track_info_widget = TrackInfoWidget(track.title,
@@ -148,13 +147,8 @@ class MyDelegate(QStyledItemDelegate):
 
             painter.save()
             painter.translate(option.rect.x(), option.rect.y())
-
             track_info_widget.render(painter)
-
             painter.restore()
-
-
-            print(index.row())
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks
