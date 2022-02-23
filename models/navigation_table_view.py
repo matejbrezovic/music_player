@@ -2,8 +2,9 @@ from typing import List, Any
 
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QVariant
-from PyQt6.QtGui import QIcon
-from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt6.QtGui import QIcon, QPen, QBrush, QPainter
+from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle, \
+    QStyleOptionViewItem
 
 import global_timer
 from constants import *
@@ -33,17 +34,17 @@ class NavigationListModel(QtCore.QAbstractTableModel):
                 icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
                 return icon
 
-        if role == Qt.ItemDataRole.DisplayRole:
-            if index.column() != 1:
-                return None
-            group = self._groups[index.row()]
-            group_id = f"{group.title}{group.tracks_num}"
-            index_widget = self.table_view.indexWidget(index)
-            # self.table_view.setIndexWidget(index, NavigationGroupWidget(group.title, group.tracks_num))
-
-            if not index_widget or index_widget.group_id != group_id:
-                self.table_view.setIndexWidget(index, NavigationGroupWidget(group.title, group.tracks_num))
-            return QVariant()
+        # if role == Qt.ItemDataRole.DisplayRole:
+        #     if index.column() != 1:
+        #         return None
+        #     group = self._groups[index.row()]
+        #     group_id = f"{group.title}{group.tracks_num}"
+        #     index_widget = self.table_view.indexWidget(index)
+        #     # self.table_view.setIndexWidget(index, NavigationGroupWidget(group.title, group.tracks_num))
+        #
+        #     if not index_widget or index_widget.group_id != group_id:
+        #         self.table_view.setIndexWidget(index, NavigationGroupWidget(group.title, group.tracks_num))
+        #     return QVariant()
 
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(self._groups)
@@ -60,6 +61,51 @@ class NavigationListModel(QtCore.QAbstractTableModel):
                                                self.columnCount()))
 
 
+class NavigationTableItemDelegate(QStyledItemDelegate):
+    def __init__(self, parent: QTableView = None):
+        super().__init__(parent)
+        self._table_view: QTableView = parent
+        self._groups: List[NavigationGroup] = []
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        super().paint(painter, option, index)
+        # painter.save()
+        # set background color
+        painter.setPen(QPen(Qt.PenStyle.NoPen))
+        if option.state & QStyle.StateFlag.State_Selected:
+            if self._table_view.hasFocus():
+                painter.setBrush(QBrush(SELECTION_QCOLOR))
+            else:
+                painter.setBrush(QBrush(LOST_FOCUS_QCOLOR))
+        else:
+            painter.setBrush(QBrush(Qt.GlobalColor.white))
+        painter.drawRect(option.rect)
+
+        if index.data(Qt.ItemDataRole.DecorationRole):
+            decoration_value = index.data(Qt.ItemDataRole.DecorationRole).pixmap(50, 50)
+            rect = option.rect
+            rect.setRect(option.rect.left() + 2, option.rect.top() + 2,
+                         option.rect.width() - 4, option.rect.height() - 4)
+
+            pixmap = decoration_value.scaled(rect.width(), rect.height(),
+                                             Qt.AspectRatioMode.KeepAspectRatio,
+                                             Qt.TransformationMode.SmoothTransformation)
+
+            painter.drawPixmap(rect, pixmap)
+
+        if index.column() == 1:
+            navigation_group = self._groups[index.row()]
+            navigation_group_widget = NavigationGroupWidget(navigation_group.title, navigation_group.tracks_num)
+
+            navigation_group_widget.setGeometry(option.rect)
+
+            painter.save()
+            painter.translate(option.rect.x(), option.rect.y())
+            navigation_group_widget.render(painter)
+            painter.restore()
+
+    def set_groups(self, groups: List[NavigationGroup]) -> None:
+        self._groups = groups
 
 
 class NavigationTableView(QTableView):
@@ -72,7 +118,9 @@ class NavigationTableView(QTableView):
         self.groups: List[NavigationGroup] = []
         self.group_key = None
         self._table_model = NavigationListModel(self)
+        self._table_delegate = NavigationTableItemDelegate(self)
         self.setModel(self._table_model)
+        self.setItemDelegate(self._table_delegate)
 
         self.clicked.connect(self.temp)
         self.doubleClicked.connect(lambda index: self.group_double_clicked.emit(
@@ -92,6 +140,7 @@ class NavigationTableView(QTableView):
     def set_groups(self, groups: List[NavigationGroup]) -> None:
         self.groups = groups
         self._table_model.set_groups(groups)
+        self._table_delegate.set_groups(groups)
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
         self.setStyleSheet(SELECTION_STYLESHEET)
@@ -123,3 +172,5 @@ class NavigationGroupWidget(QWidget):
 
         self.v_layout.addWidget(title_label)
         self.v_layout.addWidget(tracks_label)
+
+        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)

@@ -105,7 +105,7 @@ class InformationTableModel(QtCore.QAbstractTableModel):
         self._playing_track_index = index
 
 
-class MyDelegate(QStyledItemDelegate):
+class InformationTableItemDelegate(QStyledItemDelegate):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self._table_view: QTableView = parent
@@ -162,7 +162,7 @@ class InformationTableView(QTableView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._table_model = InformationTableModel(self)
-        self._table_delegate = MyDelegate(self)
+        self._table_delegate = InformationTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
         self._tracks: List[Track] = []
