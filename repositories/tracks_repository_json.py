@@ -1,38 +1,15 @@
 import json
-from collections import defaultdict
-from random import randint
 from typing import List
 
 import mutagen.mp3
 from PyQt6 import QtWidgets
 
-from constants import *
-from utils import *
 from data_models.track import Track
 from tag_manager import TagManager
+from utils import *
 
 
 class TracksRepository:
-    # def __init__(self):
-    #
-    #     self.group_options = {
-    #         0: "Album",
-    #         1: "Artist",
-    #         2: "Composer",
-    #         3: "Folder",
-    #         4: "Genre",
-    #         5: "Year"
-    #     }
-    #
-    # def create_groups(self) -> None:
-    #     tracks = self.get_tracks()
-    #     for track in tracks:
-    #         ALBUM_GROUPS[track.album].append(track)
-    #         ARTIST_GROUPS[track.artist].append(track)
-    #         COMPOSER_GROUPS[track.composer].append(track)
-    #         FOLDER_GROUPS[track.file_path.split("/" if "/" in track.file_path else "\\")[-2]].append(track)
-    #         GENRE_GROUPS[track.genre].append(track)
-
     def get_tracks(self) -> List[Track]:
         with open(DEFAULT_LOADED_TRACKS_FILE_PATH, "r") as f:
             try:
@@ -42,22 +19,13 @@ class TracksRepository:
                     for track in tracks:
                         track.artwork_pixmap = get_artwork_pixmap(track.file_path)
 
-                tracks = tracks * 10000
+                tracks = tracks * 100
                 # for i, track in enumerate(tracks):
                 #     track.track_id = i
                 #     tracks[i] = track
                 return tracks
             except json.decoder.JSONDecodeError:
                 return []
-
-    # def get_groups(self, group_key: str) -> List[List[Track]]:
-    #     groups = defaultdict(list)
-    #
-    # def update_groups(self):
-    #
-
-    # def get_track_ids(self) -> List[int]:  # TODO maybe redundant
-    #     return [track.track_id for track in self.get_tracks()]
 
     def get_track_by_id(self, track_id: int) -> Optional[Track]:
         for track in self.get_tracks():

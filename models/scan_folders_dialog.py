@@ -1,12 +1,11 @@
 from __future__ import annotations
 
+import os
 from typing import Union, List, Tuple
 
-from PyQt6.QtWidgets import QDialog, QVBoxLayout, QHBoxLayout, QPushButton, QScrollArea, QWidget, \
-    QTreeWidgetItem, QTreeWidget, QSpacerItem
+from PyQt6.QtWidgets import QDialog, QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout
 
 from config import Config
-from constants import *
 from repositories.tracks_repository import TracksRepository
 from utils import *
 

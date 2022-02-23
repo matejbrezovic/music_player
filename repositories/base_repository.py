@@ -1,5 +1,6 @@
 import sqlite3
-from typing import List
+from sqlite3 import Connection
+from typing import List, Any
 
 from constants import *
 
@@ -9,11 +10,11 @@ class BaseRepository:
         print(DATABASE_PATH)
 
     @staticmethod
-    def get_connection():
+    def get_connection() -> Connection:
         conn = sqlite3.connect(DATABASE_PATH)
         return conn
 
-    def get_all_table_names(self):
+    def get_all_table_names(self) -> List[str]:
         conn = self.get_connection()
         cursor = conn.cursor()
 
@@ -21,14 +22,14 @@ class BaseRepository:
                        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';").fetchall()]
         return table_names
 
-    def get_all_table_rows(self, table_name: str):
+    def get_all_table_rows(self, table_name: str) -> List[Any]:
         conn = self.get_connection()
         cursor = conn.cursor()
 
         table_rows = cursor.execute(f"SELECT * FROM {table_name}").fetchall()
         return table_rows
 
-    def get_all_table_columns(self, table_name: str):
+    def get_all_table_columns(self, table_name: str) -> List[Any]:
         conn = self.get_connection()
         cursor = conn.execute(f"SELECT * FROM {table_name}")
 
@@ -38,7 +39,7 @@ class BaseRepository:
 
         return table_columns
 
-    def drop_all_tables(self):
+    def drop_all_tables(self) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
 
@@ -47,18 +48,18 @@ class BaseRepository:
             for name in table_names:
                 cursor.execute(f"DROP TABLE {name}")
 
-    def create_table(self, table_name: str, table_columns: List):
+    def create_table(self, table_name: str, table_columns: List) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
 
         cursor.execute(f'''CREATE TABLE IF NOT EXISTS {table_name} ({", ".join(table_columns)})''')
         conn.commit()
 
-    def reset_table(self, table_name: str):
+    def reset_table(self, table_name: str) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute(f"DELETE * FROM {table_name};")
+        cursor.execute(f"DELETE FROM {table_name};")
 
         conn.commit()
         conn.close()

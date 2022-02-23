@@ -2,8 +2,8 @@ from typing import List, Any
 
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QVariant
-from PyQt6.QtGui import QIcon, QPixmap
-from PyQt6.QtWidgets import QListView, QTableView, QWidget, QVBoxLayout, QHBoxLayout
+from PyQt6.QtGui import QIcon
+from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout
 
 import global_timer
 from constants import *
@@ -60,30 +60,6 @@ class NavigationListModel(QtCore.QAbstractTableModel):
                                                self.columnCount()))
 
 
-class NavigationGroupWidget(QWidget):
-    def __init__(self, title: str, tracks_num: int, parent=None):
-        super().__init__(parent)
-
-        self.group_id = f"{title}{tracks_num}"
-        # return
-        self.v_layout = QVBoxLayout(self)
-        self.v_layout.setContentsMargins(5, 0, 5, 0)
-        self.v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.h_layout = QHBoxLayout()
-        self.h_layout.setContentsMargins(0, 0, 0, 0)
-
-        # self.id = f"{title}{artist}{duration}"
-
-        title_label = ElidedLabel(title)
-        title_label.setContentsMargins(0, 0, 0, 0)
-        title_label.setMinimumHeight(20)
-
-        tracks_label = ElidedLabel(f"{tracks_num} {'Tracks' if tracks_num > 1 else 'Track'}")
-        tracks_label.setContentsMargins(0, 0, 0, 0)
-        tracks_label.setMinimumHeight(20)
-
-        self.v_layout.addWidget(title_label)
-        self.v_layout.addWidget(tracks_label)
 
 
 class NavigationTableView(QTableView):
@@ -124,3 +100,26 @@ class NavigationTableView(QTableView):
     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
         self.setStyleSheet(LOST_FOCUS_STYLESHEET)
         super().focusOutEvent(event)
+
+
+class NavigationGroupWidget(QWidget):
+    def __init__(self, title: str, tracks_num: int, parent=None):
+        super().__init__(parent)
+
+        self.group_id = f"{title}{tracks_num}"
+        self.v_layout = QVBoxLayout(self)
+        self.v_layout.setContentsMargins(5, 0, 5, 0)
+        self.v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.h_layout = QHBoxLayout()
+        self.h_layout.setContentsMargins(0, 0, 0, 0)
+
+        title_label = ElidedLabel(title)
+        title_label.setContentsMargins(0, 0, 0, 0)
+        title_label.setMinimumHeight(20)
+
+        tracks_label = ElidedLabel(f"{tracks_num} {'Tracks' if tracks_num > 1 else 'Track'}")
+        tracks_label.setContentsMargins(0, 0, 0, 0)
+        tracks_label.setMinimumHeight(20)
+
+        self.v_layout.addWidget(title_label)
+        self.v_layout.addWidget(tracks_label)

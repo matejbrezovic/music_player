@@ -12,12 +12,10 @@ from PyQt6.QtWidgets import *
 
 from models.add_files_dialog import AddFilesDialog
 from models.audio_controller import AudioController
-from models.scan_folders_dialog import *
 from models.information_panel import InformationPanel
 from models.main_panel import MainPanel
 from models.navigation_panel import NavigationPanel
-
-import global_timer
+from models.scan_folders_dialog import *
 
 
 class MainWindowUi(QtWidgets.QMainWindow):

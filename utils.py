@@ -2,17 +2,17 @@ import datetime
 from typing import Optional
 
 import mutagen
-from PyQt6 import QtGui, QtCore
+from PIL.ImageQt import ImageQt
+from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QTableWidget, \
-    QHeaderView, QHBoxLayout, QVBoxLayout, QWidget
+    QVBoxLayout, QWidget
 from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
-from PIL.ImageQt import ImageQt
+
 from constants import *
-import global_timer
 
 
 def classify(module):

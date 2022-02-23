@@ -6,6 +6,7 @@ from PyQt6.QtWidgets import QApplication
 
 from repositories.tracks_repository import TracksRepository
 
+
 def key_getter(attr="album"):
     if attr == "file_path":
         return str(attrgetter(cls, attr)).split("/" if "/" in cls.file_path else "\\")[-2]

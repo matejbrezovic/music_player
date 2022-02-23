@@ -1,12 +1,8 @@
-import os
-
 import h5py
+import mutagen.id3
+import mutagen.mp3
 import numpy as np
 from PIL import Image
-from random import randint
-import mutagen
-import mutagen.mp3
-import mutagen.id3
 
 
 class ImageManager:

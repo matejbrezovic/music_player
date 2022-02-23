@@ -1,9 +1,8 @@
 import sys
 from typing import List
 
-from PyQt6 import QtCore
-from PyQt6.QtCore import Qt, QModelIndex
 from PyQt6.QtWidgets import *
+
 import global_timer
 from data_models.track import Track
 

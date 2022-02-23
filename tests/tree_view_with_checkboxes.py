@@ -1,9 +1,8 @@
-import os
 import sys
 
 from PyQt6 import QtWidgets
-from PyQt6.QtWidgets import QVBoxLayout, QTreeWidgetItem, QDialog, QTreeWidget, QScrollArea, \
-    QHBoxLayout, QPushButton, QWidget
+from PyQt6.QtWidgets import QTreeWidgetItem, QDialog, QTreeWidget, QScrollArea, \
+    QPushButton
 
 from utils import *
 

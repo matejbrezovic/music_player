@@ -4,8 +4,8 @@ from PyQt6 import QtWidgets
 from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import *
 
-from models.track_table_view import TrackTableView
 from data_models.track import Track
+from models.track_table_view import TrackTableView
 from utils import *
 
 

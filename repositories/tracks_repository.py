@@ -2,10 +2,12 @@ import sqlite3
 import time
 from typing import List, Union, Iterable
 
+import mutagen.mp3
 from PyQt6 import QtWidgets
 
-from repositories.base_repository import BaseRepository
 from data_models.track import Track
+from repositories.base_repository import BaseRepository
+from tag_manager import TagManager
 from utils import get_artwork_pixmap
 
 
@@ -37,11 +39,20 @@ class TracksRepository(BaseRepository):
     def get_track_counts_grouped_by(self, group_key: str):
         conn = self.get_connection()
         cursor = conn.cursor()
-        track_counts = cursor.execute(f"SELECT {group_key}, COUNT (*) "
-                                      f"FROM tracks "
-                                      # f"WHERE {group_key} IS NOT NULL "
-                                      f"GROUP BY {group_key}").fetchall()
-        print(track_counts)
+
+        if group_key == "folder":
+            print("ddd")
+            conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
+            track_counts = cursor.execute(f"SELECT get_folder_path(file_path), COUNT (*) "
+                                          f"FROM tracks "
+                                          # f"WHERE {group_key} IS NOT NULL "
+                                          f"GROUP BY get_folder_path(file_path)").fetchall()
+        else:
+            track_counts = cursor.execute(f"SELECT {group_key}, COUNT (*) "
+                                          f"FROM tracks "
+                                          # f"WHERE {group_key} IS NOT NULL "
+                                          f"GROUP BY {group_key}").fetchall()
+
         return track_counts
 
     def get_tracks_by(self, key: str, value: Union[str, int]) -> List[Track]:
@@ -51,19 +62,18 @@ class TracksRepository(BaseRepository):
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
-        if value:
+        if key.lower() == "folder":
+            key = "file_path"
+            cursor.execute(f"SELECT * FROM tracks WHERE {key} LIKE '%{value}%'")
+
+        elif value:
             cursor.execute(f"SELECT * FROM tracks WHERE {key} = '{value}'")
         else:
             cursor.execute(f"SELECT * FROM tracks WHERE {key} IS NULL")
-        # print(f"SELECT * FROM tracks WHERE {key} = '{value if value }'")
-
-        # for row in cursor.fetchall():
-        #     print(row)
 
         tracks: List[Track] = []
         rows = cursor.fetchall()
         for row in rows:
-            # print(row)
             track = Track(
                 track_id=row["track_id"],
                 file_path=row["file_path"],
@@ -169,3 +179,28 @@ class TracksRepository(BaseRepository):
         cursor.execute("DELETE FROM tracks WHERE track_id = ?", (track_id,))
         conn.commit()
         conn.close()
+
+    @staticmethod
+    def convert_file_paths_to_tracks(file_paths: List[str]) -> List[Track]:
+        tracks = []
+        tag_manager = TagManager()
+        for i, file_path in enumerate(file_paths):
+            try:
+                loaded_file = tag_manager.load_file(file_path)
+                tracks.append(Track(
+                    i,
+                    file_path,
+                    file_path.rsplit("/")[-1],
+                    loaded_file["album"].first,
+                    loaded_file["artist"].first,
+                    loaded_file["composer"].first,
+                    loaded_file["genre"].first,
+                    int(loaded_file["year"]) if int(loaded_file["year"]) else None,
+                    int(loaded_file["#length"].first),
+                    ""  # get_artwork_pixmap(file_path, "album")
+                ))
+            except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError):
+                # TODO cannot convert '2020-10-26T20:39:57-04:00' to int type for year so ValueError (can be improved)
+                continue
+
+        return tracks

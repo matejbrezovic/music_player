@@ -1,12 +1,12 @@
 import math
 from typing import List
 
-from PyQt6.QtCore import QSize
 from PyQt6 import QtWidgets
+from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import *
 
 from data_models.track import Track
-from models.information_list_view import InformationTableView
+from models.information_table_view import InformationTableView
 from tag_manager import TagManager
 from utils import *
 
