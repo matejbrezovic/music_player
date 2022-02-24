@@ -41,7 +41,7 @@ class TracksRepository(BaseRepository):
         cursor = conn.cursor()
 
         if group_key == "folder":
-            print("ddd")
+            # print("ddd")
             conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
             track_counts = cursor.execute(f"SELECT get_folder_path(file_path), COUNT (*) "
                                           f"FROM tracks "
@@ -67,6 +67,10 @@ class TracksRepository(BaseRepository):
             cursor.execute(f"SELECT * FROM tracks WHERE {key} LIKE '%{value}%'")
 
         elif value:
+            # print(key, value)
+            # if "'" in value:
+            #     value = value.replace("'", "''")
+            value = value.replace("'", "''")
             cursor.execute(f"SELECT * FROM tracks WHERE {key} = '{value}'")
         else:
             cursor.execute(f"SELECT * FROM tracks WHERE {key} IS NULL")
@@ -83,7 +87,8 @@ class TracksRepository(BaseRepository):
                 composer=row["composer"],
                 genre=row["genre"],
                 year=row["year"],
-                length=row["length"]
+                length=row["length"],
+                # artwork_pixmap=get_artwork_pixmap(row["file_path"])
                 )
 
             tracks.append(track)
@@ -91,8 +96,8 @@ class TracksRepository(BaseRepository):
             # if QtWidgets.QApplication.instance() is not None:
             #     for track in tracks:
             #         track.artwork_pixmap = get_artwork_pixmap(track.file_path)
-
-        print("Tracks loaded in:", time.time() - start)
+        print(key, value)
+        # print("Tracks loaded in:", time.time() - start)
         return tracks
 
     def get_tracks(self) -> List[Track]:

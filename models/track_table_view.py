@@ -11,6 +11,7 @@ import global_timer
 from constants import *
 from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
+from utils import get_artwork_pixmap
 
 
 class TrackTableModel(QtCore.QAbstractTableModel):
@@ -52,8 +53,17 @@ class TrackTableModel(QtCore.QAbstractTableModel):
             return Qt.AlignmentFlag.AlignCenter
 
         if role == Qt.ItemDataRole.DecorationRole:
-            if not index.column():
-                icon = QIcon(self._tracks[index.row()].artwork_pixmap)
+            if not index.column():  # TODO can probably be improved
+                track = self._tracks[index.row()]
+                artwork_pixmap = track.artwork_pixmap
+                if artwork_pixmap is None:
+                    new_pixmap = get_artwork_pixmap(track.file_path)
+                    track.artwork_pixmap = new_pixmap if new_pixmap else ""
+                    artwork_pixmap = track.artwork_pixmap
+                if not artwork_pixmap:
+                    return None
+                icon = QIcon(artwork_pixmap)
+                icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
                 return icon if icon else None
             elif index.column() == 1:
                 if self.playing_track_index is None:
@@ -64,9 +74,8 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                     elif not self.is_playing:
                         return self.muted_speaker_pixmap
 
-        if role == Qt.ItemDataRole.DisplayRole:
+        if role == Qt.ItemDataRole.DisplayRole and not index.data(Qt.ItemDataRole.DecorationRole):
             if not index.column():
-                # print(index.row())
                 return "-"
 
             value = self.column_names[index.column()].lower()
@@ -108,6 +117,7 @@ class TrackTableView(QTableView):
         self.setModel(self._table_model)
 
     def set_tracks(self, tracks: List[Track]) -> None:
+        # return
         # self._table_model.set_tracks(tracks)
         self._table_model.set_tracks(tracks)
         self.set_new_tracks.emit()

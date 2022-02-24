@@ -31,67 +31,15 @@ class InformationTableModel(QtCore.QAbstractTableModel):
             if not index.column():
                 artwork_pixmap = get_artwork_pixmap(self._tracks[index.row()].file_path)
                 artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
-                icon = QIcon(artwork_pixmap)
-                icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
-                return icon
-
-        # if role == Qt.ItemDataRole.DisplayRole:
-        #     if index.column() != 1:
-        #         return None
-        #
-        #     track = self._tracks[index.row()]
-        #     # return track.title
-        #
-        #     return TrackInfoWidget(track.title,
-        #                            track.artist,
-        #                            format_seconds(track.length))
-        #
-        #     # OLD
-        #
-        #     widget_id = f"{track.title}{track.artist}{format_seconds(track.length)}"
-        #     index_widget = self.table_view.indexWidget(index)
-        #
-        #     if not index_widget or index_widget.id != widget_id:
-        #         self.table_view.setIndexWidget(index, TrackInfoWidget(track.title,
-        #                                                               track.artist,
-        #                                                               format_seconds(track.length)))
-        #     return QVariant()
-
-    # def canFetchMore(self, index: QModelIndex) -> bool:
-    #     if index.isValid():
-    #         return False
-    #     return self.loaded_tracks_num < len(self._tracks)
-    #
-    # def fetchMore(self, index: QModelIndex) -> None:
-    #     remainder = len(self._tracks) - self.loaded_tracks_num
-    #     items_to_fetch = min(100, remainder)
-    #     print("To fetch:", items_to_fetch)
-    #     if items_to_fetch <= 0:
-    #         return
-    #
-    #     self.beginInsertRows(index, self.loaded_tracks_num, self.loaded_tracks_num + items_to_fetch - 1)
-    #     self.loaded_tracks_num += items_to_fetch
-    #     self.endInsertRows()
-    #     # self.numb
+                # icon = QIcon(artwork_pixmap)
+                # icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
+                return artwork_pixmap
 
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(self._tracks)
 
     def columnCount(self, index: QModelIndex = QModelIndex) -> int:
         return 2
-
-    # def canFetchMore(self, parent: QModelIndex) -> bool:
-    #     return True
-    #
-    # def fetchMore(self, index: QModelIndex) -> None:
-    #     if index.isValid():
-    #         return
-    #     current_len = len(self.nodes)
-    #     target_len = min(current_len + self.batch_size, self.max_num_nodes)
-    #     self.beginInsertRows(index, current_len, target_len - 1)
-    #     for i in range(current_len, target_len):
-    #         self.nodes.append('node ' + str(i))
-    #     self.endInsertRows()
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self.layoutAboutToBeChanged.emit()
@@ -110,9 +58,10 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         super().__init__(parent)
         self._table_view: QTableView = parent
         self._tracks: List[Track] = []
+        # self.loaded_pixmap_indexes = []
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
-        super().paint(painter, option, index)
+        # super().paint(painter, option, index)
         # painter.save()
         # set background color
         painter.setPen(QPen(Qt.PenStyle.NoPen))
@@ -126,13 +75,13 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         painter.drawRect(option.rect)
 
         if index.data(Qt.ItemDataRole.DecorationRole):
-            decoration_value = index.data(Qt.ItemDataRole.DecorationRole).pixmap(50, 50)
+            decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
             rect = option.rect
-            rect.setRect(option.rect.left() + 2, option.rect.top() + 2,
-                         option.rect.width() - 4, option.rect.height() - 4)
+            rect.setRect(rect.left() + 2, rect.top() + 2,
+                         rect.width() - 4, rect.height() - 4)
 
             pixmap = decoration_value.scaled(rect.width(), rect.height(),
-                                             Qt.AspectRatioMode.KeepAspectRatio,
+                                             Qt.AspectRatioMode.IgnoreAspectRatio,
                                              Qt.TransformationMode.SmoothTransformation)
 
             painter.drawPixmap(rect, pixmap)
@@ -171,6 +120,7 @@ class InformationTableView(QTableView):
         self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()]))
 
     def set_tracks(self, tracks: List[Track]) -> None:
+        # return
         self._table_model.set_tracks(tracks)
         self._table_delegate.set_tracks(tracks)
         self._tracks = tracks

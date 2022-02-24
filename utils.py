@@ -32,18 +32,6 @@ def delete_items(layout: QLayout) -> None:
             else:
                 delete_items(item.layout())
 
-
-# def unparent_items(layout: QLayout) -> None:
-#     if layout is not None:
-#         while layout.count():
-#             item = layout.takeAt(0)
-#             widget = item.widget()
-#             if widget is not None:
-#                 widget.setParent(None)
-#             else:
-#                 delete_items(item.layout())
-
-
 def delete_grid_layout_items(layout: QGridLayout) -> None:
     if layout is None:
         return
@@ -63,10 +51,6 @@ class ElidedLabel(QLabel):
     double_clicked = pyqtSignal(QLabel)
 
     def __init__(self, *args, **kwargs):
-        # print(args)
-        # print(*args)
-        # print(tuple(map(str, args)))
-        # print(*tuple(map(str, *args)))
         super().__init__(*tuple(map(str, args)) if args else "", **kwargs)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
 

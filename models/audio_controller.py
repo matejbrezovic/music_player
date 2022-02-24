@@ -28,7 +28,7 @@ class AudioController(QtWidgets.QFrame):
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
         self.current_playlist = AudioPlaylist()
-        self.current_playlist.set_playlist(TracksRepository().get_tracks_by("artist", "Alan Walker"))
+        # self.current_playlist.set_playlist(TracksRepository().get_tracks_by("artist", "Alan Walker"))
         # print("asd")
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 

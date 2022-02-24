@@ -34,18 +34,6 @@ class NavigationListModel(QtCore.QAbstractTableModel):
                 icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
                 return icon
 
-        # if role == Qt.ItemDataRole.DisplayRole:
-        #     if index.column() != 1:
-        #         return None
-        #     group = self._groups[index.row()]
-        #     group_id = f"{group.title}{group.tracks_num}"
-        #     index_widget = self.table_view.indexWidget(index)
-        #     # self.table_view.setIndexWidget(index, NavigationGroupWidget(group.title, group.tracks_num))
-        #
-        #     if not index_widget or index_widget.group_id != group_id:
-        #         self.table_view.setIndexWidget(index, NavigationGroupWidget(group.title, group.tracks_num))
-        #     return QVariant()
-
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(self._groups)
 
@@ -68,7 +56,7 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
         self._groups: List[NavigationGroup] = []
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
-        super().paint(painter, option, index)
+        # super().paint(painter, option, index)
         # painter.save()
         # set background color
         painter.setPen(QPen(Qt.PenStyle.NoPen))
@@ -81,12 +69,13 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
             painter.setBrush(QBrush(Qt.GlobalColor.white))
         painter.drawRect(option.rect)
 
-        if index.data(Qt.ItemDataRole.DecorationRole):
-            decoration_value = index.data(Qt.ItemDataRole.DecorationRole).pixmap(50, 50)
+        if index.data(Qt.ItemDataRole.DecorationRole) and not index.column():
+
             rect = option.rect
             rect.setRect(option.rect.left() + 2, option.rect.top() + 2,
                          option.rect.width() - 4, option.rect.height() - 4)
 
+            decoration_value = index.data(Qt.ItemDataRole.DecorationRole).pixmap(rect.width(), rect.height())
             pixmap = decoration_value.scaled(rect.width(), rect.height(),
                                              Qt.AspectRatioMode.KeepAspectRatio,
                                              Qt.TransformationMode.SmoothTransformation)

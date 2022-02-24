@@ -61,7 +61,7 @@ class NavigationPanel(QFrame):
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:
-            # tracks = CachedTracksRepository().get_tracks_by(group_key, group_title)
+            # tracks = CachedTracksRepository().get_tracks_by(group_key, group_title)  # TODO should be optimized
             pixmap = None  # get_artwork_pixmap(tracks[0].file_path)
 
             # group_key = group_key.lower()
@@ -74,8 +74,6 @@ class NavigationPanel(QFrame):
                     pixmap = QPixmap("icons/folder.png")
                 else:
                     pixmap = QPixmap("icons/misc.png")
-            # print(group)
-            # print(tracks)
             return pixmap
 
         start = time.time()
