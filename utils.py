@@ -32,6 +32,7 @@ def delete_items(layout: QLayout) -> None:
             else:
                 delete_items(item.layout())
 
+
 def delete_grid_layout_items(layout: QGridLayout) -> None:
     if layout is None:
         return
@@ -219,6 +220,7 @@ def get_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
     class NoArtworkError(Exception):
         pass
     # return None
+    # print("CREATED PIXMAP")
     pixmap = QPixmap()
     try:
         try:

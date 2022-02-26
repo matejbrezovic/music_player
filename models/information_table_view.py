@@ -19,6 +19,7 @@ class InformationTableModel(QtCore.QAbstractTableModel):
         self._playing_track_index = None
 
         self.loaded_tracks_num = 0
+        self.loaded_pixmap_mapping = {}
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if not self._tracks:
@@ -30,8 +31,14 @@ class InformationTableModel(QtCore.QAbstractTableModel):
         if role == Qt.ItemDataRole.DecorationRole:
             # return None
             if not index.column():
-                artwork_pixmap = get_artwork_pixmap(self._tracks[index.row()].file_path)
-                artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
+                if index.row() not in self.loaded_pixmap_mapping:
+                    artwork_pixmap = get_artwork_pixmap(self._tracks[index.row()].file_path)
+                    if not artwork_pixmap:
+                        artwork_pixmap = QPixmap(f"icons/album.png")
+                    self.loaded_pixmap_mapping[index.row()] = artwork_pixmap
+                else:
+                    artwork_pixmap = self.loaded_pixmap_mapping[index.row()]
+                    # artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
                 # icon = QIcon(artwork_pixmap)
                 # icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
                 return artwork_pixmap
@@ -62,7 +69,17 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         self._playing_track_index = None
         self.is_playing = False
         # self.loaded_pixmap_indexes = []
-        # self.track_info_widgets = []
+        self.track_info_widgets_mapping = {}
+
+        self.pixmap_width = 16
+        self.pixmap_height = 16
+
+        self.playing_pixmap = QPixmap("icons/speaker_playing.png").scaled(self.pixmap_width, self.pixmap_height,
+                                                                          Qt.AspectRatioMode.IgnoreAspectRatio,
+                                                                          Qt.TransformationMode.SmoothTransformation)
+        self.paused_pixmap = QPixmap("icons/speaker_muted.png").scaled(self.pixmap_width, self.pixmap_height,
+                                                                       Qt.AspectRatioMode.IgnoreAspectRatio,
+                                                                       Qt.TransformationMode.SmoothTransformation)
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         # super().paint(painter, option, index)
@@ -93,29 +110,34 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         if index.column() == 1:
             main_part_rect = option.rect
 
-            track = self._tracks[index.row()]
-            track_info_widget = TrackInfoWidget(track.title,
-                                                track.artist,
-                                                format_seconds(track.length))
+            # track = self._tracks[index.row()]
+            # track_info_widget = TrackInfoWidget(track.title,
+            #                                     track.artist,
+            #                                     format_seconds(track.length))
+
+            if index.row() not in self.track_info_widgets_mapping:
+                track = self._tracks[index.row()]
+                track_info_widget = TrackInfoWidget(track.title,
+                                                    track.artist,
+                                                    format_seconds(track.length))
+                self.track_info_widgets_mapping[index.row()] = track_info_widget
+            else:
+                track_info_widget = self.track_info_widgets_mapping[index.row()]
 
             if index.row() == self._playing_track_index:
                 # bottom_right = main_part_rect.bottomRight()
-                bottom_right = QPoint(main_part_rect.left() + 18, main_part_rect.top() + 22)
-                top_left = QPoint(main_part_rect.left(), main_part_rect.top() + 4)
+                vertical_offset = 4
+                bottom_right = QPoint(main_part_rect.left() + self.pixmap_width, main_part_rect.top() +
+                                      self.pixmap_height + vertical_offset)
+                top_left = QPoint(main_part_rect.left(), main_part_rect.top() + vertical_offset)
                 pixmap_rect = QRect(top_left, bottom_right)
-                main_part_rect.setLeft(main_part_rect.left() + 18)
+                main_part_rect.setLeft(main_part_rect.left() + self.pixmap_width)
                 # print(index.row())
-                print(self.is_playing)
+                # print(self.is_playing)
                 if self.is_playing:
-                    pixmap = QPixmap("icons/speaker_playing.png").scaled(pixmap_rect.width(), pixmap_rect.height(),
-                                                                         Qt.AspectRatioMode.IgnoreAspectRatio,
-                                                                         Qt.TransformationMode.SmoothTransformation)
+                    painter.drawPixmap(pixmap_rect, self.playing_pixmap)
                 else:
-                    pixmap = QPixmap("icons/speaker_muted.png").scaled(pixmap_rect.width(), pixmap_rect.height(),
-                                                                       Qt.AspectRatioMode.IgnoreAspectRatio,
-                                                                       Qt.TransformationMode.SmoothTransformation)
-
-                painter.drawPixmap(pixmap_rect, pixmap)
+                    painter.drawPixmap(pixmap_rect, self.paused_pixmap)
                 # track_info_widget.set_playing()
 
             track_info_widget.setGeometry(main_part_rect)
@@ -126,7 +148,7 @@ class InformationTableItemDelegate(QStyledItemDelegate):
             painter.restore()
 
     def set_tracks(self, tracks: List[Track]) -> None:
-        # self.track_info_widgets = []
+        self.track_info_widgets_mapping = {}
         self._tracks = tracks
 
     def set_currently_playing_track_index(self, index: int) -> None:
@@ -163,7 +185,7 @@ class InformationTableView(QTableView):
         self.viewport().repaint()
 
     def set_paused(self) -> None:
-        print("paused")
+        # print("paused")
         self._table_delegate.is_playing = False
         self.viewport().repaint()
 
@@ -175,6 +197,7 @@ class InformationTableView(QTableView):
 class TrackInfoWidget(QWidget):
     def __init__(self, title: str, artist: str, duration: str, parent=None):
         super().__init__(parent)
+        # print("CREATED")
         # self.setMinimumSize(100, 100)
         self.v_layout = QVBoxLayout()
         self.v_layout.setContentsMargins(5, 0, 5, 0)
