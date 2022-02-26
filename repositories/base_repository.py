@@ -7,7 +7,8 @@ from constants import *
 
 class BaseRepository:
     def __init__(self):
-        print(DATABASE_PATH)
+        ...
+        # print(DATABASE_PATH)
 
     @staticmethod
     def get_connection() -> Connection:

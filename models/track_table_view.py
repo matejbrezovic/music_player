@@ -5,7 +5,7 @@ from typing import List, Optional
 from PyQt6 import QtCore, QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
 from PyQt6.QtGui import QIcon, QPixmap
-from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView
+from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView
 
 import global_timer
 from constants import *
@@ -47,12 +47,14 @@ class TrackTableModel(QtCore.QAbstractTableModel):
             return None
 
         if index.column() == 0:
-            print(index.row())
+            ...
+            # print(index.row())
 
         if role == Qt.ItemDataRole.TextAlignmentRole and not index.column():
             return Qt.AlignmentFlag.AlignCenter
 
         if role == Qt.ItemDataRole.DecorationRole:
+            # return None
             if not index.column():  # TODO can probably be improved
                 track = self._tracks[index.row()]
                 artwork_pixmap = track.artwork_pixmap
@@ -112,13 +114,13 @@ class TrackTableView(QTableView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.verticalHeader().setDefaultSectionSize(22)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+
         self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
         self._table_model = TrackTableModel()
         self.setModel(self._table_model)
 
     def set_tracks(self, tracks: List[Track]) -> None:
-        # return
-        # self._table_model.set_tracks(tracks)
         self._table_model.set_tracks(tracks)
         self.set_new_tracks.emit()
 

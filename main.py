@@ -6,6 +6,7 @@
 
 import sys
 
+from PyQt6 import QtCore
 from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import *
@@ -32,7 +33,11 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
+        # self.setWindowOpacity(0.8)
+        # self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, True)
+        # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
+        # self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
         self.show()
 
         self.__post__()
@@ -126,10 +131,10 @@ class MainWindowUi(QtWidgets.QMainWindow):
             lambda track: (self.main_panel.set_playing_track(track),
                            self.information_panel.set_currently_playing_track(track)))
 
-        self.audio_controller.paused.connect(lambda: (self.main_panel.pause_playing_track()),)
-                                             # .information_panel.pause_playing_track())
-        self.audio_controller.unpaused.connect(lambda: (self.main_panel.unpause_playing_track()),)
-                                                  #      self.information_panel.unpause_playing_track())
+        self.audio_controller.paused.connect(lambda: (self.main_panel.pause_playing_track(),
+                                             self.information_panel.pause_playing_track()))
+        self.audio_controller.unpaused.connect(lambda: (self.main_panel.unpause_playing_track(),
+                                               self.information_panel.unpause_playing_track()))
         self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
 
 

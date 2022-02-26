@@ -96,7 +96,7 @@ class TracksRepository(BaseRepository):
             # if QtWidgets.QApplication.instance() is not None:
             #     for track in tracks:
             #         track.artwork_pixmap = get_artwork_pixmap(track.file_path)
-        print(key, value)
+        # print(key, value)
         # print("Tracks loaded in:", time.time() - start)
         return tracks
 

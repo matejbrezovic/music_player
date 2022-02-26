@@ -168,12 +168,12 @@ class FocusFrame(QFrame): # TODO remove, better fix found
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
         # global_timer.timer_init()
         # global_timer.start()
-        print("GOT FOCUS")
+        # print("GOT FOCUS")
         self.focus_receiver.focusInEvent(event)
         # global_timer.stop()
 
     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-        print("LOST FOCUS")
+        # print("LOST FOCUS")
         self.focus_receiver.focusOutEvent(event)
 
 

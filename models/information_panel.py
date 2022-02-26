@@ -104,7 +104,7 @@ class InformationPanel(QtWidgets.QFrame):
             samplerate = f'{str(round(f["#samplerate"].first / 1000, 1))} kHz'
             bitrate = f'{str(math.floor(f["#bitrate"].first / 1000))}k'
             channels = "Stereo" if f["#channels"].first == 2 else "Mono"
-            print(track.length)
+            # print(track.length)
             return f"{extension} {bitrate}, {samplerate}, {channels}, {format_seconds(track.length)}"
 
         self.currently_playing_track_title.setText(track.title)
@@ -119,9 +119,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.information_table_view.set_currently_playing_track_index(self.playing_tracks.index(track))
 
     def pause_playing_track(self) -> None:
-        return
-        self.playing_track_widget.set_paused()
+        self.information_table_view.set_paused()
 
     def unpause_playing_track(self) -> None:
-        return
-        self.playing_track_widget.set_playing()
+        self.information_table_view.set_unpaused()
