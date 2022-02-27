@@ -136,6 +136,22 @@ class SpecificImageLabel(QLabel):
         super().setPixmap(new_pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation))
 
 
+class ClickableLabel(QLabel):
+    clicked = pyqtSignal()
+    double_clicked = pyqtSignal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        self.clicked.emit()
+        super().mousePressEvent(event)
+
+    def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
+        self.double_clicked.emit()
+        super().mouseDoubleClickEvent(event)
+
+
 class FixedHorizontalSplitter(QSplitter):
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -289,7 +305,7 @@ def get_formatted_time(track_duration: int) -> str:
 
 
 def format_seconds(time_in_seconds: int) -> str:
-    print(time_in_seconds)
+    # print(time_in_seconds)
     if not time_in_seconds:
         return "0:00"
 

@@ -68,7 +68,7 @@ class InformationPanel(QtWidgets.QFrame):
 
         self.currently_playing_track_title = ElidedLabel("No Track")
         self.currently_playing_track_info = ElidedLabel("No Info")
-        self.currently_playing_track_info.setStyleSheet("background-color: red")
+        # self.currently_playing_track_info.setStyleSheet("background-color: red")
 
         artwork_pixmap = get_artwork_pixmap("")
         if not artwork_pixmap:
@@ -80,7 +80,7 @@ class InformationPanel(QtWidgets.QFrame):
 
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_title)
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_info)
-        # self.track_info_scroll_area_widget_layout.addSpacerItem(QSpacerItem(20, 50))
+        self.track_info_scroll_area_widget_layout.addSpacerItem(QSpacerItem(20, 40))
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_image_label)
 
         self.track_info_widget_layout.addWidget(QLabel("Track Information"))
