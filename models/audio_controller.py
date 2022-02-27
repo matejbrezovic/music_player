@@ -11,8 +11,7 @@ from constants import *
 from data_models.track import Track
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
-from repositories.tracks_repository import TracksRepository
-from utils import get_formatted_time
+from utils import get_formatted_time, format_seconds, format_player_position_to_seconds
 
 
 class AudioController(QtWidgets.QFrame):
@@ -20,6 +19,7 @@ class AudioController(QtWidgets.QFrame):
     updated_playlist = pyqtSignal(list)
     paused = pyqtSignal(Track)
     unpaused = pyqtSignal(Track)
+    remaining_queue_time_changed = pyqtSignal(int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -28,8 +28,9 @@ class AudioController(QtWidgets.QFrame):
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
         self.current_playlist = AudioPlaylist()
-        # self.current_playlist.set_playlist(TracksRepository().get_tracks_by("artist", "Alan Walker"))
-        # print("asd")
+        self.total_queue_time = 0
+        self._rounded_remaining_queue_time = 0  # doesn't update while track is playing
+        self.remaining_queue_time = 0
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
 
         self.player = AudioPlayer(self)
@@ -151,7 +152,11 @@ class AudioController(QtWidgets.QFrame):
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
 
-        # print("SASA")
+    def update_total_queue_time(self, time_in_secs: int) -> None:
+        self.total_queue_time = time_in_secs
+        self._rounded_remaining_queue_time = time_in_secs
+        self.remaining_queue_time = time_in_secs
+        self.remaining_queue_time_changed.emit(self.remaining_queue_time)
 
     def change_audio_order(self) -> None:
         self.current_playlist.change_mode()
@@ -159,14 +164,17 @@ class AudioController(QtWidgets.QFrame):
             self.audio_order_button_mode_index <= 1 else 0
         self.audio_order_button.setText(self.audio_order_button_modes[self.audio_order_button_mode_index])
 
+        self.update_total_queue_time(sum(track.length for track in self.current_playlist.playlist))
+
     def set_player_position(self, position: int) -> None:
         self.player.setPosition(position)
 
-    def set_playlist(self, playlist: List[Union[Track, str]]) -> None:
+    def set_playlist(self, playlist: List[Union[Track]]) -> None:
         if playlist == self.current_playlist.playlist:
             return
         self.current_playlist.set_playlist(playlist)
         self.updated_playlist.emit(playlist)
+        self.update_total_queue_time(sum(track.length for track in playlist))
 
     def set_playlist_index(self, index: int) -> None:
         self.current_playlist.set_playlist_index(index)
@@ -190,8 +198,16 @@ class AudioController(QtWidgets.QFrame):
                     self.next_button_clicked()
                 else:
                     self.seek_slider.setSliderPosition(position)
+                    old_text = self.seek_slider_time_label.text()
                     self.seek_slider_time_label.setText(get_formatted_time(self.player.position()) + "/" +
                                                         get_formatted_time(self.player.duration()))
+                    if old_text != self.seek_slider_time_label.text():
+                        # self.remaining_queue_time -= format_player_position_to_seconds(self.player.position())
+                        self.remaining_queue_time_changed.emit(self.remaining_queue_time -
+                                                               format_player_position_to_seconds(self.player.position()))
+
+    def get_remaining_time_in_secs(self) -> int:
+        return self._rounded_remaining_queue_time - format_player_position_to_seconds(self.player.position())
 
     def pause(self, fade=True) -> None:
         self.play_button.setIcon(self.play_icon)

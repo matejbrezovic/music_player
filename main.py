@@ -30,7 +30,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # TracksRepository().create_groups()
         self._setup_ui()
 
-        self.setWindowTitle('music player v0.0.8')
+        self.setWindowTitle('music player v0.0.9')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
@@ -81,7 +81,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.information_panel = InformationPanel(self)
         self.audio_controller = AudioController(self)
         self.horizontal_splitter = FixedHorizontalSplitter()
-        self.queue_info_panel = QueueInfoPanel(self)
+        self.queue_info_panel = QueueInfoPanel(self.audio_controller, self)
 
         self.horizontal_splitter.addWidget(self.navigation_panel)
         self.horizontal_splitter.addWidget(self.main_panel)
@@ -136,6 +136,9 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.audio_controller.unpaused.connect(lambda: (self.main_panel.unpause_playing_track(),
                                                self.information_panel.unpause_playing_track()))
         self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
+
+        self.audio_controller.remaining_queue_time_changed.connect(self.queue_info_panel.update_remaining_queue_time)
+        # self.queue_info_panel.right_label_clicked.connect()
 
 
 class App(QApplication):

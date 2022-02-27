@@ -313,3 +313,7 @@ def format_seconds(time_in_seconds: int) -> str:
         return f"0:{time_in_seconds}"
     # print("0:".join(str(datetime.timedelta(seconds=time_in_seconds)).split("00:")[-2:]))
     return "".join(str(datetime.timedelta(seconds=time_in_seconds)).split("0:")[-1:])
+
+
+def format_player_position_to_seconds(position: int) -> int:
+    return int((position / 1000) % 60)
