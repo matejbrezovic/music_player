@@ -31,13 +31,13 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_widget_layout = QVBoxLayout(self.playing_tracks_widget)
         self.playing_tracks_widget_layout.setContentsMargins(0, 0, 0, 0)
 
-        default_row_height = 56
+        default_row_height = 44
         self.information_table_view = InformationTableView(self)
-        self.information_table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.information_table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.information_table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.information_table_view.setShowGrid(False)
-        self.information_table_view.verticalHeader().setDefaultSectionSize(default_row_height + 4)
-        self.information_table_view.horizontalHeader().setDefaultSectionSize(default_row_height + 4)
+        self.information_table_view.verticalHeader().setDefaultSectionSize(default_row_height + 2)
+        self.information_table_view.horizontalHeader().setDefaultSectionSize(default_row_height + 2)
         self.information_table_view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         self.information_table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Stretch)
         self.information_table_view.setIconSize(QSize(default_row_height - 6, default_row_height - 6))
@@ -68,15 +68,19 @@ class InformationPanel(QtWidgets.QFrame):
 
         self.currently_playing_track_title = ElidedLabel("No Track")
         self.currently_playing_track_info = ElidedLabel("No Info")
+        self.currently_playing_track_info.setStyleSheet("background-color: red")
 
         artwork_pixmap = get_artwork_pixmap("")
         if not artwork_pixmap:
             artwork_pixmap = get_default_artwork_pixmap("album")
-        self.currently_playing_track_image_label = ImageLabel(artwork_pixmap)
+        self.currently_playing_track_image_label = SpecificImageLabel(artwork_pixmap)
+        self.currently_playing_track_image_label.setUpdatesEnabled(True)
+        self.currently_playing_track_image_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+        # self.currently_playing_track_image_label.anc
 
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_title)
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_info)
-        self.track_info_scroll_area_widget_layout.addSpacerItem(QSpacerItem(20, 50))
+        # self.track_info_scroll_area_widget_layout.addSpacerItem(QSpacerItem(20, 50))
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_image_label)
 
         self.track_info_widget_layout.addWidget(QLabel("Track Information"))
@@ -104,17 +108,15 @@ class InformationPanel(QtWidgets.QFrame):
             samplerate = f'{str(round(f["#samplerate"].first / 1000, 1))} kHz'
             bitrate = f'{str(math.floor(f["#bitrate"].first / 1000))}k'
             channels = "Stereo" if f["#channels"].first == 2 else "Mono"
-            # print(track.length)
             return f"{extension} {bitrate}, {samplerate}, {channels}, {format_seconds(track.length)}"
 
         self.currently_playing_track_title.setText(track.title)
         self.currently_playing_track_info.setText(get_track_info(track))
-        self.currently_playing_track_image_label.deleteLater()
         artwork_pixmap = get_artwork_pixmap(track.file_path)
         if not artwork_pixmap:
             artwork_pixmap = self.artwork_pixmap
-        self.currently_playing_track_image_label = ImageLabel(artwork_pixmap)
-        self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_image_label)
+        self.currently_playing_track_image_label.pixmap = artwork_pixmap
+        self.currently_playing_track_image_label.setPixmap(artwork_pixmap)
 
         self.information_table_view.set_currently_playing_track_index(self.playing_tracks.index(track))
 

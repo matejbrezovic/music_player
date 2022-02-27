@@ -68,8 +68,8 @@ class ElidedLabel(QLabel):
 
 
 class ImageLabel(QLabel):
-    def __init__(self, pixmap: QPixmap):
-        super().__init__()
+    def __init__(self, pixmap: QPixmap, parent=None):
+        super().__init__(parent)
         self.pixmap = pixmap
 
         size_policy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)  # Very important!
@@ -87,19 +87,53 @@ class ImageLabel(QLabel):
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
     def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
-        if self.pixmap is not None:
-            if self.pixmap.width() != 0 and self.width() != 0:
-                if self.pixmap.height() / self.pixmap.width() > self.height() / self.width():
-                    displayed_image = self.pixmap.scaledToHeight(self.height(),
-                                                                 Qt.TransformationMode.SmoothTransformation)
-                else:
-                    displayed_image = self.pixmap.scaledToWidth(self.width(),
-                                                                Qt.TransformationMode.SmoothTransformation)
+        if self.pixmap is None:
+            return
+        if self.pixmap.width() != 0 and self.width() != 0:
+            if self.pixmap.height() / self.pixmap.width() > self.height() / self.width():
+                displayed_pixmap = self.pixmap.scaledToHeight(self.height(),
+                                                              Qt.TransformationMode.SmoothTransformation)
+            else:
+                displayed_pixmap = self.pixmap.scaledToWidth(self.width(),
+                                                             Qt.TransformationMode.SmoothTransformation)
 
-                self.setPixmap(displayed_image)
+            self.setPixmap(displayed_pixmap)
 
     def heightForWidth(self, width: int) -> int:
         return width
+
+    def setPixmap(self, new_pixmap: QPixmap) -> None:
+        super().setPixmap(new_pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation))
+
+
+class SpecificImageLabel(QLabel):
+    def __init__(self, pixmap: QPixmap, parent=None):
+        super().__init__(parent)
+        self.pixmap = pixmap
+
+        size_policy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)  # Very important!
+        # size_policy.setHeightForWidth(True)
+        size_policy.setWidthForHeight(True)
+        self.setSizePolicy(size_policy)
+
+        if self.pixmap.width() != 0:
+            self.pixmap = self.pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation)
+
+        self.setPixmap(self.pixmap)
+        self.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+    def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
+        if self.pixmap is None:
+            return
+        if self.pixmap.width() != 0 and self.width() != 0:
+            displayed_pixmap = self.pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation)
+            self.setPixmap(displayed_pixmap)
+
+    # def heightForWidth(self, width: int) -> int:
+    #     return width
+
+    def setPixmap(self, new_pixmap: QPixmap) -> None:
+        super().setPixmap(new_pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation))
 
 
 class FixedHorizontalSplitter(QSplitter):
@@ -255,4 +289,11 @@ def get_formatted_time(track_duration: int) -> str:
 
 
 def format_seconds(time_in_seconds: int) -> str:
-    return str(datetime.timedelta(seconds=time_in_seconds)).replace("0:", "")
+    print(time_in_seconds)
+    if not time_in_seconds:
+        return "0:00"
+
+    if time_in_seconds < 60:
+        return f"0:{time_in_seconds}"
+    # print("0:".join(str(datetime.timedelta(seconds=time_in_seconds)).split("00:")[-2:]))
+    return "".join(str(datetime.timedelta(seconds=time_in_seconds)).split("0:")[-1:])

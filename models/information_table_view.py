@@ -50,6 +50,7 @@ class InformationTableModel(QtCore.QAbstractTableModel):
         return 2
 
     def set_tracks(self, tracks: List[Track]) -> None:
+        self.loaded_pixmap_mapping = {}
         self.layoutAboutToBeChanged.emit()
         self._tracks = tracks
         self.layoutChanged.emit()
@@ -200,8 +201,9 @@ class TrackInfoWidget(QWidget):
         # print("CREATED")
         # self.setMinimumSize(100, 100)
         self.v_layout = QVBoxLayout()
-        self.v_layout.setContentsMargins(5, 0, 5, 0)
+        self.v_layout.setContentsMargins(4, 0, 4, 0)
         self.v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.v_layout.setSpacing(0)
         self.h_layout = QHBoxLayout()
         self.h_layout.setContentsMargins(0, 0, 0, 0)
 
@@ -209,9 +211,12 @@ class TrackInfoWidget(QWidget):
 
         title_label = ElidedLabel(title)
         title_label.setContentsMargins(0, 0, 0, 0)
-        title_label.setMinimumHeight(20)
+        # title_label.setStyleSheet("background-color: red")
+        # title_label.setFixedHeight(20)
 
         dur_label = QLabel(duration)
+        # dur_label.setStyleSheet("background-color: green")
+        dur_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         dur_label.setContentsMargins(0, 0, 0, 0)
         dur_label.setMinimumHeight(20)
         dur_label.setFixedWidth(30)
@@ -224,8 +229,12 @@ class TrackInfoWidget(QWidget):
         self.upper_widget.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum))
         self.upper_widget.setLayout(self.h_layout)
 
+        artist_label = ElidedLabel(artist if artist else "")
+        # artist_label.setStyleSheet("background-color: blue")
+        artist_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         self.v_layout.addWidget(self.upper_widget)
-        self.v_layout.addWidget(ElidedLabel(artist))
+        self.v_layout.addWidget(artist_label)
 
         self.main_widget_part = QWidget()
         self.main_widget_part.setLayout(self.v_layout)
