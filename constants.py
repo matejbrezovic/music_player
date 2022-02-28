@@ -27,8 +27,10 @@ DEFAULT_AUDIO_PATH = "/home/matey/Music"
 
 SELECTION_COLOR = "rgba(166, 223, 231, 0.8)"
 LOST_FOCUS_COLOR = "rgba(0, 0, 0, 0.2)"
-SELECTION_QCOLOR = QColor(166, 223, 231)
+SELECTION_QCOLOR = QColor(156, 206, 233)  # QColor(166, 223, 231)
+SELECTION_QCOLOR_BORDER = QColor(110, 189, 232)  # QColor(100, 140, 200)
 LOST_FOCUS_QCOLOR = QColor(0, 0, 0, 50)
+LOST_FOCUS_QCOLOR_BORDER = QColor(0, 0, 0, 60)
 
 
 SELECTION_STYLESHEET = f"QTableView {{selection-background-color: {SELECTION_COLOR}; " \
@@ -47,17 +49,6 @@ FADE_OUT_ANIM_KEY_VALUE = FADE_IN_ANIM_KEY_VALUE
 FADE_OUT_ANIM_END_VALUE = 0
 
 # TRACKS = [DEFAULT_AUDIO_PATH + "/" + name for name in os.listdir(DEFAULT_AUDIO_PATH)]
-
-
-# Navigation panel groups
-
-ALBUM_GROUPS = defaultdict(list)
-ARTIST_GROUPS = defaultdict(list)
-COMPOSER_GROUPS = defaultdict(list)
-FOLDER_GROUPS = defaultdict(list)
-GENRE_GROUPS = defaultdict(list)
-YEAR_GROUPS = defaultdict(list)
-
 
 pre = "C:/My Files/My Projects/"
 

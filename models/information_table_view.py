@@ -1,7 +1,7 @@
 from typing import List, Any
 
 from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint, QLineF, QLine
 from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QIcon
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate, \
     QStyle, QStyleOptionViewItem
@@ -83,18 +83,23 @@ class InformationTableItemDelegate(QStyledItemDelegate):
                                                                        Qt.TransformationMode.SmoothTransformation)
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
-        # super().paint(painter, option, index)
-        # painter.save()
-        # set background color
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():
-                painter.setBrush(QBrush(SELECTION_QCOLOR))
+                fill_color = SELECTION_QCOLOR
+                border_color = SELECTION_QCOLOR_BORDER
             else:
-                painter.setBrush(QBrush(LOST_FOCUS_QCOLOR))
+                fill_color = LOST_FOCUS_QCOLOR
+                border_color = fill_color
+            painter.setBrush(fill_color)
+            painter.drawRect(option.rect)
+            painter.setPen(QPen(QBrush(border_color), 1))
+            painter.drawLine(option.rect.topLeft(), option.rect.topRight())
+            painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
+
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
-        painter.drawRect(option.rect)
+        # painter.drawRect(option.rect)
 
         if index.data(Qt.ItemDataRole.DecorationRole):
             decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
@@ -111,11 +116,6 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         if index.column() == 1:
             main_part_rect = option.rect
 
-            # track = self._tracks[index.row()]
-            # track_info_widget = TrackInfoWidget(track.title,
-            #                                     track.artist,
-            #                                     format_seconds(track.length))
-
             if index.row() not in self.track_info_widgets_mapping:
                 track = self._tracks[index.row()]
                 track_info_widget = TrackInfoWidget(track.title,
@@ -126,20 +126,16 @@ class InformationTableItemDelegate(QStyledItemDelegate):
                 track_info_widget = self.track_info_widgets_mapping[index.row()]
 
             if index.row() == self._playing_track_index:
-                # bottom_right = main_part_rect.bottomRight()
                 vertical_offset = 4
                 bottom_right = QPoint(main_part_rect.left() + self.pixmap_width, main_part_rect.top() +
                                       self.pixmap_height + vertical_offset)
                 top_left = QPoint(main_part_rect.left(), main_part_rect.top() + vertical_offset)
                 pixmap_rect = QRect(top_left, bottom_right)
                 main_part_rect.setLeft(main_part_rect.left() + self.pixmap_width)
-                # print(index.row())
-                # print(self.is_playing)
                 if self.is_playing:
                     painter.drawPixmap(pixmap_rect, self.playing_pixmap)
                 else:
                     painter.drawPixmap(pixmap_rect, self.paused_pixmap)
-                # track_info_widget.set_playing()
 
             track_info_widget.setGeometry(main_part_rect)
 
@@ -173,7 +169,6 @@ class InformationTableView(QTableView):
         self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()]))
 
     def set_tracks(self, tracks: List[Track]) -> None:
-        # return
         self._table_model.set_tracks(tracks)
         self._table_delegate.set_tracks(tracks)
         self._tracks = tracks
@@ -186,7 +181,6 @@ class InformationTableView(QTableView):
         self.viewport().repaint()
 
     def set_paused(self) -> None:
-        # print("paused")
         self._table_delegate.is_playing = False
         self.viewport().repaint()
 
@@ -199,7 +193,6 @@ class TrackInfoWidget(QWidget):
     def __init__(self, title: str, artist: str, duration: str, parent=None):
         super().__init__(parent)
         # print("CREATED")
-        # self.setMinimumSize(100, 100)
         self.v_layout = QVBoxLayout()
         self.v_layout.setContentsMargins(4, 0, 4, 0)
         self.v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
