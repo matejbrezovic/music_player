@@ -14,8 +14,9 @@ class AudioPlaylist:
         self.currently_playing = None
 
     def set_playlist(self, playlist: List[Track]) -> None:
-        self.playlist = playlist.copy()
-        self.ordered_playlist = playlist.copy()
+        if playlist != self.playlist:
+            self.playlist = playlist.copy()
+            self.ordered_playlist = playlist.copy()
         self.currently_playing = self.ordered_playlist[0] if self.ordered_playlist else None
         self.playlist_index = 0
 
