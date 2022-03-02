@@ -35,7 +35,7 @@ class QueueInfoPanel(QWidget):
         self.right_label.clicked.connect(self.right_label_clicked)
         self.right_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.right_label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
-        self.is_right_label_in_countdown_mode = False # TODO deprecated for now
+        self.is_right_label_in_countdown_mode = False  # TODO deprecated for now
 
         self.horizontal_layout.addWidget(self.left_label)
         self.horizontal_layout.addWidget(self.right_label)
