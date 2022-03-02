@@ -130,7 +130,7 @@ class TrackViewWidget(QWidget):
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
-        self.table_view.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.table_view.setIconSize(QSize(22, 22))
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.set_new_tracks.connect(self.update_column_width)
@@ -164,7 +164,7 @@ class TrackViewWidget(QWidget):
         self.table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
 
         self.main_layout.addWidget(self.header_splitter)
-        self.main_layout.addWidget(self._focus_frame)
+        self.main_layout.addWidget(self.table_view)
 
         # self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
 
@@ -180,6 +180,8 @@ class TrackViewWidget(QWidget):
         self.displayed_tracks = tracks
         index = self.displayed_tracks.index(self.playing_track) if self.playing_track in self.displayed_tracks else None
         self.table_view.set_playing_track_index(index)
+        self.table_view.selectionModel().clearSelection()
+        self.table_view.scrollToTop()
 
     def set_selected_row_index(self, index: int) -> None:
         self.selected_row_index = index

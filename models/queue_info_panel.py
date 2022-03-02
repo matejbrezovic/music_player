@@ -1,11 +1,10 @@
-import time
 from typing import List
 
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QWidget, QHBoxLayout, QSizePolicy
 
-from models.audio_controller import AudioController
 from data_models.track import Track
+from models.audio_controller import AudioController
 from utils import ClickableLabel, format_seconds
 
 
@@ -23,7 +22,7 @@ class QueueInfoPanel(QWidget):
         self.horizontal_layout = QHBoxLayout(self)
         self.horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.horizontal_layout.setContentsMargins(0, 0, 4, 0)
-        self.setStyleSheet("background-color: red")
+        # self.setStyleSheet("background-color: red")
 
         self.left_label = ClickableLabel(self)
         self.left_label.clicked.connect(self.left_label_clicked)
