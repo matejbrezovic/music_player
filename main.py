@@ -104,10 +104,9 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # self.main_panel.track_clicked.connect(lambda: ...)  # TODO
 
         self.main_panel.track_double_clicked.connect(
-            lambda track: (self.queue_info_panel.update_info(self.main_panel.displayed_tracks),
+            lambda track, index: (self.queue_info_panel.update_info(self.main_panel.displayed_tracks),
                            self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
-                           self.audio_controller.set_playlist_index(
-                               self.audio_controller.current_playlist.index(track)),
+                           self.audio_controller.set_playlist_index(index),
                            self.audio_controller.play(),
                            ))
 

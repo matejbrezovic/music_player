@@ -12,8 +12,8 @@ from tag_manager import TagManager
 
 
 class MainPanel(QtWidgets.QFrame):
-    track_clicked = pyqtSignal(Track)
-    track_double_clicked = pyqtSignal(Track)
+    track_clicked = pyqtSignal(Track, int)
+    track_double_clicked = pyqtSignal(Track, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -22,8 +22,8 @@ class MainPanel(QtWidgets.QFrame):
         self.setMinimumWidth(MAIN_PANEL_MIN_WIDTH)
         self.tag_manager = TagManager()
         self.track_view_widget = TrackViewWidget()
-        self.track_view_widget.track_clicked.connect(lambda track: self.track_clicked.emit(track))
-        self.track_view_widget.track_double_clicked.connect(lambda track: self.track_double_clicked.emit(track))
+        self.track_view_widget.track_clicked.connect(self.track_clicked.emit)
+        self.track_view_widget.track_double_clicked.connect(self.track_double_clicked.emit)
 
         self.view_options = {
             0: "Tracks",

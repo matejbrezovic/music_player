@@ -1,3 +1,4 @@
+import time
 from typing import List
 
 from PyQt6.QtCore import Qt, pyqtSignal
@@ -17,6 +18,7 @@ class QueueInfoPanel(QWidget):
 
         self.audio_controller = audio_controller
         self.queue_length = 0
+        self.current_queue = []
 
         self.horizontal_layout = QHBoxLayout(self)
         self.horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -74,6 +76,11 @@ class QueueInfoPanel(QWidget):
                 unit_index += 1
 
             return f"{size:.1f} {units[unit_index]}"
+
+        if self.current_queue == tracks:
+            return
+
+        self.current_queue = tracks.copy()
 
         self.queue_length = sum(track.length for track in tracks)
 

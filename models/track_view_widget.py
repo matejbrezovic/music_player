@@ -90,8 +90,8 @@ from utils import *
 
 
 class TrackViewWidget(QWidget):
-    track_double_clicked = pyqtSignal(Track)
-    track_clicked = pyqtSignal(Track)
+    track_double_clicked = pyqtSignal(Track, int)
+    track_clicked = pyqtSignal(Track, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -136,9 +136,9 @@ class TrackViewWidget(QWidget):
         self.table_view.set_new_tracks.connect(self.update_column_width)
 
         self.table_view.clicked.connect(lambda model_index: self.track_clicked.emit(
-                                                            self.displayed_tracks[model_index.row()]))
+                                                            self.displayed_tracks[model_index.row()], model_index.row()))
         self.table_view.doubleClicked.connect(lambda model_index: self.track_double_clicked.emit(
-                                                                  self.displayed_tracks[model_index.row()]))
+                                                                  self.displayed_tracks[model_index.row()], model_index.row()))
 
         self.table_view.setStyleSheet(SELECTION_STYLESHEET)
 
