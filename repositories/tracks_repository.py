@@ -1,6 +1,6 @@
 import sqlite3
 import time
-from typing import List, Union, Iterable
+from typing import List, Union, Iterable, Tuple
 
 import mutagen.mp3
 from PyQt6 import QtWidgets
@@ -36,7 +36,7 @@ class TracksRepository(BaseRepository):
         for track in tracks:
             self.add_track(track)
 
-    def get_track_counts_grouped_by(self, group_key: str):
+    def get_track_counts_grouped_by(self, group_key: str) -> List[Tuple[str, int]]:
         conn = self.get_connection()
         cursor = conn.cursor()
 
@@ -56,7 +56,7 @@ class TracksRepository(BaseRepository):
         return track_counts
 
     def get_tracks_by(self, key: str, value: Union[str, int]) -> List[Track]:
-        start = time.time()
+        # start = time.time()
 
         conn = self.get_connection()
         conn.row_factory = sqlite3.Row

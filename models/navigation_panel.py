@@ -1,4 +1,5 @@
 import time
+import typing
 from typing import List
 
 from PyQt6 import QtWidgets
@@ -11,6 +12,17 @@ from repositories.cached_tracks_repository import CachedTracksRepository
 from tag_manager import TagManager
 from utils import *
 
+
+class AutoResizeComboBox(QComboBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+    def sizeHint(self):
+        text = self.currentText()
+        width = self.fontMetrics().boundingRect(text).width() + 28
+        self.setFixedWidth(width)
+        print(width)
+        return QSize(width, self.height())
 
 class NavigationPanel(QFrame):
     group_clicked = pyqtSignal(list)
@@ -49,15 +61,31 @@ class NavigationPanel(QFrame):
 
         self.navigation_table_view.group_clicked.connect(self.group_clicked.emit)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
-        self.group_combo_box = QtWidgets.QComboBox()
+        self.group_combo_box = AutoResizeComboBox(self)
+        self.group_combo_box.setFixedHeight(20)
+        self.group_combo_box.setStyleSheet('''QComboBox QAbstractItemView  {min-width: 150px;}''')
         self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
         self.group_combo_box.addItems(self.group_options.values())
+        self.group_combo_box.resize(self.group_combo_box.sizeHint())
+
+        # self.header_widget = QWidget()
+        # self.header_widget.setStyleSheet("background-color: red")
+        # self.header_layout = QHBoxLayout(self.header_widget)
+        # self.header_layout.setContentsMargins(0, 0, 0, 0)
+        # # self.header_layout.setStretchFactor(self.group_combo_box, 100)
+        # # self.header_layout.setStretchFactor(self.group_combo_box, 0)
+        # self.header_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        # self.header_layout.addWidget(self.group_combo_box)
+        # # self.header_layout.addWidget(QWidget())
 
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vertical_layout.addWidget(self.group_combo_box)
         self.vertical_layout.addWidget(self.navigation_table_view)
+
+        for group_key in [v.lower() for v in self.group_options.values()]:
+            CachedTracksRepository().get_track_counts_grouped_by(group_key)
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:
@@ -67,16 +95,15 @@ class NavigationPanel(QFrame):
             # group_key = group_key.lower()
             if not pixmap:
                 if group_key in ["artist", "composer"]:
-                    pixmap = QPixmap("icons/artist.png")
+                    return QPixmap("icons/artist.png")
                 elif group_key == "album":
-                    pixmap = QPixmap("icons/album.png")
+                    return QPixmap("icons/album.png")
                 elif group_key == "folder":
-                    pixmap = QPixmap("icons/folder.png")
+                    return QPixmap("icons/folder.png")
                 else:
-                    pixmap = QPixmap("icons/misc.png")
-            return pixmap
+                    return QPixmap("icons/misc.png")
 
-        start = time.time()
+        # start = time.time()
         self.groups: List[NavigationGroup] = []
 
         group_key = self.group_options[key].lower()
@@ -84,12 +111,15 @@ class NavigationPanel(QFrame):
             pixmap = get_group_pixmap(group_key, title)
             self.groups.append(NavigationGroup(title, count, pixmap))
 
-        print("Groups created in:", time.time() - start)
+        # print("Groups created in:", time.time() - start)
         self.navigation_table_view.set_groups(self.groups)
-        print("Groups fully displayed in:", time.time() - start)
+        self.group_combo_box.adjustSize()
+        # print("Groups fully displayed in:", time.time() - start)
 
     def group_key_changed(self, new_key: int) -> None:
         self.navigation_table_view.set_group_key(self.group_options[new_key])
+        self.navigation_table_view.selectionModel().clearSelection()
+        self.navigation_table_view.scrollToTop()
         self._load_groups(new_key)
 
     def refresh_groups(self) -> None:

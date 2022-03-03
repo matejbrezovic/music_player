@@ -44,6 +44,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
     def __post__(self):
         self._setup_signals()
+        self.navigation_panel.refresh_groups()
 
         # self.main_panel.track_view_widget.update_column_width()
 

@@ -12,8 +12,7 @@ class BaseRepository:
 
     @staticmethod
     def get_connection() -> Connection:
-        conn = sqlite3.connect(DATABASE_PATH)
-        return conn
+        return sqlite3.connect(DATABASE_PATH)
 
     def get_all_table_names(self) -> List[str]:
         conn = self.get_connection()

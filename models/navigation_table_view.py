@@ -119,8 +119,8 @@ class NavigationTableView(QTableView):
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
         # print(tracks)
         # TEST_TRACKS = tracks
-        global_timer.timer_init()
-        global_timer.start()
+        # global_timer.timer_init()
+        # global_timer.start()
         self.group_clicked.emit(tracks)
 
     def set_group_key(self, key: str) -> None:

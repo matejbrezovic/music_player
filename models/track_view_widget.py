@@ -9,85 +9,6 @@ from data_models.track import Track
 from models.track_table_view import TrackTableView
 from utils import *
 
-#
-# class MyHeaderView(QtWidgets.QHeaderView):
-#     def __init__(self, parent):
-#         QtWidgets.QHeaderView.__init__(self, Qt.Orientation.Horizontal, parent)
-#         self.sectionResized.connect(self.myresize)
-#
-#     def myresize(self, logical_index, old_size, new_size):
-#         '''Resize while keep total width constant'''
-#
-#         # keep a copy of column widths
-#         ws = []
-#         for c in range(self.count()):
-#             wii = self.sectionSize(c)
-#             ws.append(wii)
-#
-#         if self.length() >= self.width():
-#             return
-#
-#         if logical_index > 0 or logical_index<self.count():
-#             for ii in range(logical_index,self.count()):
-#                 if ii == logical_index:
-#                     # resize present column
-#                     self.resizeSection(ii, new_size)
-#                 elif ii == logical_index + 1:
-#                     # if present column expands, shrink the one to the right
-#                     self.resizeSection(ii, ws[ii] - (new_size - old_size))
-#                 else:
-#                     # keep all others as they were
-#                     self.resizeSection(ii, ws[ii])
-#
-#     def resizeEvent(self, event):
-#         """Resize table as a whole, need this to enable resizing"""
-#
-#         super(QtWidgets.QHeaderView, self).resizeEvent(event)
-#         self.setSectionResizeMode(1,QtWidgets.QHeaderView.ResizeMode.Stretch)
-#         for column in range(self.count()):
-#             self.setSectionResizeMode(column, QtWidgets.QHeaderView.ResizeMode.Stretch)
-#             width = self.sectionSize(column)
-#             self.setSectionResizeMode(column, QtWidgets.QHeaderView.ResizeMode.Interactive)
-#             self.resizeSection(column, width)
-#
-#         return
-#
-#
-# class TestHeaderView(QHeaderView):
-#     def __init__(self, *args):
-#         super().__init__(*args)
-#         self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
-#         self.setStretchLastSection(True)
-#         self.setCascadingSectionResizes(True)
-#         self.sectionResized.connect(self.section_resized)
-#         self.old_width = self.width()
-#
-#     def section_resized(self, logical_index, old_size, new_size):
-#         print(logical_index, old_size, new_size)
-#         count = 7  # self.model().columnCount()
-#         length = self.width()
-#         sum = self.length()
-#         # print(length, sum)
-#
-#         # if sum != length:
-#         #     self.resizeSection(logical_index, old_size)
-#         #     if logical_index < count:
-#         #         next_header_size = self.sectionSize(logical_index + 1)
-#         #         if next_header_size > (sum - length):
-#         #             self.resizeSection(logical_index + 1, next_header_size - (sum - length))
-#         #         else:
-#         #             self.resizeSection(logical_index, old_size)
-#
-#     def resizeEvent(self, e: QtGui.QResizeEvent) -> None:
-#         # old_width = self.width()
-#         super().resizeEvent(e)
-#         for i in range(7):
-#             self.resizeSection(i, self.sectionSize(i) * self.width() // self.old_width)
-#         self.old_width = self.width()
-#
-#     def get_section_sizes(self):
-#         return [self.sectionSize(i) for i in range(7)]
-
 
 class TrackViewWidget(QWidget):
     track_double_clicked = pyqtSignal(Track, int)
@@ -136,9 +57,11 @@ class TrackViewWidget(QWidget):
         self.table_view.set_new_tracks.connect(self.update_column_width)
 
         self.table_view.clicked.connect(lambda model_index: self.track_clicked.emit(
-                                                            self.displayed_tracks[model_index.row()], model_index.row()))
+                                                            self.displayed_tracks[model_index.row()],
+                                                            model_index.row()))
         self.table_view.doubleClicked.connect(lambda model_index: self.track_double_clicked.emit(
-                                                                  self.displayed_tracks[model_index.row()], model_index.row()))
+                                                                  self.displayed_tracks[model_index.row()],
+                                                                  model_index.row()))
 
         self.table_view.setStyleSheet(SELECTION_STYLESHEET)
 
