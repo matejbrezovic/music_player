@@ -80,8 +80,8 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.main_panel = MainPanel(self)
         self.information_panel = InformationPanel(self)
         self.audio_controller = AudioController(self)
-        self.horizontal_splitter = FixedHorizontalSplitter()
         self.queue_info_panel = QueueInfoPanel(self.audio_controller, self)
+        self.horizontal_splitter = FixedHorizontalSplitter()
 
         self.horizontal_splitter.addWidget(self.navigation_panel)
         self.horizontal_splitter.addWidget(self.main_panel)

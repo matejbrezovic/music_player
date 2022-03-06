@@ -2,7 +2,7 @@ import time
 import typing
 from typing import List
 
-from PyQt6 import QtWidgets
+from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import *
 
@@ -12,17 +12,6 @@ from repositories.cached_tracks_repository import CachedTracksRepository
 from tag_manager import TagManager
 from utils import *
 
-
-class AutoResizeComboBox(QComboBox):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def sizeHint(self):
-        text = self.currentText()
-        width = self.fontMetrics().boundingRect(text).width() + 28
-        self.setFixedWidth(width)
-        print(width)
-        return QSize(width, self.height())
 
 class NavigationPanel(QFrame):
     group_clicked = pyqtSignal(list)
@@ -61,22 +50,23 @@ class NavigationPanel(QFrame):
 
         self.navigation_table_view.group_clicked.connect(self.group_clicked.emit)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
-        self.group_combo_box = AutoResizeComboBox(self)
+        self.group_combo_box = GroupOptionsComboBox(self)
         self.group_combo_box.setFixedHeight(20)
-        self.group_combo_box.setStyleSheet('''QComboBox QAbstractItemView  {min-width: 150px;}''')
+
+        # self.group_combo_box.setStyleSheet('''QComboBox QAbstractItemView  {min-width: 150px;}''')
         self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
         self.group_combo_box.addItems(self.group_options.values())
-        self.group_combo_box.resize(self.group_combo_box.sizeHint())
+        # self.group_combo_box.resize(self.group_combo_box.sizeHint())
 
-        # self.header_widget = QWidget()
+        self.header_widget = QWidget()
         # self.header_widget.setStyleSheet("background-color: red")
-        # self.header_layout = QHBoxLayout(self.header_widget)
-        # self.header_layout.setContentsMargins(0, 0, 0, 0)
-        # # self.header_layout.setStretchFactor(self.group_combo_box, 100)
-        # # self.header_layout.setStretchFactor(self.group_combo_box, 0)
-        # self.header_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        # self.header_layout.addWidget(self.group_combo_box)
-        # # self.header_layout.addWidget(QWidget())
+        self.header_layout = QHBoxLayout(self.header_widget)
+        self.header_layout.setContentsMargins(0, 0, 0, 0)
+        # self.header_layout.setStretchFactor(self.group_combo_box, 100)
+        # self.header_layout.setStretchFactor(self.group_combo_box, 0)
+        self.header_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.header_layout.addWidget(self.group_combo_box)
+        # self.header_layout.addWidget(QWidget())
 
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
@@ -124,3 +114,34 @@ class NavigationPanel(QFrame):
 
     def refresh_groups(self) -> None:
         self._load_groups(self.group_combo_box.currentIndex())
+
+
+class GroupOptionsComboBox(QComboBox):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.default_stylesheet = ''' QComboBox {
+           background-color: rgba(0, 0, 0, 0);
+           }
+           QComboBox QAbstractItemView {
+           background-color: white;
+           min-width: 150px;
+           }
+        '''
+        self.hide_down_arrow_stylesheet = "QComboBox::down-arrow {background-color: rgba(0, 0, 0, 0)}"
+
+        self.setStyleSheet(self.default_stylesheet + self.hide_down_arrow_stylesheet)
+
+    def sizeHint(self):
+        text = self.currentText()
+        width = self.fontMetrics().boundingRect(text).width() + 28
+        self.setFixedWidth(width)
+        return QSize(width, self.height())
+
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        print("enter")
+        self.setStyleSheet(self.default_stylesheet)
+
+    def leaveEvent(self, a0: QtCore.QEvent) -> None:
+        print("leave")
+        self.setStyleSheet(self.default_stylesheet + self.hide_down_arrow_stylesheet)

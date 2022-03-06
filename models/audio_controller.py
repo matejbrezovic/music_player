@@ -37,9 +37,9 @@ class AudioController(QtWidgets.QFrame):
         self.player.positionChanged.connect(self.player_position_changed)
         self.player.durationChanged.connect(self.player_duration_changed)
 
-        self.play_button = QPushButton()
-        self.prev_button = QPushButton()
-        self.next_button = QPushButton()
+        self.play_button = QPushButton(self)
+        self.prev_button = QPushButton(self)
+        self.next_button = QPushButton(self)
 
         self.play_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.prev_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
@@ -94,7 +94,7 @@ class AudioController(QtWidgets.QFrame):
                                                              QSizePolicy.Policy.Preferred))
         self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-        self.name_time_label_container = QFrame()
+        self.name_time_label_container = QFrame(self)
         self.name_time_label_container.setContentsMargins(0, 0, 0, 0)
         self.name_time_label_container_layout = QHBoxLayout(self.name_time_label_container)
         self.name_time_label_container_layout.setContentsMargins(0, 0, 0, 0)

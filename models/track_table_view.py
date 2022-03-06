@@ -40,7 +40,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         self.dataChanged.emit(self.createIndex(0, 0),
                               self.createIndex(self.rowCount(),
                                                self.columnCount()))
-        global_timer.print_elapsed_time()
+        # global_timer.print_elapsed_time()
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole):
         if not self._tracks:

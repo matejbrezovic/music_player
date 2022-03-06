@@ -26,6 +26,8 @@ class Timer:
         print(f"Elapsed time: {elapsed_time:0.4f} seconds")
 
     def print_elapsed_time(self):
+        if self._start_time is None:
+            raise TimerError(f"Timer is not running. Use .start() to start it")
         elapsed_time = time.perf_counter() - self._start_time
         print(f"Elapsed time: {elapsed_time:0.4f} seconds")
 
@@ -33,12 +35,21 @@ def timer_init():
     global timer
     timer = Timer()
 
+
 def start():
-    timer.start()
+    try:
+        timer.start()
+    except TimerError:
+        pass
 
 def stop():
-    timer.stop()
+    try:
+        timer.stop()
+    except TimerError:
+        pass
 
 def print_elapsed_time():
-    timer.print_elapsed_time()
-
+    try:
+        timer.print_elapsed_time()
+    except TimerError:
+        pass
