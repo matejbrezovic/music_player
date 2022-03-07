@@ -3,7 +3,8 @@ import typing
 from typing import List
 
 from PyQt6 import QtWidgets, QtCore
-from PyQt6.QtCore import QSize
+from PyQt6.QtCore import QSize, QPoint
+from PyQt6.QtGui import QEnterEvent
 from PyQt6.QtWidgets import *
 
 from data_models.navigation_group import NavigationGroup
@@ -51,12 +52,11 @@ class NavigationPanel(QFrame):
         self.navigation_table_view.group_clicked.connect(self.group_clicked.emit)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
         self.group_combo_box = GroupOptionsComboBox(self)
-        self.group_combo_box.setFixedHeight(20)
-
-        # self.group_combo_box.setStyleSheet('''QComboBox QAbstractItemView  {min-width: 150px;}''')
-        self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
         self.group_combo_box.addItems(self.group_options.values())
-        # self.group_combo_box.resize(self.group_combo_box.sizeHint())
+        self.group_combo_box.setFixedHeight(20)
+        self.group_combo_box.setCurrentIndex(0)
+
+        self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
 
         self.header_widget = QWidget()
         # self.header_widget.setStyleSheet("background-color: red")
@@ -71,7 +71,7 @@ class NavigationPanel(QFrame):
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.vertical_layout.addWidget(self.group_combo_box)
+        self.vertical_layout.addWidget(self.header_widget)
         self.vertical_layout.addWidget(self.navigation_table_view)
 
         for group_key in [v.lower() for v in self.group_options.values()]:
@@ -120,17 +120,37 @@ class GroupOptionsComboBox(QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        self.default_stylesheet = ''' QComboBox {
-           background-color: rgba(0, 0, 0, 0);
-           }
-           QComboBox QAbstractItemView {
-           background-color: white;
-           min-width: 150px;
-           }
-        '''
-        self.hide_down_arrow_stylesheet = "QComboBox::down-arrow {background-color: rgba(0, 0, 0, 0)}"
+        self.default_stylesheet = ''' 
+                QComboBox {
+                    color: black;
+                    selection-color: black;
+                    selection-background-color: rgba(0, 0, 0, 0);
+                    background-color: rgba(0, 0, 0, 0);
+                }
 
-        self.setStyleSheet(self.default_stylesheet + self.hide_down_arrow_stylesheet)
+                QComboBox QAbstractItemView {
+                    background-color: white;
+                    min-width: 150px;
+                }
+                QComboBox:open {
+                    color: black;
+                }
+                QComboBox:drop-down:open {
+                    color: black;
+                    background-color: rgba(0, 0, 0, 0);
+                }
+                QComboBox:down-arrow:open {
+                    color: black;
+                    background-color: rgba(0, 0, 0, 0);
+                }
+                
+                '''
+        self.hide_combobox = '''QComboBox::drop-down:!hover {
+                                    background-color: rgba(0, 0, 0, 0);
+                                }'''
+
+        self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
+        self.setUpdatesEnabled(True)
 
     def sizeHint(self):
         text = self.currentText()
@@ -138,10 +158,10 @@ class GroupOptionsComboBox(QComboBox):
         self.setFixedWidth(width)
         return QSize(width, self.height())
 
-    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
-        print("enter")
+    def enterEvent(self, *args, **kwargs):
+        super().enterEvent(*args, **kwargs)
         self.setStyleSheet(self.default_stylesheet)
 
-    def leaveEvent(self, a0: QtCore.QEvent) -> None:
-        print("leave")
-        self.setStyleSheet(self.default_stylesheet + self.hide_down_arrow_stylesheet)
+    def leaveEvent(self, *args, **kwargs):
+        super().leaveEvent(*args, **kwargs)
+        self.setStyleSheet(self.hide_combobox + self.default_stylesheet)

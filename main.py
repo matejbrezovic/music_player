@@ -38,15 +38,16 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         # self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
-        self.show()
-
-        self.__post__()
 
     def __post__(self):
         self._setup_signals()
         self.navigation_panel.refresh_groups()
 
         # self.main_panel.track_view_widget.update_column_width()
+
+    def show(self):
+        super().show()
+        self.__post__()
 
     def _setup_ui(self) -> None:
         self.central_widget = QWidget(self)
@@ -150,5 +151,6 @@ class App(QApplication):
 
 if __name__ == '__main__':
     app = App(sys.argv)
-    mainWindow = MainWindowUi()
+    main_window = MainWindowUi()
+    main_window.show()
     sys.exit(app.exec())
