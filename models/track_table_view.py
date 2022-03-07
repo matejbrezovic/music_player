@@ -3,9 +3,10 @@ import time
 from typing import List, Optional
 
 from PyQt6 import QtCore, QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
-from PyQt6.QtGui import QIcon, QPixmap
-from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint
+from PyQt6.QtGui import QIcon, QPixmap, QPainter, QPen, QBrush, QFontMetrics
+from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
+    QStyledItemDelegate
 
 import global_timer
 from constants import *
@@ -15,8 +16,9 @@ from utils import get_artwork_pixmap
 
 
 class TrackTableModel(QtCore.QAbstractTableModel):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, parent: QTableView = None):
+        super().__init__(parent)
+        self._table_view: QTableView = parent
         self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
         self._tracks: List[Track] = []
         self.is_playing = False
@@ -64,9 +66,10 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                     artwork_pixmap = track.artwork_pixmap
                 if not artwork_pixmap:
                     return None
-                icon = QIcon(artwork_pixmap)
-                icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
-                return icon if icon else None
+                return artwork_pixmap
+                # icon = QIcon(artwork_pixmap)
+                # icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
+                # return icon if icon else None
             elif index.column() == 1:
                 if self.playing_track_index is None:
                     return
@@ -108,6 +111,71 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                                   self.index(self.rowCount(), 1))
 
 
+class TrackTableItemDelegate(QStyledItemDelegate):
+    def __init__(self, parent: QTableView = None):
+        super().__init__(parent)
+        self._table_view: QTableView = parent
+        # self._tracks: List[Track] = []
+        # self._playing_track_index = None
+        # self.is_playing = False
+        # self.loaded_pixmap_indexes = []
+        # self.track_info_widgets_mapping = {}
+
+        self.pixmap_width = 16
+        self.pixmap_height = 16
+
+        # self.playing_pixmap = QPixmap("icons/speaker_playing.png").scaled(self.pixmap_width, self.pixmap_height,
+        #                                                                   Qt.AspectRatioMode.IgnoreAspectRatio,
+        #                                                                   Qt.TransformationMode.SmoothTransformation)
+        # self.paused_pixmap = QPixmap("icons/speaker_muted.png").scaled(self.pixmap_width, self.pixmap_height,
+        #                                                                Qt.AspectRatioMode.IgnoreAspectRatio,
+        #                                                                Qt.TransformationMode.SmoothTransformation)
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        painter.setPen(QPen(Qt.PenStyle.NoPen))
+        if option.state & QStyle.StateFlag.State_Selected:
+            if self._table_view.hasFocus():
+                fill_color = SELECTION_QCOLOR
+                border_color = SELECTION_QCOLOR_BORDER
+            else:
+                fill_color = LOST_FOCUS_QCOLOR
+                border_color = fill_color
+            painter.setBrush(fill_color)
+            painter.drawRect(option.rect)
+            painter.setPen(QPen(QBrush(border_color), 1))
+            painter.drawLine(option.rect.topLeft(), option.rect.topRight())
+            # painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
+
+        else:
+            painter.setBrush(QBrush(Qt.GlobalColor.white))
+        # painter.drawRect(option.rect)
+
+        if index.data(Qt.ItemDataRole.DecorationRole):
+            decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
+            rect = option.rect
+            rect.setRect(rect.left() + 1, rect.top() + 1,
+                         rect.width() - 2, rect.height() - 2)
+
+            if index.column() == 1:
+                height = rect.height()
+                rect.setHeight(rect.width())
+                rect.translate(0, (height - rect.width()) / 2)
+
+            pixmap = decoration_value.scaled(rect.width(), rect.width(),
+                                             Qt.AspectRatioMode.KeepAspectRatio,
+                                             Qt.TransformationMode.SmoothTransformation)
+
+            painter.drawPixmap(rect, pixmap)
+
+        if index.data(Qt.ItemDataRole.DisplayRole):
+            painter.setPen(QPen(Qt.GlobalColor.black))
+            text = index.data(Qt.ItemDataRole.DisplayRole)
+            if text:
+                elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
+                                                                   option.rect.width())
+                painter.drawText(option.rect, Qt.AlignmentFlag.AlignVCenter, elided_text)
+
+
 class TrackTableView(QTableView):
     set_new_tracks = pyqtSignal()
 
@@ -117,8 +185,10 @@ class TrackTableView(QTableView):
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
 
         self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
-        self._table_model = TrackTableModel()
+        self._table_model = TrackTableModel(self)
+        self._table_delegate = TrackTableItemDelegate(self)
         self.setModel(self._table_model)
+        self.setItemDelegate(self._table_delegate)
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._table_model.set_tracks(tracks)
@@ -142,7 +212,7 @@ class TrackTableView(QTableView):
         super().focusOutEvent(event)
 
 
-class MainWindow(QtWidgets.QMainWindow):
+class TestMainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
@@ -168,6 +238,6 @@ class MainWindow(QtWidgets.QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    mainWindow = MainWindow()
+    mainWindow = TestMainWindow()
     mainWindow.show()
     sys.exit(app.exec())

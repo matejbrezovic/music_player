@@ -14,7 +14,7 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
 
     def get_tracks_by(self, key: str, value: Union[str, int]) -> List[Track]:
         tuple_key = (key, value)
-        print(tuple_key)
+        # print(tuple_key)
         if tuple_key not in self.cached_track_groups:
             self.cached_track_groups[tuple_key] = super().get_tracks_by(key, value)
 

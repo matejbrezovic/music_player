@@ -95,7 +95,7 @@ class InformationTableItemDelegate(QStyledItemDelegate):
             painter.drawRect(option.rect)
             painter.setPen(QPen(QBrush(border_color), 1))
             painter.drawLine(option.rect.topLeft(), option.rect.topRight())
-            painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
+            # painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
 
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
@@ -107,7 +107,7 @@ class InformationTableItemDelegate(QStyledItemDelegate):
             rect.setRect(rect.left() + 2, rect.top() + 2,
                          rect.width() - 4, rect.height() - 4)
 
-            pixmap = decoration_value.scaled(rect.width(), rect.height(),
+            pixmap = decoration_value.scaled(rect.width(), rect.width(),
                                              Qt.AspectRatioMode.IgnoreAspectRatio,
                                              Qt.TransformationMode.SmoothTransformation)
 
