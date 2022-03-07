@@ -52,11 +52,10 @@ class NavigationPanel(QFrame):
         self.navigation_table_view.group_clicked.connect(self.group_clicked.emit)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
         self.group_combo_box = GroupOptionsComboBox(self)
+        self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
         self.group_combo_box.addItems(self.group_options.values())
         self.group_combo_box.setFixedHeight(20)
-        self.group_combo_box.setCurrentIndex(0)
 
-        self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
 
         self.header_widget = QWidget()
         # self.header_widget.setStyleSheet("background-color: red")
@@ -75,7 +74,7 @@ class NavigationPanel(QFrame):
         self.vertical_layout.addWidget(self.navigation_table_view)
 
         for group_key in [v.lower() for v in self.group_options.values()]:
-            CachedTracksRepository().get_track_counts_grouped_by(group_key)
+            print(CachedTracksRepository().get_track_counts_grouped_by(group_key))
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:
