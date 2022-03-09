@@ -1,6 +1,6 @@
 import sqlite3
 import time
-from typing import List, Union, Iterable, Tuple
+from typing import List, Union, Iterable, Tuple, Generator
 
 import mutagen.mp3
 from PyQt6 import QtWidgets
@@ -55,8 +55,8 @@ class TracksRepository(BaseRepository):
 
         return track_counts
 
-    def get_tracks_by(self, key: str, value: Union[str, int]) -> List[Track]:
-        # start = time.time()
+    def get_tracks_by(self, key: str, value: Union[str, int]) -> Iterable[Track]:
+        start = time.time()
 
         conn = self.get_connection()
         conn.row_factory = sqlite3.Row
@@ -77,6 +77,7 @@ class TracksRepository(BaseRepository):
 
         tracks: List[Track] = []
         rows = cursor.fetchall()
+        print("Data fetched from database in:", time.time() - start)
         for row in rows:
             track = Track(
                 track_id=row["track_id"],
@@ -92,13 +93,42 @@ class TracksRepository(BaseRepository):
                 )
 
             tracks.append(track)
-
-            # if QtWidgets.QApplication.instance() is not None:
-            #     for track in tracks:
-            #         track.artwork_pixmap = get_artwork_pixmap(track.file_path)
-        # print(key, value)
-        # print("Tracks loaded in:", time.time() - start)
         return tracks
+
+        #     # if QtWidgets.QApplication.instance() is not None:
+        #     #     for track in tracks:
+        #     #         track.artwork_pixmap = get_artwork_pixmap(track.file_path)
+        # # print(key, value)
+        # # print("Tracks loaded in:", time.time() - start)
+        # # print((Track(
+        # #         track_id=row["track_id"],
+        # #         file_path=row["file_path"],
+        # #         title=row["title"],
+        # #         album=row["album"],
+        # #         artist=row["artist"],
+        # #         composer=row["composer"],
+        # #         genre=row["genre"],
+        # #         year=row["year"],
+        # #         length=row["length"],
+        # #         ) for row in rows))
+        #
+        # gen = (Track(
+        #         track_id=row["track_id"],
+        #         file_path=row["file_path"],
+        #         title=row["title"],
+        #         album=row["album"],
+        #         artist=row["artist"],
+        #         composer=row["composer"],
+        #         genre=row["genre"],
+        #         year=row["year"],
+        #         length=row["length"],
+        #         ) for row in self.my_gen(cursor))
+        # print("Data fetched from database in:", time.time() - start)
+        # return gen
+
+    # def my_gen(self, cursor):
+    #     if cursor.fetchone():
+    #         yield cursor.fetchone()
 
     def get_tracks(self) -> List[Track]:
         conn = self.get_connection()

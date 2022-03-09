@@ -266,6 +266,10 @@ class SpeakerLabel(QLabel): # TODO remove
         self.clear()
 
 
+class TrackNotInPlaylistError(Exception):
+    pass
+
+
 def get_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
     class NoArtworkError(Exception):
         pass

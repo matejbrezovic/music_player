@@ -10,6 +10,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import *
 
+from data_models.track import Track
 from models.add_files_dialog import AddFilesDialog
 from models.audio_controller import AudioController
 from models.information_panel import InformationPanel
@@ -29,7 +30,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # TracksRepository().create_groups()
         self._setup_ui()
 
-        self.setWindowTitle('music player v0.0.9')
+        self.setWindowTitle('music player v0.0.10')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
@@ -58,7 +59,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.setCentralWidget(self.central_widget)
 
         self._setup_panels()
-        # print("SSSS")
         self._setup_menu_bar()
 
     def _setup_menu_bar(self) -> None:
@@ -106,10 +106,11 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.main_panel.track_double_clicked.connect(
             lambda track, index: (self.queue_info_panel.update_info(self.main_panel.displayed_tracks),
-                           self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
-                           self.audio_controller.set_playlist_index(index),
-                           self.audio_controller.play(),
-                           ))
+                                  self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
+                                  self.audio_controller.set_playlist_index(index),
+                                  self.audio_controller.play(),
+                                  ))
+        self.main_panel.play_now_triggered.connect(self.play_now_triggered)
 
         self.navigation_panel.group_clicked.connect(
             lambda tracks: (self.main_panel.display_tracks(tracks)))
@@ -129,7 +130,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.audio_controller.updated_playing_track.connect(
             lambda track: (self.main_panel.set_playing_track(track),
-                           self.information_panel.set_currently_playing_track(track)))
+                           self.information_panel.set_playing_track(track)))
 
         self.audio_controller.paused.connect(lambda: (self.main_panel.pause_playing_track(),
                                              self.information_panel.pause_playing_track()))
@@ -139,6 +140,15 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.audio_controller.remaining_queue_time_changed.connect(self.queue_info_panel.update_remaining_queue_time)
         # self.queue_info_panel.right_label_clicked.connect()
+
+    def play_now_triggered(self, tracks: List[Track]) -> None:
+        if len(tracks) == 1:
+            if self.main_panel.displayed_tracks != self.information_panel.playing_tracks:
+                self.audio_controller.set_playlist(self.main_panel.displayed_tracks)
+            self.audio_controller.set_playing_track(tracks[0])
+        else:
+            self.audio_controller.set_playlist(tracks)
+            self.audio_controller.set_playing_track(tracks[0])
 
 
 class App(QApplication):

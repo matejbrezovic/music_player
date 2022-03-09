@@ -48,6 +48,7 @@ class NavigationPanel(QFrame):
         self.navigation_table_view.horizontalHeader().setVisible(False)
         self.navigation_table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.navigation_table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.navigation_table_view.setFrameShape(QFrame.Shape.NoFrame)
 
         self.navigation_table_view.group_clicked.connect(self.group_clicked.emit)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
@@ -122,8 +123,8 @@ class GroupOptionsComboBox(QComboBox):
                 QComboBox {
                     color: black;
                     selection-color: black;
-                    selection-background-color: rgba(0, 0, 0, 0);
-                    background-color: rgba(0, 0, 0, 0);
+                    selection-background-color: rgba(255, 255, 255, 0);
+                    background-color: rgba(255, 255, 255, 0);
                 }
 
                 QComboBox QAbstractItemView {
@@ -135,16 +136,16 @@ class GroupOptionsComboBox(QComboBox):
                 }
                 QComboBox:drop-down:open {
                     color: black;
-                    background-color: rgba(0, 0, 0, 0);
+                    background-color: rgba(255, 255, 255, 0);
                 }
                 QComboBox:down-arrow:open {
                     color: black;
-                    background-color: rgba(0, 0, 0, 0);
+                    background-color: rgba(255, 255, 255, 0);
                 }
                 
                 '''
         self.hide_combobox = '''QComboBox::drop-down:!hover {
-                                    background-color: rgba(0, 0, 0, 0);
+                                    background-color: rgba(255, 255, 255, 0);
                                 }'''
 
         self.setStyleSheet(self.hide_combobox + self.default_stylesheet)

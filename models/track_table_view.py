@@ -3,12 +3,11 @@ import time
 from typing import List, Optional
 
 from PyQt6 import QtCore, QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint
-from PyQt6.QtGui import QIcon, QPixmap, QPainter, QPen, QBrush, QFontMetrics
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QEvent
+from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction
 from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
-    QStyledItemDelegate
+    QStyledItemDelegate, QToolButton, QMenu
 
-import global_timer
 from constants import *
 from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
@@ -36,6 +35,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 
     def set_tracks(self, tracks: List[Track]) -> None:
         # global_timer.print_elapsed_time()
+        # print(tracks)
         self.layoutAboutToBeChanged.emit()
         self._tracks = tracks
         self.layoutChanged.emit()
@@ -48,15 +48,10 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         if not self._tracks:
             return None
 
-        if index.column() == 0:
-            ...
-            # print(index.row())
-
         if role == Qt.ItemDataRole.TextAlignmentRole and not index.column():
             return Qt.AlignmentFlag.AlignCenter
 
         if role == Qt.ItemDataRole.DecorationRole:
-            # return None
             if not index.column():  # TODO can probably be improved
                 track = self._tracks[index.row()]
                 artwork_pixmap = track.artwork_pixmap
@@ -115,23 +110,16 @@ class TrackTableItemDelegate(QStyledItemDelegate):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self._table_view: QTableView = parent
-        # self._tracks: List[Track] = []
-        # self._playing_track_index = None
-        # self.is_playing = False
-        # self.loaded_pixmap_indexes = []
-        # self.track_info_widgets_mapping = {}
-
-        self.pixmap_width = 16
-        self.pixmap_height = 16
-
-        # self.playing_pixmap = QPixmap("icons/speaker_playing.png").scaled(self.pixmap_width, self.pixmap_height,
-        #                                                                   Qt.AspectRatioMode.IgnoreAspectRatio,
-        #                                                                   Qt.TransformationMode.SmoothTransformation)
-        # self.paused_pixmap = QPixmap("icons/speaker_muted.png").scaled(self.pixmap_width, self.pixmap_height,
-        #                                                                Qt.AspectRatioMode.IgnoreAspectRatio,
-        #                                                                Qt.TransformationMode.SmoothTransformation)
+        self.temp_index = -1  # only for tests, unneeded
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        # if self.temp_index != index.row():
+        #     print("P", index.row())
+        #     self.temp_index = index.row()
+        #     print("----------------")
+
+        # print([i for i in set(j.row() for j in self._table_view.selectedIndexes())])
+
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():
@@ -139,16 +127,14 @@ class TrackTableItemDelegate(QStyledItemDelegate):
                 border_color = SELECTION_QCOLOR_BORDER
             else:
                 fill_color = LOST_FOCUS_QCOLOR
-                border_color = fill_color
+                border_color = LOST_FOCUS_QCOLOR_BORDER
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
             painter.setPen(QPen(QBrush(border_color), 1))
             painter.drawLine(option.rect.topLeft(), option.rect.topRight())
             # painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
-
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
-        # painter.drawRect(option.rect)
 
         if index.data(Qt.ItemDataRole.DecorationRole):
             decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
@@ -169,18 +155,21 @@ class TrackTableItemDelegate(QStyledItemDelegate):
 
         if index.data(Qt.ItemDataRole.DisplayRole):
             painter.setPen(QPen(Qt.GlobalColor.black))
-            text = index.data(Qt.ItemDataRole.DisplayRole)
+            text = f"{index.data(Qt.ItemDataRole.DisplayRole)}"
             if text:
                 elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
                                                                    option.rect.width())
-                painter.drawText(option.rect, Qt.AlignmentFlag.AlignVCenter, elided_text)
+                alignment = Qt.AlignmentFlag.AlignVCenter if index.column() else Qt.AlignmentFlag.AlignCenter
+                painter.drawText(option.rect, alignment, elided_text)
 
 
 class TrackTableView(QTableView):
     set_new_tracks = pyqtSignal()
+    play_now_triggered = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        self._tracks: List[Track] = []
         self.verticalHeader().setDefaultSectionSize(22)
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
 
@@ -189,8 +178,44 @@ class TrackTableView(QTableView):
         self._table_delegate = TrackTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
+        # self.clicked.connect(lambda index: print(index.row()))
+
+        self.context_menu = QMenu(self)
+        self.context_menu.setContentsMargins(0, 0, 0, 0)
+        self.play_now_action = QAction("Play Now", self)
+        self.play_now_action.triggered.connect(lambda event: self.play_now_action_triggered(event))
+        self.context_menu.addAction(self.play_now_action)
+
+
+    # def eventFilter(self, source: QTableView, event) -> bool:
+    #     if event.type() == QEvent.Type.ContextMenu and source is self:
+    #         menu = QMenu()
+    #         menu.addAction('Action 1')
+    #         menu.addAction('Action 2')
+    #         menu.addAction('Action 3')
+    #
+    #         if menu.exec(event.globalPos()):
+    #             item = source.itemAt(event.pos())
+    #             print(item.text())
+    #         return True
+    #     return super().eventFilter(source, event)
+
+    def contextMenuEvent(self, event):
+        # self.menu = QMenu(self)
+        # renameAction = QAction('Rename', self)
+        # renameAction.triggered.connect(lambda: self.play_now_action_triggered(event))
+        # self.menu.addAction(renameAction)
+        # add other required actions
+        self.context_menu.popup(QtGui.QCursor.pos())
+
+    def play_now_action_triggered(self, event):
+        self.selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
+        # print(self.selected_track_indexes)
+        # print([self._tracks[i] for i in self.selected_track_indexes])
+        self.play_now_triggered.emit([self._tracks[i] for i in self.selected_track_indexes])
 
     def set_tracks(self, tracks: List[Track]) -> None:
+        self._tracks = tracks
         self._table_model.set_tracks(tracks)
         self.set_new_tracks.emit()
 

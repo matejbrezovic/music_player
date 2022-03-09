@@ -14,6 +14,7 @@ from tag_manager import TagManager
 class MainPanel(QtWidgets.QFrame):
     track_clicked = pyqtSignal(Track, int)
     track_double_clicked = pyqtSignal(Track, int)
+    play_now_triggered = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -21,9 +22,10 @@ class MainPanel(QtWidgets.QFrame):
         self.setStyleSheet("MainPanel {background-color: rgba(255, 255, 0, 0.3)}")
         self.setMinimumWidth(MAIN_PANEL_MIN_WIDTH)
         self.tag_manager = TagManager()
-        self.track_view_widget = TrackViewWidget()
+        self.track_view_widget = TrackViewWidget(self)
         self.track_view_widget.track_clicked.connect(self.track_clicked.emit)
         self.track_view_widget.track_double_clicked.connect(self.track_double_clicked.emit)
+        self.track_view_widget.play_now_triggered.connect(self.play_now_triggered.emit)
 
         self.view_options = {
             0: "Tracks",
@@ -32,7 +34,7 @@ class MainPanel(QtWidgets.QFrame):
             3: "Artists",
         }
 
-        self.view_options_combo_box = QComboBox()
+        self.view_options_combo_box = QComboBox(self)
         self.view_options_combo_box.setFixedWidth(150)
         self.view_options_combo_box.currentIndexChanged.connect(self.view_key_changed)
         self.view_options_combo_box.addItems(self.view_options.values())

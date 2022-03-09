@@ -11,7 +11,7 @@ from constants import *
 from data_models.track import Track
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
-from utils import get_formatted_time, format_seconds, format_player_position_to_seconds
+from utils import get_formatted_time, format_seconds, format_player_position_to_seconds, TrackNotInPlaylistError
 
 
 class AudioController(QtWidgets.QFrame):
@@ -211,13 +211,13 @@ class AudioController(QtWidgets.QFrame):
         self.play_button.setIcon(self.play_icon)
         self.user_action = 2
         self.player.pause(fade=fade)
-        self.paused.emit(self.get_current_track())
+        self.paused.emit(self.get_playing_track())
 
     def unpause(self, fade=True) -> None:
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
         self.player.play(fade=fade)
-        self.unpaused.emit(self.get_current_track())
+        self.unpaused.emit(self.get_playing_track())
 
     def play_pause_button_clicked(self) -> None:
         if self.user_action <= 0:
@@ -256,8 +256,15 @@ class AudioController(QtWidgets.QFrame):
             self.volume_slider.setSliderPosition(self.volume_slider_position)
             self.player.current_volume = self.player.audio_output.volume()
 
-    def get_current_track(self) -> Track:
+    def get_playing_track(self) -> Track:
         return self.current_playlist.currently_playing
+
+    def set_playing_track(self, track: Track) -> None:
+        if track not in self.current_playlist.playlist:
+            raise TrackNotInPlaylistError
+
+        self.set_playlist_index(self.current_playlist.playlist.index(track))
+        self.play()
 
 
 class ImprovedSlider(QSlider):

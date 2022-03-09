@@ -1,3 +1,4 @@
+import time
 from typing import Union, List, Tuple
 
 from data_models.track import Track
@@ -16,7 +17,9 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
         tuple_key = (key, value)
         # print(tuple_key)
         if tuple_key not in self.cached_track_groups:
+            start = time.time()
             self.cached_track_groups[tuple_key] = super().get_tracks_by(key, value)
+            print("Tracks loaded in: ", time.time() - start)
 
         return self.cached_track_groups[tuple_key]
 

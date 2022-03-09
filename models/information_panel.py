@@ -101,7 +101,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.information_table_view.set_tracks(tracks)
         # global_timer.stop()
 
-    def set_currently_playing_track(self, track: Track) -> None:
+    def set_playing_track(self, track: Track) -> None:
         def get_track_info(track: Track) -> str:
             f = TagManager().load_file(track.file_path)
             extension = track.file_path.split(".")[-1].upper()
