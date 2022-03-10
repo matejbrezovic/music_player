@@ -12,7 +12,7 @@ from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import ElidedLabel
 
 
-class NavigationListModel(QtCore.QAbstractTableModel):
+class NavigationTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self.table_view = parent
@@ -91,7 +91,7 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
 
         if index.column() == 1:
             navigation_group = self._groups[index.row()]
-            navigation_group_widget = NavigationGroupWidget(navigation_group.title, navigation_group.tracks_num)
+            navigation_group_widget = NavigationGroupWidget(navigation_group.visual_title, navigation_group.tracks_num)
 
             navigation_group_widget.setGeometry(option.rect)
 
@@ -113,7 +113,7 @@ class NavigationTableView(QTableView):
         super().__init__(parent)
         self.groups: List[NavigationGroup] = []
         self.group_key = None
-        self._table_model = NavigationListModel(self)
+        self._table_model = NavigationTableModel(self)
         self._table_delegate = NavigationTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
@@ -145,8 +145,6 @@ class NavigationTableView(QTableView):
 
     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
         return super().focusOutEvent(event)
-
-
 
 
 class NavigationGroupWidget(QWidget):

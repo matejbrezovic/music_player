@@ -3,7 +3,7 @@ import time
 from typing import List, Optional, Any
 
 from PyQt6 import QtCore, QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QEvent
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QEvent, QItemSelectionModel
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction
 from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
     QStyledItemDelegate, QToolButton, QMenu, QVBoxLayout, QPushButton, QWidget
@@ -125,12 +125,13 @@ class TrackTableItemDelegate(QStyledItemDelegate):
             painter.setPen(QPen(QBrush(border_color), 1))
             painter.drawLine(option.rect.topLeft(), option.rect.topRight())
             # bottom_left = option.rect.bottomLeft() # buggy
-            # bottom_left.setY(bottom_left.y() + 1)
+            # bottom_left.setY(bottom_left.y())
             # bottom_right = option.rect.bottomRight()
-            # bottom_right.setY(bottom_right.y() + 1)
+            # bottom_right.setY(bottom_right.y())
             # painter.drawLine(bottom_left, bottom_right)
-            if index.row() == self._table_view.selectedIndexes()[-1].row():  # might be ruining performance
-                painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
+            # print(index.row(), len(self._table_view.selectedIndexes()) // len(MAIN_PANEL_COLUMN_NAMES) - 1)
+            # if index.row() == self._table_view.selectedIndexes()[-1].row():  # might be ruining performance
+            #     painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 
@@ -173,6 +174,7 @@ class TrackTableView(QTableView):
 
         # self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
         self._table_model = TrackTableModel(self)
+        # self.setSelectionModel(QItemSelectionModel())
         self._table_delegate = TrackTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)

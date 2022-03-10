@@ -5,6 +5,7 @@
 # socket.socket = guard
 
 import sys
+import time
 
 from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
@@ -18,12 +19,12 @@ from models.main_panel import MainPanel
 from models.navigation_panel import NavigationPanel
 from models.queue_info_panel import QueueInfoPanel
 from models.scan_folders_dialog import *
+from repositories.cached_tracks_repository import CachedTracksRepository
 
 
 class MainWindowUi(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
-
         self.scan_folders_dialog = ScanFoldersDialog()
         self.add_files_dialog = AddFilesDialog()
 
@@ -39,6 +40,8 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         # self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+
+        CachedTracksRepository().preload_tracks()
 
     def __post__(self):
         self._setup_signals()

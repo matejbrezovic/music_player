@@ -1,5 +1,6 @@
 import time
 from typing import Union, List, Tuple
+from constants import *
 
 from data_models.track import Track
 from repositories.singleton import Singleton
@@ -17,9 +18,9 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
         tuple_key = (key, value)
         # print(tuple_key)
         if tuple_key not in self.cached_track_groups:
-            start = time.time()
+            # start = time.time()
             self.cached_track_groups[tuple_key] = super().get_tracks_by(key, value)
-            print("Tracks loaded in: ", time.time() - start)
+            # print("Tracks loaded in: ", time.time() - start)
 
         return self.cached_track_groups[tuple_key]
 
@@ -30,3 +31,9 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
 
         return self.cached_counts[group_key]
 
+    def preload_tracks(self):
+        start = time.time()
+        for group_key in GROUP_OPTIONS:
+            for group_name, _ in self.get_track_counts_grouped_by(group_key):
+                self.get_tracks_by(group_key, group_name)
+        print(f"Tracks preloaded in: {time.time() - start:.6f} s")

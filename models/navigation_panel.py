@@ -1,10 +1,7 @@
-import time
-import typing
 from typing import List
 
-from PyQt6 import QtWidgets, QtCore
-from PyQt6.QtCore import QSize, QPoint
-from PyQt6.QtGui import QEnterEvent
+from PyQt6 import QtWidgets
+from PyQt6.QtCore import QSize
 from PyQt6.QtWidgets import *
 
 from data_models.navigation_group import NavigationGroup
@@ -24,14 +21,6 @@ class NavigationPanel(QFrame):
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
         self.tag_manager = TagManager()
-        self.group_options = {
-            0: "Album",
-            1: "Artist",
-            2: "Composer",
-            3: "Folder",
-            4: "Genre",
-            5: "Year"
-        }
 
         default_row_height = 56
         self.navigation_table_view = NavigationTableView()
@@ -54,15 +43,12 @@ class NavigationPanel(QFrame):
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
         self.group_combo_box = GroupOptionsComboBox(self)
         self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
-        self.group_combo_box.addItems(self.group_options.values())
+        self.group_combo_box.addItems(GROUP_OPTIONS)
         self.group_combo_box.setFixedHeight(20)
 
         self.header_widget = QWidget()
-        # self.header_widget.setStyleSheet("background-color: red")
         self.header_layout = QHBoxLayout(self.header_widget)
         self.header_layout.setContentsMargins(0, 0, 0, 0)
-        # self.header_layout.setStretchFactor(self.group_combo_box, 100)
-        # self.header_layout.setStretchFactor(self.group_combo_box, 0)
         self.header_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.header_layout.addWidget(self.group_combo_box)
         # self.header_layout.addWidget(QWidget())
@@ -72,9 +58,6 @@ class NavigationPanel(QFrame):
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vertical_layout.addWidget(self.header_widget)
         self.vertical_layout.addWidget(self.navigation_table_view)
-
-        for group_key in [v.lower() for v in self.group_options.values()]:
-            CachedTracksRepository().get_track_counts_grouped_by(group_key)
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:
@@ -95,10 +78,18 @@ class NavigationPanel(QFrame):
         # start = time.time()
         self.groups: List[NavigationGroup] = []
 
-        group_key = self.group_options[key].lower()
+        group_key = GROUP_OPTIONS[key].lower()
         for title, count in CachedTracksRepository().get_track_counts_grouped_by(group_key):
             pixmap = get_group_pixmap(group_key, title)
-            self.groups.append(NavigationGroup(title, count, pixmap))
+
+            if title is None and group_key == "album":
+                visual_title = "[Empty]"
+            elif title is None and group_key == "artist":
+                visual_title = "[Unknown]"
+            else:
+                visual_title = title
+
+            self.groups.append(NavigationGroup(title, visual_title, count, pixmap))
 
         # print("Groups created in:", time.time() - start)
         self.navigation_table_view.set_groups(self.groups)
@@ -106,7 +97,7 @@ class NavigationPanel(QFrame):
         # print("Groups fully displayed in:", time.time() - start)
 
     def group_key_changed(self, new_key: int) -> None:
-        self.navigation_table_view.set_group_key(self.group_options[new_key])
+        self.navigation_table_view.set_group_key(GROUP_OPTIONS[new_key])
         self.navigation_table_view.selectionModel().clearSelection()
         self.navigation_table_view.scrollToTop()
         self._load_groups(new_key)

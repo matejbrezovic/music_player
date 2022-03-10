@@ -41,7 +41,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        if group_key == "folder":
+        if group_key.lower() == "folder":
             # print("ddd")
             conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
             track_counts = cursor.execute(f"SELECT get_folder_path(file_path), COUNT (*) "
@@ -57,7 +57,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         return track_counts
 
     def get_tracks_by(self, key: str, value: Union[str, int]) -> Iterable[Track]:
-        start = time.time()
+        # start = time.time()
 
         conn = self.get_connection()
         conn.row_factory = sqlite3.Row
@@ -71,14 +71,15 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
             # print(key, value)
             # if "'" in value:
             #     value = value.replace("'", "''")
-            value = value.replace("'", "''")
+            if isinstance(value, str):
+                value = value.replace("'", "''")
             cursor.execute(f"SELECT * FROM tracks WHERE {key} = '{value}'")
         else:
             cursor.execute(f"SELECT * FROM tracks WHERE {key} IS NULL")
 
         tracks: List[Track] = []
         rows = cursor.fetchall()
-        print("Data fetched from database in:", time.time() - start)
+        # print("Data fetched from database in:", time.time() - start)
         for row in rows:
             track = Track(
                 track_id=row["track_id"],
@@ -233,7 +234,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                     loaded_file["genre"].first,
                     int(loaded_file["year"]) if int(loaded_file["year"]) else None,
                     int(loaded_file["#length"].first),
-                    ""  # get_artwork_pixmap(file_path, "album")
+                    # get_artwork_pixmap(file_path, "album")
                 ))
             except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError):
                 # TODO cannot convert '2020-10-26T20:39:57-04:00' to int type for year so ValueError (can be improved)

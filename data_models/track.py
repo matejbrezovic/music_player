@@ -17,11 +17,12 @@ class Track:
     rating: int = 0
     # artwork_path: str
     artwork_pixmap: Any = None
+    # size: int = 0
 
-    def __post_init__(self):
-        self.size = os.path.getsize(self.file_path)
+    # def __post_init__(self):
+    #     self.size = os.path.getsize(self.file_path)
 
-    # @property
-    # def size(self):
-    #     return os.path.getsize(self.file_path)
+    @property
+    def size(self):
+        return os.path.getsize(self.file_path)
 
