@@ -14,6 +14,7 @@ class Track:
     genre: str
     year: int
     length: int
+    rating: int = 0
     # artwork_path: str
     artwork_pixmap: Any = None
 

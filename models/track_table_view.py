@@ -1,6 +1,6 @@
 import sys
 import time
-from typing import List, Optional
+from typing import List, Optional, Any
 
 from PyQt6 import QtCore, QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QEvent
@@ -11,14 +11,13 @@ from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeader
 from constants import *
 from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
-from utils import get_artwork_pixmap
+from utils import get_artwork_pixmap, format_seconds
 
 
 class TrackTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self._table_view: QTableView = parent
-        self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
         self._tracks: List[Track] = []
         self.is_playing = False
         self.playing_track_index: Optional[int] = None
@@ -43,7 +42,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                                                self.columnCount()))
         # global_timer.print_elapsed_time()
 
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole):
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if not self._tracks:
             return None
 
@@ -77,14 +76,16 @@ class TrackTableModel(QtCore.QAbstractTableModel):
             if not index.column():
                 return "-"
 
-            value = self.column_names[index.column()].lower()
+            value = MAIN_PANEL_COLUMN_NAMES[index.column()].lower()
+            if value == "time":
+                return format_seconds(getattr(self._tracks[index.row()], "length"))
             return getattr(self._tracks[index.row()], value) if value else None
 
-    def rowCount(self, index: QModelIndex = QModelIndex):
+    def rowCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(self._tracks)
 
-    def columnCount(self, index: QModelIndex = QModelIndex):
-        return len(self.column_names)
+    def columnCount(self, index: QModelIndex = QModelIndex) -> int:
+        return len(MAIN_PANEL_COLUMN_NAMES)
 
     def set_paused(self) -> None:
         self.is_playing = False
@@ -123,7 +124,13 @@ class TrackTableItemDelegate(QStyledItemDelegate):
             painter.drawRect(option.rect)
             painter.setPen(QPen(QBrush(border_color), 1))
             painter.drawLine(option.rect.topLeft(), option.rect.topRight())
-            # painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
+            # bottom_left = option.rect.bottomLeft() # buggy
+            # bottom_left.setY(bottom_left.y() + 1)
+            # bottom_right = option.rect.bottomRight()
+            # bottom_right.setY(bottom_right.y() + 1)
+            # painter.drawLine(bottom_left, bottom_right)
+            if index.row() == self._table_view.selectedIndexes()[-1].row():  # might be ruining performance
+                painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 
@@ -164,7 +171,7 @@ class TrackTableView(QTableView):
         self.verticalHeader().setDefaultSectionSize(22)
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
 
-        self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
+        # self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
         self._table_model = TrackTableModel(self)
         self._table_delegate = TrackTableItemDelegate(self)
         self.setModel(self._table_model)

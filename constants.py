@@ -39,7 +39,7 @@ SELECTION_STYLESHEET = f"QTableView {{selection-background-color: {SELECTION_COL
 LOST_FOCUS_STYLESHEET = f"QTableView {{selection-background-color: {LOST_FOCUS_COLOR}; " \
                         f"selection-color: black; border: 0px}}"
 
-
+MAIN_PANEL_COLUMN_NAMES = ("", "", "Artist", "Title", "Album", "Year", "Genre", "Rating", "Time")
 
 # Audio settings
 

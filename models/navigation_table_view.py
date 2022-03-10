@@ -1,12 +1,11 @@
 from typing import List, Any
 
 from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QVariant
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
 from PyQt6.QtGui import QIcon, QPen, QBrush, QPainter
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle, \
     QStyleOptionViewItem, QApplication
 
-import global_timer
 from constants import *
 from data_models.navigation_group import NavigationGroup
 from repositories.cached_tracks_repository import CachedTracksRepository
@@ -71,7 +70,8 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
             painter.drawRect(option.rect)
             painter.setPen(QPen(QBrush(border_color), 1))
             painter.drawLine(option.rect.topLeft(), option.rect.topRight())
-            # painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
+            if index.row() == self._table_view.selectedIndexes()[-1].row():  # might be ruining performance
+                painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
 
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
