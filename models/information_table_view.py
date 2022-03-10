@@ -4,7 +4,7 @@ from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint, QLineF, QLine
 from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QIcon
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate, \
-    QStyle, QStyleOptionViewItem
+    QStyle, QStyleOptionViewItem, QApplication
 
 from constants import *
 from data_models.track import Track
@@ -187,6 +187,14 @@ class InformationTableView(QTableView):
     def set_unpaused(self) -> None:
         self._table_delegate.is_playing = True
         self.viewport().repaint()
+
+    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
+            self.clearSelection()
+        return super().focusInEvent(event)
+
+    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+        return super().focusOutEvent(event)
 
 
 class TrackInfoWidget(QWidget):

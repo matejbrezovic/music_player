@@ -1,17 +1,53 @@
 import sys
 import time
+from dataclasses import dataclass
+from random import randint, choice
+from string import ascii_letters
 from typing import List, Optional
 
-from PyQt6 import QtCore, QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QEvent
-from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction
+from PyQt6 import QtGui
+from PyQt6 import QtCore, QtWidgets
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
+from PyQt6.QtGui import QPainter, QPen, QBrush, QFontMetrics, QColor
 from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
-    QStyledItemDelegate, QToolButton, QMenu, QVBoxLayout, QPushButton, QWidget
+    QStyledItemDelegate, QVBoxLayout, QPushButton, QWidget
 
-from constants import *
-from data_models.track import Track
-from repositories.tracks_repository import TracksRepository
-from utils import get_artwork_pixmap
+SELECTION_QCOLOR = QColor(156, 206, 233)
+SELECTION_QCOLOR_BORDER = QColor(110, 189, 232)
+LOST_FOCUS_QCOLOR = QColor(0, 0, 0, 50)
+LOST_FOCUS_QCOLOR_BORDER = QColor(0, 0, 0, 60)
+
+
+@dataclass
+class Track:
+    track_id: int
+    file_path: str
+    title: str
+    album: str
+    artist: str
+    composer: str
+    genre: str
+    year: int
+    length: int
+
+    # def __post_init__(self): # won't work bcz file_path is some random gibberish
+    #     self.size = os.path.getsize(self.file_path)
+
+def random_string():
+    return ''.join(choice(ascii_letters) for i in range(10))
+
+def generate_random_track():
+    return Track(
+        track_id=696969,
+        file_path=random_string(),
+        title=random_string(),
+        album=random_string(),
+        artist=random_string(),
+        composer=random_string(),
+        genre=random_string(),
+        year=randint(1, 2000),
+        length=randint(1, 10000)
+    )
 
 
 class TrackTableModel(QtCore.QAbstractTableModel):
@@ -23,25 +59,13 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         self.is_playing = False
         self.playing_track_index: Optional[int] = None
 
-        self.playing_speaker_pixmap = QPixmap("icons/speaker_playing.png").scaled(
-            16, 22,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation)
-
-        self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png").scaled(
-            16, 22,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation)
-
     def set_tracks(self, tracks: List[Track]) -> None:
-        # global_timer.print_elapsed_time()
         self.layoutAboutToBeChanged.emit()
         self._tracks = tracks
         self.layoutChanged.emit()
         self.dataChanged.emit(self.createIndex(0, 0),
                               self.createIndex(self.rowCount(),
                                                self.columnCount()))
-        # global_timer.print_elapsed_time()
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole):
         if not self._tracks:
@@ -49,29 +73,6 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 
         if role == Qt.ItemDataRole.TextAlignmentRole and not index.column():
             return Qt.AlignmentFlag.AlignCenter
-
-        if role == Qt.ItemDataRole.DecorationRole:
-            if not index.column():  # TODO can probably be improved
-                track = self._tracks[index.row()]
-                artwork_pixmap = track.artwork_pixmap
-                if artwork_pixmap is None:
-                    new_pixmap = get_artwork_pixmap(track.file_path)
-                    track.artwork_pixmap = new_pixmap if new_pixmap else ""
-                    artwork_pixmap = track.artwork_pixmap
-                if not artwork_pixmap:
-                    return None
-                return artwork_pixmap
-                # icon = QIcon(artwork_pixmap)
-                # icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
-                # return icon if icon else None
-            elif index.column() == 1:
-                if self.playing_track_index is None:
-                    return
-                if index.row() == self.playing_track_index:
-                    if self.is_playing:
-                        return self.playing_speaker_pixmap
-                    elif not self.is_playing:
-                        return self.muted_speaker_pixmap
 
         if role == Qt.ItemDataRole.DisplayRole and not index.data(Qt.ItemDataRole.DecorationRole):
             if not index.column():
@@ -98,9 +99,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 
     def set_playing_track_index(self, index: Optional[int]) -> None:
         self.playing_track_index = index
-        # print("Playing track index: ", index)
         if self.playing_track_index is not None:
-            # print("Set playing")
             self.dataChanged.emit(self.index(0, 1),
                                   self.index(self.rowCount(), 1))
 
@@ -109,6 +108,7 @@ class TrackTableItemDelegate(QStyledItemDelegate):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self._table_view: QTableView = parent
+        self.last_index = -1
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         painter.setPen(QPen(Qt.PenStyle.NoPen))
@@ -116,9 +116,17 @@ class TrackTableItemDelegate(QStyledItemDelegate):
             if self._table_view.hasFocus():
                 fill_color = SELECTION_QCOLOR
                 border_color = SELECTION_QCOLOR_BORDER
+                if index.row() != self.last_index:
+                    self.last_index = index.row()
+                    print(f"{self.last_index} Blue")
+
             else:
                 fill_color = LOST_FOCUS_QCOLOR
                 border_color = LOST_FOCUS_QCOLOR_BORDER
+                if index.row() != self.last_index:
+                    self.last_index = index.row()
+                    print(f"{self.last_index} Grey")
+
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
             painter.setPen(QPen(QBrush(border_color), 1))
@@ -126,6 +134,9 @@ class TrackTableItemDelegate(QStyledItemDelegate):
             # painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
+            if index.row() != self.last_index:
+                self.last_index = index.row()
+                print(f"{self.last_index} White")
 
         if index.data(Qt.ItemDataRole.DecorationRole):
             decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
@@ -152,11 +163,11 @@ class TrackTableItemDelegate(QStyledItemDelegate):
                                                                    option.rect.width())
                 alignment = Qt.AlignmentFlag.AlignVCenter if index.column() else Qt.AlignmentFlag.AlignCenter
                 painter.drawText(option.rect, alignment, elided_text)
+        # time.sleep(0.02)
 
 
 class TrackTableView(QTableView):
     set_new_tracks = pyqtSignal()
-    play_now_triggered = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -169,41 +180,6 @@ class TrackTableView(QTableView):
         self._table_delegate = TrackTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
-        # self.clicked.connect(lambda index: print(index.row()))
-
-        self.context_menu = QMenu(self)
-        self.context_menu.setContentsMargins(0, 0, 0, 0)
-        self.play_now_action = QAction("Play Now", self)
-        self.play_now_action.triggered.connect(lambda event: self.play_now_action_triggered(event))
-        self.context_menu.addAction(self.play_now_action)
-
-
-    # def eventFilter(self, source: QTableView, event) -> bool:
-    #     if event.type() == QEvent.Type.ContextMenu and source is self:
-    #         menu = QMenu()
-    #         menu.addAction('Action 1')
-    #         menu.addAction('Action 2')
-    #         menu.addAction('Action 3')
-    #
-    #         if menu.exec(event.globalPos()):
-    #             item = source.itemAt(event.pos())
-    #             print(item.text())
-    #         return True
-    #     return super().eventFilter(source, event)
-
-    def contextMenuEvent(self, event):
-        # self.menu = QMenu(self)
-        # renameAction = QAction('Rename', self)
-        # renameAction.triggered.connect(lambda: self.play_now_action_triggered(event))
-        # self.menu.addAction(renameAction)
-        # add other required actions
-        self.context_menu.popup(QtGui.QCursor.pos())
-
-    def play_now_action_triggered(self, event):
-        self.selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
-        # print(self.selected_track_indexes)
-        # print([self._tracks[i] for i in self.selected_track_indexes])
-        self.play_now_triggered.emit([self._tracks[i] for i in self.selected_track_indexes])
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks
@@ -220,7 +196,7 @@ class TrackTableView(QTableView):
         self._table_model.set_unpaused()
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
+        if QtWidgets.QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
             self.clearSelection()
         return super().focusInEvent(event)
 
@@ -242,7 +218,6 @@ class TestMainWindow(QtWidgets.QMainWindow):
         self.table_view.verticalHeader().setVisible(False)
         self.table_view.horizontalHeader().setVisible(False)
         self.table_view.setShowGrid(False)
-        self.table_view.setStyleSheet(SELECTION_STYLESHEET)
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
@@ -250,7 +225,7 @@ class TestMainWindow(QtWidgets.QMainWindow):
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
         start = time.time()
-        self.table_view.set_tracks(TracksRepository().get_tracks_by("album", None))
+        self.table_view.set_tracks([generate_random_track() for i in range(10)])
         print(f"Test loaded in: {time.time() - start:.6f} s")
 
         self.vbox.addWidget(self.table_view)

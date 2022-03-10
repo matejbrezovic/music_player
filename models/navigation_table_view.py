@@ -4,7 +4,7 @@ from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QVariant
 from PyQt6.QtGui import QIcon, QPen, QBrush, QPainter
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle, \
-    QStyleOptionViewItem
+    QStyleOptionViewItem, QApplication
 
 import global_timer
 from constants import *
@@ -62,12 +62,19 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():
-                painter.setBrush(QBrush(SELECTION_QCOLOR))
+                fill_color = SELECTION_QCOLOR
+                border_color = SELECTION_QCOLOR_BORDER
             else:
-                painter.setBrush(QBrush(LOST_FOCUS_QCOLOR))
+                fill_color = LOST_FOCUS_QCOLOR
+                border_color = fill_color
+            painter.setBrush(fill_color)
+            painter.drawRect(option.rect)
+            painter.setPen(QPen(QBrush(border_color), 1))
+            painter.drawLine(option.rect.topLeft(), option.rect.topRight())
+            # painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
+
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
-        painter.drawRect(option.rect)
 
         if index.data(Qt.ItemDataRole.DecorationRole) and not index.column():
 
@@ -132,12 +139,14 @@ class NavigationTableView(QTableView):
         self._table_delegate.set_groups(groups)
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        self.setStyleSheet(SELECTION_STYLESHEET)
-        super().focusInEvent(event)
+        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
+            self.clearSelection()
+        return super().focusInEvent(event)
 
     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-        self.setStyleSheet(LOST_FOCUS_STYLESHEET)
-        super().focusOutEvent(event)
+        return super().focusOutEvent(event)
+
+
 
 
 class NavigationGroupWidget(QWidget):
