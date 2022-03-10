@@ -5,7 +5,6 @@
 # socket.socket = guard
 
 import sys
-import time
 
 from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
@@ -13,6 +12,7 @@ from PyQt6.QtWidgets import *
 
 from data_models.track import Track
 from models.add_files_dialog import AddFilesDialog
+from models.app import App
 from models.audio_controller import AudioController
 from models.information_panel import InformationPanel
 from models.main_panel import MainPanel
@@ -31,7 +31,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # TracksRepository().create_groups()
         self._setup_ui()
 
-        self.setWindowTitle('music player v0.0.10')
+        self.setWindowTitle('music player v0.0.11')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
@@ -56,7 +56,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
     def _setup_ui(self) -> None:
         self.central_widget = QWidget(self)
         self.central_widget_layout = QVBoxLayout()
-        self.central_widget_layout.setContentsMargins(0, 0, 0, 0)
+        self.central_widget_layout.setContentsMargins(1, 1, 1, 1)
         self.central_widget_layout.setSpacing(0)
         self.central_widget.setLayout(self.central_widget_layout)
         self.setCentralWidget(self.central_widget)
@@ -95,6 +95,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.horizontal_splitter.setStretchFactor(0, 0)
         self.horizontal_splitter.setStretchFactor(1, 1)
         self.horizontal_splitter.setStretchFactor(2, 0)
+        self.horizontal_splitter.setHandleWidth(0)
         self.horizontal_splitter.setChildrenCollapsible(False)
 
         self.central_widget_layout.addWidget(self.horizontal_splitter)
@@ -152,14 +153,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
         else:
             self.audio_controller.set_playlist(tracks)
             self.audio_controller.set_playing_track(tracks[0])
-
-
-class App(QApplication):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
-        # noinspection PyArgumentList
-        self.setStyle(QStyleFactory.create("windowsvista"))
 
 
 if __name__ == '__main__':

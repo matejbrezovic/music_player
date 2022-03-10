@@ -17,14 +17,15 @@ class NavigationPanel(QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setStyleSheet("NavigationPanel {background-color: rgba(0, 212, 88, 0.3)}")
+        self.setStyleSheet("NavigationPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
         self.tag_manager = TagManager()
 
         default_row_height = 56
         self.navigation_table_view = NavigationTableView()
-        self.navigation_table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.navigation_table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        # self.navigation_table_view.setVerticalScrollMode(QScrollBar.Sc)
         self.navigation_table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.navigation_table_view.setShowGrid(False)
         self.navigation_table_view.verticalHeader().setDefaultSectionSize(default_row_height + 4)
@@ -41,19 +42,21 @@ class NavigationPanel(QFrame):
 
         self.navigation_table_view.group_clicked.connect(self.group_clicked.emit)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
-        self.group_combo_box = GroupOptionsComboBox(self)
+        self.group_combo_box = TransparentComboBox(self)
         self.group_combo_box.currentIndexChanged.connect(self.group_key_changed)
         self.group_combo_box.addItems(GROUP_OPTIONS)
-        self.group_combo_box.setFixedHeight(20)
+        self.group_combo_box.setFixedHeight(24)
 
         self.header_widget = QWidget()
         self.header_layout = QHBoxLayout(self.header_widget)
         self.header_layout.setContentsMargins(0, 0, 0, 0)
+        self.header_layout.setSpacing(0)
         self.header_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.header_layout.addWidget(self.group_combo_box)
         # self.header_layout.addWidget(QWidget())
 
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
+        self.vertical_layout.setSpacing(0)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vertical_layout.addWidget(self.header_widget)
@@ -106,52 +109,3 @@ class NavigationPanel(QFrame):
         self._load_groups(self.group_combo_box.currentIndex())
 
 
-class GroupOptionsComboBox(QComboBox):
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-        self.default_stylesheet = ''' 
-                QComboBox {
-                    color: black;
-                    selection-color: black;
-                    selection-background-color: rgba(255, 255, 255, 0);
-                    background-color: rgba(255, 255, 255, 0);
-                }
-
-                QComboBox QAbstractItemView {
-                    background-color: white;
-                    min-width: 150px;
-                }
-                QComboBox:open {
-                    color: black;
-                }
-                QComboBox:drop-down:open {
-                    color: black;
-                    background-color: rgba(255, 255, 255, 0);
-                }
-                QComboBox:down-arrow:open {
-                    color: black;
-                    background-color: rgba(255, 255, 255, 0);
-                }
-                
-                '''
-        self.hide_combobox = '''QComboBox::drop-down:!hover {
-                                    background-color: rgba(255, 255, 255, 0);
-                                }'''
-
-        self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
-        self.setUpdatesEnabled(True)
-
-    def sizeHint(self):
-        text = self.currentText()
-        width = self.fontMetrics().boundingRect(text).width() + 28
-        self.setFixedWidth(width)
-        return QSize(width, self.height())
-
-    def enterEvent(self, *args, **kwargs):
-        super().enterEvent(*args, **kwargs)
-        self.setStyleSheet(self.default_stylesheet)
-
-    def leaveEvent(self, *args, **kwargs):
-        super().leaveEvent(*args, **kwargs)
-        self.setStyleSheet(self.hide_combobox + self.default_stylesheet)

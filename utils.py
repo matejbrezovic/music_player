@@ -4,10 +4,10 @@ from typing import Optional
 import mutagen
 from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, QSize
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QTableWidget, \
-    QVBoxLayout, QWidget
+    QVBoxLayout, QWidget, QComboBox
 from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
@@ -110,9 +110,11 @@ class SpecificImageLabel(QLabel):
     def __init__(self, pixmap: QPixmap, parent=None):
         super().__init__(parent)
         self.pixmap = pixmap
+        self.setStyleSheet("background-color: red;")
+        # self.setMinimumWidth(super().minimumWidth())
 
         size_policy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)  # Very important!
-        # size_policy.setHeightForWidth(True)
+        size_policy.setHeightForWidth(True)
         size_policy.setWidthForHeight(True)
         self.setSizePolicy(size_policy)
 
@@ -123,17 +125,21 @@ class SpecificImageLabel(QLabel):
         self.setAlignment(Qt.AlignmentFlag.AlignTop)
 
     def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
+        print(self.width())
         if self.pixmap is None:
             return
         if self.pixmap.width() != 0 and self.width() != 0:
             displayed_pixmap = self.pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation)
             self.setPixmap(displayed_pixmap)
 
-    # def heightForWidth(self, width: int) -> int:
-    #     return width
+    def heightForWidth(self, width: int) -> int:
+        return width
 
     def setPixmap(self, new_pixmap: QPixmap) -> None:
-        super().setPixmap(new_pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation))
+        super().setPixmap(new_pixmap.scaled(self.width(),
+                                            self.width(),
+                                            Qt.AspectRatioMode.KeepAspectRatio,
+                                            Qt.TransformationMode.SmoothTransformation))
 
 
 class ClickableLabel(QLabel):
@@ -206,64 +212,90 @@ class PathCheckbox(QCheckBox):
         self.path = path
 
 
-class FocusFrame(QFrame): # TODO remove, better fix found
-    def __init__(self, focus_receiver: QWidget, parent=None):
-        super().__init__(parent)
-        self.focus_receiver = focus_receiver
-        self.layout = QVBoxLayout(self)
-        self.layout.setContentsMargins(0, 0, 0, 0)
-        self.setContentsMargins(0, 0, 0, 0)
-        self.layout.addWidget(focus_receiver)
-        self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+# class FocusFrame(QFrame): # TODO remove, better fix found
+#     def __init__(self, focus_receiver: QWidget, parent=None):
+#         super().__init__(parent)
+#         self.focus_receiver = focus_receiver
+#         self.layout = QVBoxLayout(self)
+#         self.layout.setContentsMargins(0, 0, 0, 0)
+#         self.setContentsMargins(0, 0, 0, 0)
+#         self.layout.addWidget(focus_receiver)
+#         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+#
+#     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+#         # global_timer.timer_init()
+#         # global_timer.start()
+#         # print("GOT FOCUS")
+#         self.focus_receiver.focusInEvent(event)
+#         # global_timer.stop()
+#
+#     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+#         # print("LOST FOCUS")
+#         self.focus_receiver.focusOutEvent(event)
 
-    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        # global_timer.timer_init()
-        # global_timer.start()
-        # print("GOT FOCUS")
-        self.focus_receiver.focusInEvent(event)
-        # global_timer.stop()
 
-    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-        # print("LOST FOCUS")
-        self.focus_receiver.focusOutEvent(event)
+# class ChangeStylesheetOnClickTableWidget(QTableWidget):
+#     def __init__(self, parent=None):
+#         super().__init__(parent)
+#
+#     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+#         self.setStyleSheet(SELECTION_STYLESHEET)
+#         super().focusInEvent(event)
+#
+#     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+#         self.setStyleSheet(LOST_FOCUS_STYLESHEET)
+#         super().focusOutEvent(event)
 
 
-class ChangeStylesheetOnClickTableWidget(QTableWidget):
+class TransparentComboBox(QComboBox):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        self.setStyleSheet(SELECTION_STYLESHEET)
-        super().focusInEvent(event)
+        self.default_stylesheet = ''' 
+                QComboBox {
+                    color: black;
+                    selection-color: black;
+                    selection-background-color: rgba(255, 255, 255, 0);
+                    background-color: rgba(255, 255, 255, 0);
+                }
 
-    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-        self.setStyleSheet(LOST_FOCUS_STYLESHEET)
-        super().focusOutEvent(event)
+                QComboBox QAbstractItemView {
+                    background-color: white;
+                    min-width: 150px;
+                }
+                QComboBox:open {
+                    color: black;
+                }
+                QComboBox:drop-down:open {
+                    color: black;
+                    background-color: rgba(255, 255, 255, 0);
+                }
+                QComboBox:down-arrow:open {
+                    color: black;
+                    background-color: rgba(255, 255, 255, 0);
+                }
 
+                '''
+        self.hide_combobox = '''QComboBox::drop-down:!hover {
+                                    background-color: rgba(255, 255, 255, 0);
+                                }'''
 
-class SpeakerLabel(QLabel): # TODO remove
-    def __init__(self, parent=None):
-        super(SpeakerLabel, self).__init__(parent)
-        self.setContentsMargins(0, 1, 0, 0)
-        self.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.setFixedWidth(15)
+        self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
+        self.setUpdatesEnabled(True)
 
-        self.setPixmap(QPixmap("icons/speaker_playing.png").scaled(self.width(), self.width(),
-                                                                   Qt.AspectRatioMode.KeepAspectRatio,
-                                                                   Qt.TransformationMode.SmoothTransformation))
+    def sizeHint(self):
+        text = self.currentText()
+        width = self.fontMetrics().boundingRect(text).width() + 28
+        self.setFixedWidth(width)
+        return QSize(width, self.height())
 
-    def set_playing(self):
-        self.setPixmap(QPixmap("icons/speaker_playing.png").scaled(self.width(), self.width(),
-                                                                   Qt.AspectRatioMode.KeepAspectRatio,
-                                                                   Qt.TransformationMode.SmoothTransformation))
+    def enterEvent(self, *args, **kwargs):
+        super().enterEvent(*args, **kwargs)
+        self.setStyleSheet(self.default_stylesheet)
 
-    def set_paused(self):
-        self.setPixmap(QPixmap("icons/speaker_muted.png").scaled(self.width(), self.width(),
-                                                                 Qt.AspectRatioMode.KeepAspectRatio,
-                                                                 Qt.TransformationMode.SmoothTransformation))
-
-    def set_transparent(self):
-        self.clear()
+    def leaveEvent(self, *args, **kwargs):
+        super().leaveEvent(*args, **kwargs)
+        self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
 
 
 class TrackNotInPlaylistError(Exception):

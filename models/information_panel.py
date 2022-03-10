@@ -17,19 +17,24 @@ class InformationPanel(QtWidgets.QFrame):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.setObjectName("information_panel")
-        self.setStyleSheet("QFrame#information_panel {background-color: rgba(255, 0, 0, 0.3)}")
+        # self.setObjectName("information_panel")
+        self.setStyleSheet("InformationPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH * 1.8)
 
         self.playing_tracks: List[Track] = []
 
         self.main_layout = QVBoxLayout(self)
+        self.main_layout.setSpacing(0)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.vertical_splitter = QSplitter(Qt.Orientation.Vertical)
-        self.playing_tracks_widget = QFrame()
+        self.vertical_splitter.setHandleWidth(0)
+        self.playing_tracks_widget = QFrame(self)
+        self.playing_tracks_widget.setContentsMargins(0, 0, 0, 0)
         self.playing_tracks_widget_layout = QVBoxLayout(self.playing_tracks_widget)
         self.playing_tracks_widget_layout.setContentsMargins(0, 0, 0, 0)
+        self.playing_tracks_widget_layout.setSpacing(0)
 
         default_row_height = 44
         self.information_table_view = InformationTableView(self)
@@ -50,23 +55,31 @@ class InformationPanel(QtWidgets.QFrame):
         self.information_table_view.track_clicked.connect(self.track_clicked.emit)
         self.information_table_view.track_double_clicked.connect(self.track_double_clicked.emit)
 
-        self.playing_tracks_widget_layout.addWidget(QLabel("Playing Tracks"))
+        self.information_panel_combo_box = TransparentComboBox(self)
+        # self.information_panel_combo_box.setStyleSheet("background-color: red")
+        self.information_panel_combo_box.addItem("Playing Tracks")
+        # self.information_panel_combo_box.resize(self.information_panel_combo_box.sizeHint())
+        self.information_panel_combo_box.setFixedHeight(24)
+
+        self.playing_tracks_widget_layout.addWidget(self.information_panel_combo_box)
         self.playing_tracks_widget_layout.addWidget(self.information_table_view)
 
-        self.track_info_widget = QFrame()
+        self.track_info_widget = QFrame(self)
+        self.track_info_widget.setContentsMargins(0, 0, 0, 0)
         self.track_info_widget_layout = QVBoxLayout(self.track_info_widget)
         self.track_info_widget_layout.setContentsMargins(0, 0, 0, 0)
-        self.track_info_scroll_area = QScrollArea()
+        self.track_info_scroll_area = QScrollArea(self)
         self.track_info_scroll_area.setWidgetResizable(True)
         self.track_info_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.track_info_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.track_info_scroll_area_widget = QWidget()
+        self.track_info_scroll_area_widget = QWidget(self)
         self.track_info_scroll_area_widget_layout = QVBoxLayout(self.track_info_scroll_area_widget)
         self.track_info_scroll_area_widget_layout.setContentsMargins(0, 0, 0, 0)
         self.track_info_scroll_area_widget_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.track_info_scroll_area.setWidget(self.track_info_scroll_area_widget)
 
         self.currently_playing_track_title = ElidedLabel("No Track")
+        # self.currently_playing_track_title.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.currently_playing_track_info = ElidedLabel("No Info")
         # self.currently_playing_track_info.setStyleSheet("background-color: red")
 
@@ -76,7 +89,6 @@ class InformationPanel(QtWidgets.QFrame):
         self.currently_playing_track_image_label = SpecificImageLabel(artwork_pixmap)
         self.currently_playing_track_image_label.setUpdatesEnabled(True)
         self.currently_playing_track_image_label.setAlignment(Qt.AlignmentFlag.AlignTop)
-        # self.currently_playing_track_image_label.anc
 
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_title)
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_info)
@@ -91,6 +103,7 @@ class InformationPanel(QtWidgets.QFrame):
         self.vertical_splitter.setSizes([1, 1])
         self.main_layout.addWidget(self.vertical_splitter)
         self.artwork_pixmap = QPixmap(f"icons/album.png")
+        # self.main_layout.setSpacing(0)
         # self.set_currently_playing_track(TracksRepository().get_tracks())
 
     def set_playing_tracks(self, tracks: List[Track]) -> None:

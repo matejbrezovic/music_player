@@ -4,7 +4,7 @@ from PyQt6 import QtWidgets, QtCore
 from PyQt6.QtCore import QSize, QEvent, QModelIndex
 from PyQt6.QtWidgets import *
 
-from auto_resizing_header_view_test import HeaderView
+# from auto_resizing_header_view_test import HeaderView
 from data_models.track import Track
 from models.track_table_view import TrackTableView
 from utils import *
@@ -25,6 +25,7 @@ class TrackViewWidget(QWidget):
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setSpacing(0)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.header_splitter = HeaderSplitter()
@@ -33,7 +34,8 @@ class TrackViewWidget(QWidget):
         self.header_splitter.setHandleWidth(2)
         self.header_splitter.resized.connect(self.update_column_width)
         self.header_splitter.splitterMoved.connect(self.update_column_width)
-        self.header_splitter.setStyleSheet("QSplitter::handle{background: red;}")
+        self.header_splitter.setStyleSheet("QSplitter {background-color: white;}"
+                                           "QSplitter::handle{background: black;}")
 
         # self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
 
@@ -50,7 +52,7 @@ class TrackViewWidget(QWidget):
         self.table_view.horizontalHeader().setVisible(False)
         self.table_view.setShowGrid(False)
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.table_view.setIconSize(QSize(22, 22))
@@ -71,8 +73,8 @@ class TrackViewWidget(QWidget):
         # self.table_view.setHorizontalHeader(header)
         # self.table_view.setTextElideMode(Qt.TextElideMode.ElideNone)
 
-        self._focus_frame = FocusFrame(self.table_view)
-        self._focus_frame.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
+        # self._focus_frame = FocusFrame(self.table_view)
+        # self._focus_frame.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
         first_col_width = 26
         second_col_width = 20

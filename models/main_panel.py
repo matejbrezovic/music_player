@@ -3,12 +3,13 @@ from typing import List
 
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
-from PyQt6.QtWidgets import QComboBox, QVBoxLayout
+from PyQt6.QtWidgets import QVBoxLayout
 
 from constants import *
 from data_models.track import Track
 from models.track_view_widget import TrackViewWidget
 from tag_manager import TagManager
+from utils import TransparentComboBox
 
 
 class MainPanel(QtWidgets.QFrame):
@@ -19,7 +20,7 @@ class MainPanel(QtWidgets.QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.displayed_tracks = []
-        self.setStyleSheet("MainPanel {background-color: rgba(255, 255, 0, 0.3)}")
+        self.setStyleSheet("MainPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(MAIN_PANEL_MIN_WIDTH)
         self.tag_manager = TagManager()
         self.track_view_widget = TrackViewWidget(self)
@@ -34,12 +35,13 @@ class MainPanel(QtWidgets.QFrame):
             3: "Artists",
         }
 
-        self.view_options_combo_box = QComboBox(self)
-        self.view_options_combo_box.setFixedWidth(150)
+        self.view_options_combo_box = TransparentComboBox(self)
+        self.view_options_combo_box.setFixedSize(150, 24)
         self.view_options_combo_box.currentIndexChanged.connect(self.view_key_changed)
         self.view_options_combo_box.addItems(self.view_options.values())
 
         self.main_layout = QVBoxLayout(self)
+        self.main_layout.setSpacing(0)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.main_layout.addWidget(self.view_options_combo_box)

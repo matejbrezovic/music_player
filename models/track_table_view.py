@@ -10,6 +10,8 @@ from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeader
 
 from constants import *
 from data_models.track import Track
+from models.app import App
+from models.audio_controller import AudioController
 from repositories.tracks_repository import TracksRepository
 from utils import get_artwork_pixmap, format_seconds
 

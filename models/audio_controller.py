@@ -5,7 +5,7 @@ from PyQt6 import QtCore
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QUrl, pyqtSignal, QPoint
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
-    QFrame
+    QFrame, QWidget
 
 from constants import *
 from data_models.track import Track
@@ -27,6 +27,8 @@ class AudioController(QtWidgets.QFrame):
         self.setStyleSheet("QFrame#audio_controller {background-color: rgba(0, 0, 88, 0.3)}")
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
+        self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
         self.current_playlist = AudioPlaylist()
         self.total_queue_time = 0
         self._rounded_remaining_queue_time = 0  # doesn't update while track is playing
@@ -40,6 +42,10 @@ class AudioController(QtWidgets.QFrame):
         self.play_button = QPushButton(self)
         self.prev_button = QPushButton(self)
         self.next_button = QPushButton(self)
+
+        # self.play_button.setStyleSheet("background: transparent")
+        # self.prev_button.setStyleSheet("background: transparent")
+        # self.next_button.setStyleSheet("background: transparent")
 
         self.play_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.prev_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
@@ -151,6 +157,10 @@ class AudioController(QtWidgets.QFrame):
         self.main_layout.addWidget(self.left_part)
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
+
+        # for child in self.children():
+        #     if isinstance(child, QWidget):
+        #         child.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
     def update_total_queue_time(self, time_in_secs: int) -> None:
         self.total_queue_time = time_in_secs
