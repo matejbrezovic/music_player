@@ -56,7 +56,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
         return track_counts
 
-    def get_tracks_by(self, key: str, value: Union[str, int]) -> Iterable[Track]:
+    def get_tracks_by(self, key: str, value: Union[str, int]) -> List[Track]:
         # start = time.time()
 
         conn = self.get_connection()

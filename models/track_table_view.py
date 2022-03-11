@@ -1,3 +1,4 @@
+from __future__ import annotations
 import sys
 import time
 from typing import List, Optional, Any
@@ -89,6 +90,14 @@ class TrackTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(MAIN_PANEL_COLUMN_NAMES)
 
+    def headerData(self, section: int, orientation: QtCore.Qt.Orientation,
+                   role: QtCore.Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return MAIN_PANEL_COLUMN_NAMES[section]
+            return f"{section}"
+        return None
+
     def set_paused(self) -> None:
         self.is_playing = False
         if self.playing_track_index is not None:
@@ -109,9 +118,9 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 
 
 class TrackTableItemDelegate(QStyledItemDelegate):
-    def __init__(self, parent: QTableView = None):
+    def __init__(self, parent: TrackTableView = None):
         super().__init__(parent)
-        self._table_view: QTableView = parent
+        self._table_view: TrackTableView = parent
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         painter.setPen(QPen(Qt.PenStyle.NoPen))
@@ -161,7 +170,26 @@ class TrackTableItemDelegate(QStyledItemDelegate):
                 elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
                                                                    option.rect.width())
                 alignment = Qt.AlignmentFlag.AlignVCenter if index.column() else Qt.AlignmentFlag.AlignCenter
+
+                # padding = 4
+                option.rect.setLeft(option.rect.left() + self._table_view.padding)
                 painter.drawText(option.rect, alignment, elided_text)
+
+
+class TrackTableHeader(QHeaderView):
+    def __init__(self, orientation: Qt.Orientation, parent: TrackTableView = None):
+        super().__init__(orientation, parent)
+        self.padding = parent.padding
+
+    def text(self, section):
+        if isinstance(self.model(), QtCore.QAbstractItemModel):
+            return self.model().headerData(section, self.orientation())
+
+    def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logicalIndex: int) -> None:
+        elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logicalIndex), Qt.TextElideMode.ElideRight,
+                                                                self.sectionSize(logicalIndex))
+        rect.setLeft(rect.left() + self.padding)
+        painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
 
 
 class TrackTableView(QTableView):
@@ -171,8 +199,8 @@ class TrackTableView(QTableView):
     def __init__(self, parent=None):
         super().__init__(parent)
         self._tracks: List[Track] = []
-        self.verticalHeader().setDefaultSectionSize(22)
-        self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+
+        self.padding = 4
 
         # self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
         self._table_model = TrackTableModel(self)
@@ -181,12 +209,28 @@ class TrackTableView(QTableView):
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
         # self.clicked.connect(lambda index: print(index.row()))
+        self._table_header = TrackTableHeader(Qt.Orientation.Horizontal, self)
+        self.setHorizontalHeader(self._table_header)
+
+        self.horizontalHeader().setStyleSheet(f"QHeaderView::item {{padding {self.padding};}}")
+
+        self.verticalHeader().setDefaultSectionSize(22)
+        self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
 
         self.context_menu = QMenu(self)
         self.context_menu.setContentsMargins(0, 0, 0, 0)
+
         self.play_now_action = QAction("Play Now", self)
         self.play_now_action.triggered.connect(lambda event: self.play_now_action_triggered(event))
         self.context_menu.addAction(self.play_now_action)
+
+        self.queue_now_action = QAction("Queue Now", self)
+        self.queue_now_action.triggered.connect(lambda event: self.queue_now_action_triggered(event))
+        self.context_menu.addAction(self.queue_now_action)
+
+        self.queue_next_action = QAction("Queue Next", self)
+        self.queue_now_action.triggered.connect(lambda event: self.queue_next_action_triggered(event))
+        self.context_menu.addAction(self.queue_next_action)
 
 
     # def eventFilter(self, source: QTableView, event) -> bool:
@@ -215,6 +259,12 @@ class TrackTableView(QTableView):
         # print(self.selected_track_indexes)
         # print([self._tracks[i] for i in self.selected_track_indexes])
         self.play_now_triggered.emit([self._tracks[i] for i in self.selected_track_indexes])
+
+    def queue_now_action_triggered(self, event):
+        ...
+
+    def queue_next_action_triggered(self, event):
+        ...
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks
@@ -251,7 +301,8 @@ class TestMainWindow(QtWidgets.QMainWindow):
 
         self.table_view.horizontalHeader().setMinimumSectionSize(20)
         self.table_view.verticalHeader().setVisible(False)
-        self.table_view.horizontalHeader().setVisible(False)
+        # self.table_view.horizontalHeader().setVisible(False)
+
         self.table_view.setShowGrid(False)
         self.table_view.setStyleSheet(SELECTION_STYLESHEET)
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
@@ -260,14 +311,54 @@ class TestMainWindow(QtWidgets.QMainWindow):
         self.table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
-        start = time.time()
+        # self.view = QTableView(self)
+        # self.view.setModel(self.tableModel)
+        # self.table_view.horizontalHeader().setResizeMode(QHeaderView.Interactive)
+        # Added these two lines
+        self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.table_view.horizontalHeader().setStretchLastSection(True)
+
+        # start = time.time()
         self.table_view.set_tracks(TracksRepository().get_tracks_by("album", None))
-        print(f"Test loaded in: {time.time() - start:.6f} s")
+        # print(f"Test loaded in: {time.time() - start:.6f} s")
 
         self.vbox.addWidget(self.table_view)
         self.vbox.addWidget(QPushButton())
 
         self.setCentralWidget(self.widget)
+
+        # ===== ADDITION
+
+        self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # Mode set to Interactive to allow resizing
+        self.table_view.horizontalHeader().setMinimumSectionSize(10)
+
+        hideButton = QPushButton('Hide Column')
+        hideButton.clicked.connect(self.hideColumn)
+
+        unhideButton = QPushButton('Unhide Column')
+        unhideButton.clicked.connect(self.unhideColumn)
+
+    def hideColumn(self):
+        self.table_view.model().setColumnCount(1)
+
+    def unhideColumn(self):
+        self.table_view.model().setColumnCount(10)
+
+    # Added a reimplementation of the resize event
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        tableSize = self.table_view.width()
+        sideHeaderWidth = self.table_view.verticalHeader().width()
+        tableSize -= sideHeaderWidth
+        numberOfColumns = self.table_view.model().columnCount()
+
+        remainingWidth = tableSize % numberOfColumns
+        for columnNum in range(self.table_view.model().columnCount()):
+            if remainingWidth > 0:
+                self.table_view.setColumnWidth(columnNum, int(tableSize / numberOfColumns) + 1)
+                remainingWidth -= 1
+            else:
+                self.table_view.setColumnWidth(columnNum, int(tableSize / numberOfColumns))
 
 
 if __name__ == '__main__':

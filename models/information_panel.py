@@ -35,7 +35,6 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_widget_layout = QVBoxLayout(self.playing_tracks_widget)
         self.playing_tracks_widget_layout.setContentsMargins(0, 0, 0, 0)
         self.playing_tracks_widget_layout.setSpacing(0)
-
         default_row_height = 44
         self.information_table_view = InformationTableView(self)
         self.information_table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)

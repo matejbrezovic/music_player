@@ -5,6 +5,7 @@
 # socket.socket = guard
 
 import sys
+import time
 
 from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
@@ -156,7 +157,9 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
 
 if __name__ == '__main__':
+    start = time.time()
     app = App(sys.argv)
     main_window = MainWindowUi()
     main_window.show()
+    print(f"Window shown in: {time.time() - start:.6f}")
     sys.exit(app.exec())

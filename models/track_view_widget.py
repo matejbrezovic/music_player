@@ -46,11 +46,15 @@ class TrackViewWidget(QWidget):
             self.header_splitter.setCollapsible(i, False)
 
         self.table_view = TrackTableView(self)
-        # self.table_view.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        # self.table_view.setStyleSheet("""
+        # QTableView::item{padding: 10px;}
+        # """)
+        # self.table_view.horizontalHeader().pa
         self.table_view.horizontalHeader().setMinimumSectionSize(4)
+        self.table_view.horizontalHeader().setDefaultAlignment(Qt.AlignmentFlag.AlignLeft)
         self.table_view.verticalHeader().setVisible(False)
-        self.table_view.horizontalHeader().setVisible(False)
-        self.table_view.setShowGrid(False)
+        # self.table_view.horizontalHeader().setVisible(False)
+        # self.table_view.setShowGrid(False)
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
@@ -96,7 +100,7 @@ class TrackViewWidget(QWidget):
         self.table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
         self.table_view.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
 
-        self.main_layout.addWidget(self.header_splitter)
+        # self.main_layout.addWidget(self.header_splitter)
         self.main_layout.addWidget(self.table_view)
 
         # self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
