@@ -13,7 +13,6 @@ class SpecificImageLabel(QLabel):
         self.pixmap = pixmap
         self.setStyleSheet("background-color: green;")
         size_policy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)  # Very important!
-        # size_policy.setHeightForWidth(True)
         size_policy.setWidthForHeight(True)
         self.setSizePolicy(size_policy)
 
@@ -23,15 +22,19 @@ class SpecificImageLabel(QLabel):
         self.setPixmap(self.pixmap)
         self.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        self.resize_counter = 0
+
     def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
+        self.resize_counter += 1
+        if self.resize_counter > 100:
+            self.resize_counter = 0
+            return
+
         if self.pixmap is None:
             return
         if self.pixmap.width() != 0 and self.width() != 0:
             displayed_pixmap = self.pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation)
             self.setPixmap(displayed_pixmap)
-
-    # def heightForWidth(self, width: int) -> int:
-    #     return width
 
     def setPixmap(self, new_pixmap: QPixmap) -> None:
         super().setPixmap(new_pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation))

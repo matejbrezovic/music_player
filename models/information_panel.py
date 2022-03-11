@@ -30,7 +30,8 @@ class InformationPanel(QtWidgets.QFrame):
 
         self.vertical_splitter = QSplitter(Qt.Orientation.Vertical)
         self.vertical_splitter.setHandleWidth(0)
-        self.playing_tracks_widget = QFrame(self)
+        self.playing_tracks_widget = QWidget(self)
+        self.playing_tracks_widget.setStyleSheet("border: none")
         self.playing_tracks_widget.setContentsMargins(0, 0, 0, 0)
         self.playing_tracks_widget_layout = QVBoxLayout(self.playing_tracks_widget)
         self.playing_tracks_widget_layout.setContentsMargins(0, 0, 0, 0)
@@ -63,7 +64,8 @@ class InformationPanel(QtWidgets.QFrame):
         self.playing_tracks_widget_layout.addWidget(self.information_panel_combo_box)
         self.playing_tracks_widget_layout.addWidget(self.information_table_view)
 
-        self.track_info_widget = QFrame(self)
+        self.track_info_widget = QWidget(self)
+        self.track_info_widget.setStyleSheet("border: none")
         self.track_info_widget.setContentsMargins(0, 0, 0, 0)
         self.track_info_widget_layout = QVBoxLayout(self.track_info_widget)
         self.track_info_widget_layout.setContentsMargins(0, 0, 0, 0)

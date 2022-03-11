@@ -7,7 +7,7 @@ from PyQt6 import QtCore, QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QEvent, QItemSelectionModel
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction
 from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
-    QStyledItemDelegate, QToolButton, QMenu, QVBoxLayout, QPushButton, QWidget
+    QStyledItemDelegate, QToolButton, QMenu, QVBoxLayout, QPushButton, QWidget, QStyleOptionHeader
 
 from constants import *
 from data_models.track import Track
@@ -94,6 +94,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                    role: QtCore.Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
+                print(f"Got data:", section)
                 return MAIN_PANEL_COLUMN_NAMES[section]
             return f"{section}"
         return None
@@ -180,16 +181,29 @@ class TrackTableHeader(QHeaderView):
     def __init__(self, orientation: Qt.Orientation, parent: TrackTableView = None):
         super().__init__(orientation, parent)
         self.padding = parent.padding
+        self.setSectionsClickable(True)
+        self.setSortIndicatorShown(True)
+        self.setSectionsMovable(True)
+        self.setFirstSectionMovable(False)
 
-    def text(self, section):
+        self.section_text = MAIN_PANEL_COLUMN_NAMES
+
+    def text(self, section: int):
         if isinstance(self.model(), QtCore.QAbstractItemModel):
-            return self.model().headerData(section, self.orientation())
+            return self.section_text[section]
 
-    def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logicalIndex: int) -> None:
-        elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logicalIndex), Qt.TextElideMode.ElideRight,
-                                                                self.sectionSize(logicalIndex))
-        rect.setLeft(rect.left() + self.padding)
-        painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
+    def initStyleOptionForIndex(self, option: QStyleOptionHeader, section_index: int) -> None:
+        text = self.section_text[section_index]
+        elided_text: str = self.fontMetrics().elidedText(text, Qt.TextElideMode.ElideRight, self.sectionSize(section_index))
+        option.text = elided_text
+        # print(section_index, option.text, self.sectionSize(section_index))
+        super().initStyleOptionForIndex(option, section_index)
+
+    # def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logicalIndex: int) -> None:
+    #     elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logicalIndex), Qt.TextElideMode.ElideRight,
+    #                                                             self.sectionSize(logicalIndex))
+    #     rect.setLeft(rect.left() + self.padding)
+    #     painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
 
 
 class TrackTableView(QTableView):

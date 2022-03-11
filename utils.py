@@ -5,7 +5,7 @@ import mutagen
 from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
-from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap
+from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QTableWidget, \
     QVBoxLayout, QWidget, QComboBox
 from mutagen import MutagenError
@@ -110,7 +110,7 @@ class SpecificImageLabel(QLabel):
     def __init__(self, pixmap: QPixmap, parent=None):
         super().__init__(parent)
         self.pixmap = pixmap
-        self.setStyleSheet("background-color: red;")
+        # self.setStyleSheet("background-color: red;")
         # self.setMinimumWidth(super().minimumWidth())
 
         size_policy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)  # Very important!
@@ -121,10 +121,15 @@ class SpecificImageLabel(QLabel):
         if self.pixmap.width() != 0:
             self.pixmap = self.pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation)
 
+        self.resize_counter = 0
         self.setPixmap(self.pixmap)
         self.setAlignment(Qt.AlignmentFlag.AlignTop)
 
     def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
+        self.resize_counter += 1
+        if self.resize_counter > 100:
+            self.resize_counter = 0
+            return
         print(self.width())
         if self.pixmap is None:
             return
@@ -165,6 +170,45 @@ class FixedHorizontalSplitter(QSplitter):
         self.last_sizes = self.sizes()
         self.splitterMoved.connect(self.splitter_moved)
 
+        palette = QPalette()
+        # for color in QPalette.ColorRole:
+        #     print(color)
+        #     palette.setColor(color, Qt.GlobalColor.red)
+
+        # palette.setColor(QPalette.ColorRole.Window, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.Base, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.AlternateBase, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.Button, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.PlaceholderText, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.NoRole, Qt.GlobalColor.red)
+
+        # palette.setColor(QPalette.ColorRole.Light, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.Midlight, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.Dark, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.Mid, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.Shadow, Qt.GlobalColor.red)
+        palette.setColor(QPalette.ColorRole.Highlight, 244)
+        # palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.Link, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.LinkVisited, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.NoRole, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.NoRole, Qt.GlobalColor.red)
+        # palette.setColor(QPalette.ColorRole.NoRole, Qt.GlobalColor.red)
+
+
+
+
+        # palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.red)
+
+
+        self.setPalette(palette)
+
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
         try:
@@ -179,6 +223,9 @@ class FixedHorizontalSplitter(QSplitter):
 
     def splitter_moved(self) -> None:
         self.last_sizes = self.sizes()
+
+    # def paintEvent(self, e: QtGui.QPaintEvent) -> None:
+    #
 
 
 class QHLine(QFrame):

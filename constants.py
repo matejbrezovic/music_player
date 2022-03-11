@@ -40,6 +40,7 @@ LOST_FOCUS_STYLESHEET = f"QTableView {{selection-background-color: {LOST_FOCUS_C
                         f"selection-color: black; border: 0px}}"
 
 MAIN_PANEL_COLUMN_NAMES = ("", "", "Artist", "Title", "Album", "Year", "Genre", "Rating", "Time")
+MAIN_PANAL_VIEW_OPTIONS = ("Tracks", "Album and Tracks", "Album Covers", "Artists")
 GROUP_OPTIONS = ("Album", "Artist", "Composer", "Folder", "Genre", "Year")
 
 # Audio settings

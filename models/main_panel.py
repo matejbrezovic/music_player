@@ -28,23 +28,11 @@ class MainPanel(QtWidgets.QFrame):
         self.track_view_widget.track_double_clicked.connect(self.track_double_clicked.emit)
         self.track_view_widget.play_now_triggered.connect(self.play_now_triggered.emit)
 
-        self.view_options = {
-            0: "Tracks",
-            1: "Album and Tracks",
-            2: "Album Covers",
-            3: "Artists",
-        }
-
-        self.view_options_combo_box = TransparentComboBox(self)
-        self.view_options_combo_box.setFixedSize(150, 24)
-        self.view_options_combo_box.currentIndexChanged.connect(self.view_key_changed)
-        self.view_options_combo_box.addItems(self.view_options.values())
-
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setSpacing(0)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.main_layout.addWidget(self.view_options_combo_box)
+        # self.main_layout.addWidget(self.view_options_combo_box)
         self.main_layout.addWidget(self.track_view_widget)
 
     def view_key_changed(self) -> None:
