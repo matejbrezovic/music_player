@@ -104,8 +104,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         QSplitter::handle {background-color: rgba(0, 0, 0, 0.2);}
         """)
         self.horizontal_splitter.setChildrenCollapsible(False)
-        # self.horizontal_splitter.setHandleWidth(2)
-        self.horizontal_splitter.setOpaqueResize(False)
+        # self.horizontal_splitter.setOpaqueResize(False)
 
         self.central_widget_layout.addWidget(self.header_menu)
         self.central_widget_layout.addWidget(self.horizontal_splitter)

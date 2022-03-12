@@ -115,16 +115,16 @@ class SpecificImageLabel(QLabel):
         if self.pixmap.width() != 0:
             self.pixmap = self.pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation)
 
-        self.resize_counter = 0
+        # self.resize_counter = 0
         self.setPixmap(self.pixmap)
         self.setAlignment(Qt.AlignmentFlag.AlignTop)
 
     def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
-        self.resize_counter += 1
-        if self.resize_counter > 100:
-            self.resize_counter = 0
-            return
-        print(self.width())
+        # self.resize_counter += 1
+        # if self.resize_counter > 100:
+        #     self.resize_counter = 0
+        #     return
+        # print(self.width())
         if self.pixmap is None:
             return
         if self.pixmap.width() != 0 and self.width() != 0:
@@ -213,7 +213,7 @@ class QHLine(QFrame):
         self.setFrameShadow(QFrame.Shadow.Sunken)
 
 
-class AlwaysVisibleScrollBar(QScrollBar):  # TODO make scroll bar always visible
+class AlwaysVisibleScrollBarProxyStyle(QProxyStyle):  # TODO make scroll bar always visible (deprecated)
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -228,6 +228,23 @@ class AlwaysVisibleScrollBar(QScrollBar):  # TODO make scroll bar always visible
     #     if not size.height():
     #         size.setHeight(50)
     #     return size
+
+    def drawComplexControl(self,
+                           control: QStyle.ComplexControl,
+                           option: 'QStyleOptionComplex',
+                           painter: QtGui.QPainter,
+                           widget: typing.Optional[QWidget] = ...) -> None:
+
+        print(control)
+        if control == QStyle.ComplexControl.CC_ScrollBar:
+            print("Scroll")
+            # painter.save()
+            # option.rect.setWidth(10)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor("red"))
+            # painter.drawRect(option.rect)
+            # painter.restore()
+        return super().drawComplexControl(control, option, painter, widget)
 
 
 

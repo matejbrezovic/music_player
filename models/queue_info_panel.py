@@ -1,14 +1,14 @@
 from typing import List
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QSizePolicy
+from PyQt6.QtWidgets import QWidget, QHBoxLayout, QSizePolicy, QFrame
 
 from data_models.track import Track
 from models.audio_controller import AudioController
 from utils import ClickableLabel, format_seconds
 
 
-class QueueInfoPanel(QWidget):
+class QueueInfoPanel(QFrame):
     # right_label_clicked = pyqtSignal()
 
     def __init__(self, audio_controller: AudioController, parent=None):
@@ -38,6 +38,8 @@ class QueueInfoPanel(QWidget):
 
         self.horizontal_layout.addWidget(self.left_label)
         self.horizontal_layout.addWidget(self.right_label)
+
+        self.setStyleSheet("QueueInfoPanel {border-top: 1px solid rgba(0, 0, 0, 0.2);}")
 
     def left_label_clicked(self):
         if not self.left_label.text():

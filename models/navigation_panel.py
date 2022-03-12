@@ -26,7 +26,6 @@ class NavigationPanel(QFrame):
         default_row_height = 56
         self.navigation_table_view = NavigationTableView()
         self.navigation_table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
-        # self.navigation_table_view.setVerticalScrollMode(QScrollBar.Sc)
         self.navigation_table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.navigation_table_view.setShowGrid(False)
         self.navigation_table_view.verticalHeader().setDefaultSectionSize(default_row_height + 4)

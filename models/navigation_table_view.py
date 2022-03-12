@@ -1,7 +1,7 @@
 from typing import List, Any
 
 from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QTimer
 from PyQt6.QtGui import QIcon, QPen, QBrush, QPainter
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle, \
     QStyleOptionViewItem, QApplication
@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyl
 from constants import *
 from data_models.navigation_group import NavigationGroup
 from repositories.cached_tracks_repository import CachedTracksRepository
-from utils import ElidedLabel, AlwaysVisibleScrollBar
+from utils import ElidedLabel, AlwaysVisibleScrollBarProxyStyle
 
 
 class NavigationTableModel(QtCore.QAbstractTableModel):
@@ -117,19 +117,12 @@ class NavigationTableView(QTableView):
         self._table_delegate = NavigationTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
-        self.setVerticalScrollBar(AlwaysVisibleScrollBar())
+        # self.setStyle(AlwaysVisibleScrollBarProxyStyle())
 
-        self.clicked.connect(self.temp)
-        self.doubleClicked.connect(lambda index: self.group_double_clicked.emit(
-            CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)))
+        self.clicked.connect(self.single_click_action)
+        self.doubleClicked.connect(self.double_click_action)
 
-    def temp(self, index):
-        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
-        # print(tracks)
-        # TEST_TRACKS = tracks
-        # global_timer.timer_init()
-        # global_timer.start()
-        self.group_clicked.emit(tracks)
+        # self.click_timer = QTimer()
 
     def set_group_key(self, key: str) -> None:
         self.group_key = key
@@ -146,6 +139,23 @@ class NavigationTableView(QTableView):
 
     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
         return super().focusOutEvent(event)
+
+    # def g_clicked(self, index):
+    #     self.click_timer.singleShot(80, lambda: self.perform_single_click_action(index))
+    #
+    # def g_double_clicked(self, index):
+    #     self.click_timer.stop()
+    #     self.group_double_clicked.emit(
+    #         CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title))
+
+    def single_click_action(self, index):
+        # print("click")
+        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
+        self.group_clicked.emit(tracks)
+
+    def double_click_action(self, index):
+        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
+        self.group_double_clicked.emit(tracks)
 
 
 class NavigationGroupWidget(QWidget):

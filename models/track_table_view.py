@@ -13,6 +13,7 @@ from constants import *
 from data_models.track import Track
 from models.app import App
 from models.audio_controller import AudioController
+from repositories.cached_tracks_repository import CachedTracksRepository
 from repositories.tracks_repository import TracksRepository
 from utils import get_artwork_pixmap, format_seconds
 
@@ -248,6 +249,9 @@ class TrackTableView(QTableView):
         self.queue_last_action.triggered.connect(lambda event: self.queue_last_action_triggered(event))
         self.context_menu.addAction(self.queue_last_action)
 
+        # self.set_tracks(CachedTracksRepository().get_tracks())
+        # self.set_tracks([])
+
     # def eventFilter(self, source: QTableView, event) -> bool:
     #     if event.type() == QEvent.Type.ContextMenu and source is self:
     #         menu = QMenu()
@@ -311,6 +315,9 @@ class TrackTableView(QTableView):
 
     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
         return super().focusOutEvent(event)
+
+    # def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
+
 
 
 class TestMainWindow(QtWidgets.QMainWindow):

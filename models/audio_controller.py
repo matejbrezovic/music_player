@@ -13,7 +13,7 @@ from utils import get_formatted_time, format_player_position_to_seconds, TrackNo
     ImprovedSlider
 
 
-class AudioController(QtWidgets.QFrame):
+class AudioController(QFrame):
     updated_playing_track = pyqtSignal(Track)
     updated_playlist = pyqtSignal(list)
     paused = pyqtSignal(Track)
