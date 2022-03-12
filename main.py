@@ -15,6 +15,7 @@ from data_models.track import Track
 from models.add_files_dialog import AddFilesDialog
 from models.app import App
 from models.audio_controller import AudioController
+from models.header_menu import HeaderMenu
 from models.information_panel import InformationPanel
 from models.main_panel import MainPanel
 from models.navigation_panel import NavigationPanel
@@ -32,7 +33,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # TracksRepository().create_groups()
         self._setup_ui()
 
-        self.setWindowTitle('music player v0.0.11')
+        self.setWindowTitle('music player v0.0.12')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
@@ -86,7 +87,9 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.information_panel = InformationPanel(self)
         self.audio_controller = AudioController(self)
         self.queue_info_panel = QueueInfoPanel(self.audio_controller, self)
-        self.horizontal_splitter = FixedHorizontalSplitter()
+        self.header_menu = HeaderMenu(self)
+        self.horizontal_splitter = FixedHorizontalSplitter(self)
+        self.horizontal_splitter.sizes_changed.connect(self.header_menu.set_sizes)
 
         self.horizontal_splitter.addWidget(self.navigation_panel)
         self.horizontal_splitter.addWidget(self.main_panel)
@@ -105,6 +108,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # self.horizontal_splitter.setHandleWidth(2)
         self.horizontal_splitter.setOpaqueResize(False)
 
+        self.central_widget_layout.addWidget(self.header_menu)
         self.central_widget_layout.addWidget(self.horizontal_splitter)
         self.central_widget_layout.addWidget(self.queue_info_panel)
         self.central_widget_layout.addWidget(self.audio_controller)
@@ -114,6 +118,10 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.add_files_dialog.finished.connect(self.navigation_panel.refresh_groups)
 
         # self.main_panel.track_clicked.connect(lambda: ...)  # TODO
+
+        self.header_menu.navigation_panel_group_key_changed.connect(self.navigation_panel.group_key_changed)
+        self.header_menu.main_panel_view_key_changed.connect(self.main_panel.view_key_changed)
+        self.header_menu.information_panel_view_key_changed.connect(self.information_panel.view_key_changed)
 
         self.main_panel.track_double_clicked.connect(
             lambda track, index: (self.queue_info_panel.update_info(self.main_panel.displayed_tracks),

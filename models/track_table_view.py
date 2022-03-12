@@ -94,7 +94,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                    role: QtCore.Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                print(f"Got data:", section)
+                # print(f"Got data:", section)
                 return MAIN_PANEL_COLUMN_NAMES[section]
             return f"{section}"
         return None

@@ -122,6 +122,7 @@ class NavigationTableView(QTableView):
         self.doubleClicked.connect(lambda index: self.group_double_clicked.emit(
             CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)))
 
+
     def temp(self, index):
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
         # print(tracks)
@@ -137,6 +138,7 @@ class NavigationTableView(QTableView):
         self.groups = groups
         self._table_model.set_groups(groups)
         self._table_delegate.set_groups(groups)
+        print(self.groups)
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
         if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:

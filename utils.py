@@ -1,13 +1,14 @@
 import datetime
+import typing
 from typing import Optional
 
 import mutagen
 from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, pyqtSignal, QSize
-from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette
+from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette, QPaintEvent
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QTableWidget, \
-    QVBoxLayout, QWidget, QComboBox
+    QVBoxLayout, QWidget, QComboBox, QStyle, QStyleOptionFocusRect, QStyleOption, QStyleOptionComplex, QProxyStyle
 from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
@@ -48,8 +49,8 @@ def delete_grid_layout_items(layout: QGridLayout) -> None:
 
 
 class ElidedLabel(QLabel):
-    clicked = pyqtSignal(QLabel)
-    double_clicked = pyqtSignal(QLabel)
+    # clicked = pyqtSignal(QLabel)
+    # double_clicked = pyqtSignal(QLabel)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*tuple(map(str, args)) if args else "", **kwargs)
@@ -164,6 +165,8 @@ class ClickableLabel(QLabel):
 
 
 class FixedHorizontalSplitter(QSplitter):
+    sizes_changed = pyqtSignal(list)
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOrientation(Qt.Orientation.Horizontal)
@@ -193,7 +196,9 @@ class FixedHorizontalSplitter(QSplitter):
         # palette.setColor(QPalette.ColorRole.Dark, Qt.GlobalColor.red)
         # palette.setColor(QPalette.ColorRole.Mid, Qt.GlobalColor.red)
         # palette.setColor(QPalette.ColorRole.Shadow, Qt.GlobalColor.red)
-        palette.setColor(QPalette.ColorRole.Highlight, 244)
+        # palette.setColor(QPalette.ColorRole.Highlight, 244)
+        # palette.setColor(QPalette.ColorRole.Midlight, QColor(200, 200, 200, 255))
+        # palette.setColor(QPalette.ColorRole.Dark)
         # palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.red)
         # palette.setColor(QPalette.ColorRole.Link, Qt.GlobalColor.red)
         # palette.setColor(QPalette.ColorRole.LinkVisited, Qt.GlobalColor.red)
@@ -201,13 +206,32 @@ class FixedHorizontalSplitter(QSplitter):
         # palette.setColor(QPalette.ColorRole.NoRole, Qt.GlobalColor.red)
         # palette.setColor(QPalette.ColorRole.NoRole, Qt.GlobalColor.red)
 
-
-
+        # self.setStyle(TestProxyStyle())
 
         # palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.red)
+        # style = self.style()
+        # style.setProperty(QStyle.P)
 
+        # self.setPalette(palette)
 
-        self.setPalette(palette)
+    # def paintEvent(self, pe: QPaintEvent) -> None:
+    #     painter = QPainter(self)
+    #     option = QStyleOption()
+    #     option.initFrom(self)
+    #     option.backgroundColor = QColor(100)
+    #     # for p in QStyle.PrimitiveElement:
+    #     #     self.style().drawPrimitive(p, option, painter)
+    #     # for c in QStyle.ComplexControl:
+    #     #     option = QStyleOptionComplex()
+    #     #     option.initFrom(self)
+    #     #     option.backgroundColor = QColor(100)
+    #     #     self.style().drawComplexControl(c, option, painter)
+    #     # for k in QStyle.ControlElement:
+    #     #     option = QStyleOption()
+    #     #     option.initFrom(self)
+    #     #     option.backgroundColor = QColor(100)
+    #     #     self.style().drawControl(k, option, painter)
+    #     self.style().drawPrimitive(QStyle.PrimitiveElement.PE_IndicatorDockWidgetResizeHandle, option, painter, self)
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
@@ -221,11 +245,33 @@ class FixedHorizontalSplitter(QSplitter):
             self.last_sizes = self.sizes()
         self.last_sizes = self.sizes()
 
+        self.sizes_changed.emit(self.sizes())
+
     def splitter_moved(self) -> None:
         self.last_sizes = self.sizes()
+        self.sizes_changed.emit(self.sizes())
 
-    # def paintEvent(self, e: QtGui.QPaintEvent) -> None:
-    #
+
+class TestProxyStyle(QProxyStyle):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def drawControl(self, element: QStyle.ControlElement, option: 'QStyleOption', painter: QtGui.QPainter, widget: Optional[QWidget] = ...) -> None:
+        print("draw control", element)
+        if element == QStyle.ControlElement.CE_ShapedFrame:
+            print("Resize Handle")
+            palette = QPalette()
+            palette.setColor(QPalette.ColorRole.Highlight, 244)
+            option.palette = palette
+            painter.setOpacity(255)
+            painter.setBrush(Qt.GlobalColor.red)
+            painter.setPen(Qt.GlobalColor.green)
+        # super().drawPrimitive(element, option, painter, widget)
+        super().drawControl(element, option, painter, widget)
+
+    def drawComplexControl(self, control: QStyle.ComplexControl, option: 'QStyleOptionComplex', painter: QtGui.QPainter, widget: typing.Optional[QWidget] = ...) -> None:
+        print("draw complex control")
+        super().drawComplexControl(control, option, painter, widget)
 
 
 class QHLine(QFrame):
@@ -329,6 +375,7 @@ class TransparentComboBox(QComboBox):
 
         self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
         self.setUpdatesEnabled(True)
+        self.currentIndexChanged.connect(self.adjustSize)
 
     def sizeHint(self):
         text = self.currentText()
@@ -343,6 +390,7 @@ class TransparentComboBox(QComboBox):
     def leaveEvent(self, *args, **kwargs):
         super().leaveEvent(*args, **kwargs)
         self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
+
 
 
 class TrackNotInPlaylistError(Exception):
