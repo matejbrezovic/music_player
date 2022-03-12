@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QFr
 
 
 class SpecificImageLabel(QLabel):
-    def __init__(self, pixmap: QPixmap, parent=None):
+    def __init__(self, pixmap: QPixmap = None, parent=None):
         super().__init__(parent)
         self.pixmap = pixmap
         self.setStyleSheet("background-color: green;")
@@ -16,10 +16,10 @@ class SpecificImageLabel(QLabel):
         size_policy.setWidthForHeight(True)
         self.setSizePolicy(size_policy)
 
-        if self.pixmap.width() != 0:
+        if self.pixmap and self.pixmap.width() != 0:
             self.pixmap = self.pixmap.scaledToWidth(self.width(), Qt.TransformationMode.SmoothTransformation)
 
-        self.setPixmap(self.pixmap)
+            self.setPixmap(self.pixmap)
         self.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.resize_counter = 0
@@ -60,7 +60,7 @@ class TestWindowUi(QMainWindow):
         self.track_info_scroll_area_widget_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.track_info_scroll_area.setWidget(self.track_info_scroll_area_widget)
 
-        self.currently_playing_track_image_label = SpecificImageLabel(QPixmap("C:/My Files/My Projects/music_player/icons/album.png"))
+        self.currently_playing_track_image_label = SpecificImageLabel()
         self.currently_playing_track_image_label.setUpdatesEnabled(True)
         self.currently_playing_track_image_label.setAlignment(Qt.AlignmentFlag.AlignTop)
 

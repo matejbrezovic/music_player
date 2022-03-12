@@ -4,16 +4,15 @@ from typing import Optional
 
 import mutagen
 from PIL.ImageQt import ImageQt
-from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, pyqtSignal, QSize
-from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette, QPaintEvent
-from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QTableWidget, \
-    QVBoxLayout, QWidget, QComboBox, QStyle, QStyleOptionFocusRect, QStyleOption, QStyleOptionComplex, QProxyStyle
+from PyQt6 import QtGui, QtCore
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint
+from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette, QColor
+from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QWidget, QComboBox, \
+    QStyle, QStyleOption, QStyleOptionComplex, QProxyStyle, \
+    QSlider, QStyleOptionSlider, QScrollBar
 from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
-
-from constants import *
 
 
 def classify(module):
@@ -49,23 +48,17 @@ def delete_grid_layout_items(layout: QGridLayout) -> None:
 
 
 class ElidedLabel(QLabel):
-    # clicked = pyqtSignal(QLabel)
-    # double_clicked = pyqtSignal(QLabel)
-
     def __init__(self, *args, **kwargs):
         super().__init__(*tuple(map(str, args)) if args else "", **kwargs)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
+        self.setContentsMargins(4, 0, 4, 0)
 
     def paintEvent(self, event) -> None:
         metrics = QFontMetrics(self.font())
         elided = metrics.elidedText(self.text(), Qt.TextElideMode.ElideRight, self.width())
-        QPainter(self).drawText(self.rect(), self.alignment(), elided)
-
-    # def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
-    #     self.clicked.emit(self)
-    #
-    # def mouseDoubleClickEvent(self, ev: QtGui.QMouseEvent) -> None:
-    #     self.double_clicked.emit(self)
+        rect = self.rect()
+        rect.setLeft(self.contentsMargins().left() + rect.left())
+        QPainter(self).drawText(rect, self.alignment(), elided)
 
 
 class ImageLabel(QLabel):
@@ -170,68 +163,9 @@ class FixedHorizontalSplitter(QSplitter):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setOrientation(Qt.Orientation.Horizontal)
+        self.setStyle(FixedHorizontalSplitterProxyStyle())
         self.last_sizes = self.sizes()
         self.splitterMoved.connect(self.splitter_moved)
-
-        palette = QPalette()
-        # for color in QPalette.ColorRole:
-        #     print(color)
-        #     palette.setColor(color, Qt.GlobalColor.red)
-
-        # palette.setColor(QPalette.ColorRole.Window, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.WindowText, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.Base, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.AlternateBase, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.Button, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.ButtonText, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.ToolTipText, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.ToolTipBase, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.BrightText, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.PlaceholderText, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.NoRole, Qt.GlobalColor.red)
-
-        # palette.setColor(QPalette.ColorRole.Light, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.Midlight, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.Dark, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.Mid, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.Shadow, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.Highlight, 244)
-        # palette.setColor(QPalette.ColorRole.Midlight, QColor(200, 200, 200, 255))
-        # palette.setColor(QPalette.ColorRole.Dark)
-        # palette.setColor(QPalette.ColorRole.HighlightedText, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.Link, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.LinkVisited, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.NoRole, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.NoRole, Qt.GlobalColor.red)
-        # palette.setColor(QPalette.ColorRole.NoRole, Qt.GlobalColor.red)
-
-        # self.setStyle(TestProxyStyle())
-
-        # palette.setColor(QPalette.ColorRole.Text, Qt.GlobalColor.red)
-        # style = self.style()
-        # style.setProperty(QStyle.P)
-
-        # self.setPalette(palette)
-
-    # def paintEvent(self, pe: QPaintEvent) -> None:
-    #     painter = QPainter(self)
-    #     option = QStyleOption()
-    #     option.initFrom(self)
-    #     option.backgroundColor = QColor(100)
-    #     # for p in QStyle.PrimitiveElement:
-    #     #     self.style().drawPrimitive(p, option, painter)
-    #     # for c in QStyle.ComplexControl:
-    #     #     option = QStyleOptionComplex()
-    #     #     option.initFrom(self)
-    #     #     option.backgroundColor = QColor(100)
-    #     #     self.style().drawComplexControl(c, option, painter)
-    #     # for k in QStyle.ControlElement:
-    #     #     option = QStyleOption()
-    #     #     option.initFrom(self)
-    #     #     option.backgroundColor = QColor(100)
-    #     #     self.style().drawControl(k, option, painter)
-    #     self.style().drawPrimitive(QStyle.PrimitiveElement.PE_IndicatorDockWidgetResizeHandle, option, painter, self)
 
     def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
         super().resizeEvent(event)
@@ -252,26 +186,24 @@ class FixedHorizontalSplitter(QSplitter):
         self.sizes_changed.emit(self.sizes())
 
 
-class TestProxyStyle(QProxyStyle):
+class FixedHorizontalSplitterProxyStyle(QProxyStyle):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def drawControl(self, element: QStyle.ControlElement, option: 'QStyleOption', painter: QtGui.QPainter, widget: Optional[QWidget] = ...) -> None:
-        print("draw control", element)
-        if element == QStyle.ControlElement.CE_ShapedFrame:
-            print("Resize Handle")
-            palette = QPalette()
-            palette.setColor(QPalette.ColorRole.Highlight, 244)
-            option.palette = palette
-            painter.setOpacity(255)
-            painter.setBrush(Qt.GlobalColor.red)
-            painter.setPen(Qt.GlobalColor.green)
-        # super().drawPrimitive(element, option, painter, widget)
-        super().drawControl(element, option, painter, widget)
-
-    def drawComplexControl(self, control: QStyle.ComplexControl, option: 'QStyleOptionComplex', painter: QtGui.QPainter, widget: typing.Optional[QWidget] = ...) -> None:
-        print("draw complex control")
-        super().drawComplexControl(control, option, painter, widget)
+    def drawControl(self,
+                    element: QStyle.ControlElement,
+                    option: QStyleOption,
+                    painter: QtGui.QPainter,
+                    widget: Optional[QWidget] = ...) -> None:
+        if element == QStyle.ControlElement.CE_RubberBand:
+            painter.save()
+            option.rect.setWidth(10)
+            painter.setPen(Qt.PenStyle.NoPen)
+            painter.setBrush(QColor("grey"))
+            painter.drawRect(option.rect)
+            painter.restore()
+        else:
+            return super().drawControl(element, option, painter, widget)
 
 
 class QHLine(QFrame):
@@ -279,6 +211,24 @@ class QHLine(QFrame):
         super(QHLine, self).__init__()
         self.setFrameShape(QFrame.Shape.HLine)
         self.setFrameShadow(QFrame.Shadow.Sunken)
+
+
+class AlwaysVisibleScrollBar(QScrollBar):  # TODO make scroll bar always visible
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+ #        self.setStyleSheet("""
+ #         QScrollBar::handle:vertical {
+ #     background-color: red;
+ # }
+ #        """)
+
+    # def sizeHint(self) -> QSize:
+    #     size = super().sizeHint()
+    #     if not size.height():
+    #         size.setHeight(50)
+    #     return size
+
 
 
 class HeaderSplitter(QSplitter):
@@ -303,41 +253,6 @@ class PathCheckbox(QCheckBox):
 
     def set_path(self, path: str) -> None:
         self.path = path
-
-
-# class FocusFrame(QFrame): # TODO remove, better fix found
-#     def __init__(self, focus_receiver: QWidget, parent=None):
-#         super().__init__(parent)
-#         self.focus_receiver = focus_receiver
-#         self.layout = QVBoxLayout(self)
-#         self.layout.setContentsMargins(0, 0, 0, 0)
-#         self.setContentsMargins(0, 0, 0, 0)
-#         self.layout.addWidget(focus_receiver)
-#         self.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
-#
-#     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-#         # global_timer.timer_init()
-#         # global_timer.start()
-#         # print("GOT FOCUS")
-#         self.focus_receiver.focusInEvent(event)
-#         # global_timer.stop()
-#
-#     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-#         # print("LOST FOCUS")
-#         self.focus_receiver.focusOutEvent(event)
-
-
-# class ChangeStylesheetOnClickTableWidget(QTableWidget):
-#     def __init__(self, parent=None):
-#         super().__init__(parent)
-#
-#     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-#         self.setStyleSheet(SELECTION_STYLESHEET)
-#         super().focusInEvent(event)
-#
-#     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-#         self.setStyleSheet(LOST_FOCUS_STYLESHEET)
-#         super().focusOutEvent(event)
 
 
 class TransparentComboBox(QComboBox):
@@ -375,7 +290,7 @@ class TransparentComboBox(QComboBox):
 
         self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
         self.setUpdatesEnabled(True)
-        self.currentIndexChanged.connect(self.adjustSize)
+        self.currentIndexChanged.connect(lambda: self.adjustSize())
 
     def sizeHint(self):
         text = self.currentText()
@@ -391,6 +306,50 @@ class TransparentComboBox(QComboBox):
         super().leaveEvent(*args, **kwargs)
         self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
 
+    # def paintEvent(self, e: QtGui.QPaintEvent) -> None:
+    #     print("Paint")
+    #     super().paintEvent(e)
+    #
+    # def test(self):
+    #     print("Test")
+
+
+class ImprovedSlider(QSlider):
+    value_changed = pyqtSignal(int)
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+            val = self.pixel_pos_to_range_value(event.pos())
+            self.setValue(val)
+            self.value_changed.emit(val)
+
+    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        val = self.pixel_pos_to_range_value(event.pos())
+        self.setValue(val)
+        self.value_changed.emit(val)
+
+    def pixel_pos_to_range_value(self, pos: QPoint) -> int:
+        opt = QStyleOptionSlider()
+        self.initStyleOption(opt)
+        gr = self.style().subControlRect(QStyle.ComplexControl.CC_Slider, opt,
+                                         QStyle.SubControl.SC_SliderGroove, self)
+        sr = self.style().subControlRect(QStyle.ComplexControl.CC_Slider, opt,
+                                         QStyle.SubControl.SC_SliderHandle, self)
+
+        slider_length = sr.width()
+        slider_min = gr.x()
+        slider_max = gr.right() - slider_length + 2
+
+        pr = pos - sr.center() + sr.topLeft()
+        p = pr.x() if self.orientation() == QtCore.Qt.Orientation.Horizontal else pr.y()
+        val = QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), p - slider_min,
+                                             slider_max - slider_min, opt.upsideDown)
+        if val == 99:  # it wasn't able to be 100
+            val = 100
+        return val
 
 
 class TrackNotInPlaylistError(Exception):
@@ -421,7 +380,7 @@ def get_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
 
 
 def get_default_artwork_pixmap(default_type: str) -> QPixmap:
-    if default_type.lower() in ['album', 'artist', 'composer', 'folder']:
+    if default_type.lower() in ('album', 'artist', 'composer', 'folder'):
         return QPixmap(f"icons/{default_type.lower()}.png")
     return QPixmap("icons/misc.png")
 
@@ -440,11 +399,22 @@ def format_seconds(time_in_seconds: int) -> str:
     if not time_in_seconds:
         return "0:00"
 
+    if time_in_seconds < 10:
+        return f"0:0{time_in_seconds}"
+
     if time_in_seconds < 60:
         return f"0:{time_in_seconds}"
     # print("0:".join(str(datetime.timedelta(seconds=time_in_seconds)).split("00:")[-2:]))
-    return "".join(str(datetime.timedelta(seconds=time_in_seconds)).split("0:")[-1:]).split()[-1]
+    step_one = "".join(str(datetime.timedelta(seconds=time_in_seconds)).split("0:")[-1:]).split()[-1].lstrip("0")
+    # if not step_one.split(":")[-1].startswith("0") and len(step_one.split(":")[-1]) <= 1:
+    #     step_one = step_one.replace(":", ":0")
+    return step_one
 
 
 def format_player_position_to_seconds(position: int) -> int:
     return int((position / 1000) % 60)
+
+
+if __name__ == "__main__":
+    while True:
+        print(format_seconds(int(input())))

@@ -9,6 +9,7 @@ from data_models.track import Track
 from models.information_table_view import InformationTableView
 from tag_manager import TagManager
 from utils import *
+from constants import *
 
 
 class InformationPanel(QtWidgets.QFrame):
@@ -86,12 +87,22 @@ class InformationPanel(QtWidgets.QFrame):
         self.currently_playing_track_image_label.setUpdatesEnabled(True)
         self.currently_playing_track_image_label.setAlignment(Qt.AlignmentFlag.AlignTop)
 
+        self.track_information_header = QWidget(self)
+        self.track_information_header.setFixedHeight(24)
+        self.track_information_header.setStyleSheet("background-color: rgba(0, 0, 0, 0.2);")
+        self.track_information_header_layout = QHBoxLayout(self.track_information_header)
+        self.track_information_header_layout.setContentsMargins(0, 0, 0, 0)
+        self.track_information_header_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.track_information_combo_box = TransparentComboBox(self.track_information_header)
+        self.track_information_combo_box.addItem("Track Information")
+        self.track_information_header_layout.addWidget(self.track_information_combo_box)
+
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_title)
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_info)
         self.track_info_scroll_area_widget_layout.addSpacerItem(QSpacerItem(20, 40))
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_image_label)
 
-        self.track_info_widget_layout.addWidget(QLabel("Track Information"))
+        self.track_info_widget_layout.addWidget(self.track_information_header)
         self.track_info_widget_layout.addWidget(self.track_info_scroll_area)
 
         self.vertical_splitter.addWidget(self.playing_tracks_widget)

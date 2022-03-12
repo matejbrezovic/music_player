@@ -3,11 +3,14 @@ from __future__ import annotations
 import os
 from typing import Union, List, Tuple
 
-from PyQt6.QtWidgets import QDialog, QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout
+from PyQt6.QtWidgets import QDialog, QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout, \
+    QVBoxLayout
 
 from config import Config
+from repositories.cached_tracks_repository import CachedTracksRepository
 from repositories.tracks_repository import TracksRepository
 from utils import *
+from constants import *
 
 
 # TODO only overwrite files from folders which were scanned, not other ones; don't allow to proceed when no
@@ -73,7 +76,7 @@ class ScanFoldersDialog(QDialog):
         config.load(DEFAULT_CONFIG_PATH)
         self.update_selected_folders(config.get_setting("preselected_folders"))
 
-    def exec(self) -> None:
+    def exec(self) -> None:  # TODO not needed?
         super().exec()
 
     def proceed_button_clicked(self) -> None:
@@ -85,9 +88,11 @@ class ScanFoldersDialog(QDialog):
                 for file in files:
                     if file.rsplit(".")[-1] in SUPPORTED_AUDIO_FORMATS:
                         found_file_paths.append(f"{root}/{file}")
-        tracks = TracksRepository().convert_file_paths_to_tracks([file_path.replace("\\", "/").replace("//", "/") for
+        tracks = CachedTracksRepository().convert_file_paths_to_tracks([file_path.replace("\\", "/").replace("//", "/") for
                                                                   file_path in found_file_paths])
-        TracksRepository().save_tracks(tracks)
+        CachedTracksRepository().add_new_tracks(tracks)
+        CachedTracksRepository().delete_cache()
+        CachedTracksRepository().cache_tracks()
         self.done(0)
 
     def update_selected_folders(self, paths: List[str]) -> None:

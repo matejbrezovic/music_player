@@ -1,17 +1,16 @@
-import os
 from typing import List, Union
 
-from PyQt6 import QtCore
 from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QUrl, pyqtSignal, QPoint
-from PyQt6.QtWidgets import QStyle, QHBoxLayout, QSlider, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
-    QFrame, QWidget
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal
+from PyQt6.QtWidgets import QStyle, QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
+    QFrame, QToolTip
 
 from constants import *
 from data_models.track import Track
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
-from utils import get_formatted_time, format_seconds, format_player_position_to_seconds, TrackNotInPlaylistError
+from utils import get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError, \
+    ImprovedSlider
 
 
 class AudioController(QtWidgets.QFrame):
@@ -65,7 +64,7 @@ class AudioController(QtWidgets.QFrame):
         self.next_button.clicked.connect(self.next_button_clicked)
         self.prev_button.clicked.connect(self.prev_button_clicked)
 
-        self.volume_slider = ImprovedSlider(Qt.Orientation.Horizontal)
+        self.volume_slider = VolumeSlider(Qt.Orientation.Horizontal)
         self.volume_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.volume_slider.setMaximumWidth(100)
         self.volume_slider.setMinimumWidth(50)
@@ -120,9 +119,9 @@ class AudioController(QtWidgets.QFrame):
         self.audio_order_button.clicked.connect(self.change_audio_order)
 
         # Layout logic
-        self.left_part = QFrame()
-        self.middle_part = QFrame()
-        self.right_part = QFrame()
+        self.left_part = QFrame(self)
+        self.middle_part = QFrame(self)
+        self.right_part = QFrame(self)
 
         self.left_layout = QHBoxLayout(self.left_part)
         self.left_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -162,6 +161,10 @@ class AudioController(QtWidgets.QFrame):
         #     if isinstance(child, QWidget):
         #         child.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
+        if not self.current_playlist:
+            self.prev_button.setEnabled(False)
+            self.next_button.setEnabled(False)
+
     def update_total_queue_time(self, time_in_secs: int) -> None:
         self.total_queue_time = time_in_secs
         self._rounded_remaining_queue_time = time_in_secs
@@ -180,6 +183,8 @@ class AudioController(QtWidgets.QFrame):
         self.player.setPosition(position)
 
     def set_playlist(self, playlist: List[Union[Track]]) -> None:
+        self.prev_button.setEnabled(True)
+        self.next_button.setEnabled(True)
         self.current_playlist.set_playlist(playlist)
         self.updated_playlist.emit(playlist)
         self.update_total_queue_time(sum(track.length for track in playlist))
@@ -191,7 +196,14 @@ class AudioController(QtWidgets.QFrame):
         self.updated_playing_track.emit(self.current_playlist.currently_playing)
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
-        self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing.file_path))
+        # self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing.file_path))
+        # artist = self.current_playlist.currently_playing.artist
+        title = self.current_playlist.currently_playing.title.rsplit(".", 1)[0]
+        # if not artist:
+        #     self.audio_file_name_label.setText(title)
+        # else:
+        #     self.audio_file_name_label.setText(" - ".join([artist, title]))
+        self.audio_file_name_label.setText(title)
         self.player.setSource(QUrl(self.current_playlist.currently_playing.file_path))
         self.player.play()
 
@@ -230,6 +242,9 @@ class AudioController(QtWidgets.QFrame):
         self.unpaused.emit(self.get_playing_track())
 
     def play_pause_button_clicked(self) -> None:
+        if not self.current_playlist:
+            return
+
         if self.user_action <= 0:
             self.current_playlist.set_playlist_index(0)
             self.play()
@@ -277,35 +292,14 @@ class AudioController(QtWidgets.QFrame):
         self.play()
 
 
-class ImprovedSlider(QSlider):
+class VolumeSlider(ImprovedSlider):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        if event.button() == QtCore.Qt.MouseButton.LeftButton:
-            val = self.pixel_pos_to_range_value(event.pos())
-            self.setValue(val)
+        self.value_changed.connect(self.slider_moved)
 
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        val = self.pixel_pos_to_range_value(event.pos())
-        self.setValue(val)
-
-    def pixel_pos_to_range_value(self, pos: QPoint) -> int:
-        opt = QtWidgets.QStyleOptionSlider()
-        self.initStyleOption(opt)
-        gr = self.style().subControlRect(QtWidgets.QStyle.ComplexControl.CC_Slider, opt,
-                                         QtWidgets.QStyle.SubControl.SC_SliderGroove, self)
-        sr = self.style().subControlRect(QtWidgets.QStyle.ComplexControl.CC_Slider, opt,
-                                         QtWidgets.QStyle.SubControl.SC_SliderHandle, self)
-
-        slider_length = sr.width()
-        slider_min = gr.x()
-        slider_max = gr.right() - slider_length + 1
-
-        pr = pos - sr.center() + sr.topLeft()
-        p = pr.x() if self.orientation() == QtCore.Qt.Orientation.Horizontal else pr.y()
-        return QtWidgets.QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), p - slider_min,
-                                                        slider_max - slider_min, opt.upsideDown)
+    def slider_moved(self, value: int) -> None:
+        self.setToolTip(f"{value}%")
 
 
 class SeekSlider(ImprovedSlider):

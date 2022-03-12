@@ -20,7 +20,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("INSERT INTO tracks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)", (None,
+        cursor.execute("INSERT INTO tracks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (None,
                                                                                  track.file_path,
                                                                                  track.title,
                                                                                  track.album,
@@ -28,7 +28,8 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                                                                                  track.composer,
                                                                                  track.genre,
                                                                                  track.year,
-                                                                                 track.length
+                                                                                 track.length,
+                                                                                 track.rating
                                                                                  ))
         conn.commit()
         conn.close()
@@ -36,6 +37,14 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
     def add_tracks(self, tracks: Iterable[Track]) -> None:
         for track in tracks:
             self.add_track(track)
+
+    def add_new_tracks(self, tracks: Iterable[Track]) -> None:
+        existing_tracks = self.get_tracks()
+        tracks_to_add = []
+        for track in tracks:
+            if track not in existing_tracks:
+                tracks_to_add.append(track)
+        self.add_tracks(tracks_to_add)
 
     def get_track_counts_grouped_by(self, group_key: str) -> List[Tuple[str, int]]:
         conn = self.get_connection()

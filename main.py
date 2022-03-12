@@ -43,7 +43,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         # self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
 
-        CachedTracksRepository().preload_tracks()
+        CachedTracksRepository().cache_tracks()
 
     def __post__(self):
         self._setup_signals()
@@ -100,10 +100,9 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.horizontal_splitter.setStretchFactor(1, 1)
         self.horizontal_splitter.setStretchFactor(2, 0)
         self.horizontal_splitter.setHandleWidth(1)
-        # self.horizontal_splitter.setStyleSheet("""
-        # QSplitter::handle {background-color: rgba(0, 0, 0, 0.3);}
-        # QSplitter::handle:pressed {background-color: red;}
-        # """)
+        self.horizontal_splitter.setStyleSheet("""
+        QSplitter::handle {background-color: rgba(0, 0, 0, 0.2);}
+        """)
         self.horizontal_splitter.setChildrenCollapsible(False)
         # self.horizontal_splitter.setHandleWidth(2)
         self.horizontal_splitter.setOpaqueResize(False)

@@ -209,6 +209,8 @@ class TrackTableHeader(QHeaderView):
 class TrackTableView(QTableView):
     set_new_tracks = pyqtSignal()
     play_now_triggered = pyqtSignal(list)
+    queue_next_triggered = pyqtSignal(list)
+    queue_last_triggered = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -238,14 +240,13 @@ class TrackTableView(QTableView):
         self.play_now_action.triggered.connect(lambda event: self.play_now_action_triggered(event))
         self.context_menu.addAction(self.play_now_action)
 
-        self.queue_now_action = QAction("Queue Now", self)
-        self.queue_now_action.triggered.connect(lambda event: self.queue_now_action_triggered(event))
-        self.context_menu.addAction(self.queue_now_action)
-
         self.queue_next_action = QAction("Queue Next", self)
-        self.queue_now_action.triggered.connect(lambda event: self.queue_next_action_triggered(event))
+        self.queue_next_action.triggered.connect(lambda event: self.queue_next_action_triggered(event))
         self.context_menu.addAction(self.queue_next_action)
 
+        self.queue_last_action = QAction("Queue Last", self)
+        self.queue_last_action.triggered.connect(lambda event: self.queue_last_action_triggered(event))
+        self.context_menu.addAction(self.queue_last_action)
 
     # def eventFilter(self, source: QTableView, event) -> bool:
     #     if event.type() == QEvent.Type.ContextMenu and source is self:
@@ -269,16 +270,25 @@ class TrackTableView(QTableView):
         self.context_menu.popup(QtGui.QCursor.pos())
 
     def play_now_action_triggered(self, event):
-        self.selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
+        if not self._tracks:
+            return
+
+        selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         # print(self.selected_track_indexes)
         # print([self._tracks[i] for i in self.selected_track_indexes])
-        self.play_now_triggered.emit([self._tracks[i] for i in self.selected_track_indexes])
-
-    def queue_now_action_triggered(self, event):
-        ...
+        self.play_now_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
     def queue_next_action_triggered(self, event):
-        ...
+        if not self._tracks:
+            return
+        selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
+        self.queue_next_triggered.emit([self._tracks[i] for i in selected_track_indexes])
+
+    def queue_last_action_triggered(self, event):
+        if not self._tracks:
+            return
+        selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
+        self.queue_last_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks

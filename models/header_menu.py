@@ -16,13 +16,14 @@ class HeaderMenu(QWidget):
         super().__init__(*args, **kwargs)
 
         self.setFixedHeight(24)
-        self.setStyleSheet("background-color: rgba(0, 0, 0, 0.1);")
+        # self.setStyleSheet("background-color: rgba(0, 0, 0, 0.2);")
         self.setContentsMargins(0, 0, 0, 0)
 
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
         self.main_splitter.setContentsMargins(0, 0, 0, 0)
         self.main_splitter.setChildrenCollapsible(False)
         self.main_splitter.setHandleWidth(0)
+        # self.main_splitter.setStyleSheet("background-color: rgba(0, 0, 0, 0.2);")
 
         self.main_panel_view_options_combo_box = TransparentComboBox(self)
         self.main_panel_view_options_combo_box.setFixedSize(150, 24)
@@ -40,19 +41,21 @@ class HeaderMenu(QWidget):
         self.information_panel_view_key_combo_box.currentIndexChanged.connect(self.information_panel_view_key_changed.emit)
 
         self.navigation_panel_header_widget = QWidget(self)
-        # self.navigation_panel_header_widget.setStyleSheet("background-color: red;")
+        self.navigation_panel_header_widget.setStyleSheet("background-color: rgba(0, 0, 0, 0.2);")
         self.navigation_panel_header_widget_layout = QHBoxLayout(self.navigation_panel_header_widget)
         self.navigation_panel_header_widget_layout.setContentsMargins(0, 0, 0, 0)
         self.navigation_panel_header_widget_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.navigation_panel_header_widget_layout.addWidget(self.navigation_panel_group_combo_box)
 
         self.main_panel_header_widget = QWidget(self)
+        self.main_panel_header_widget.setStyleSheet("background-color: rgba(0, 0, 0, 0.2);")
         self.main_panel_header_widget_layout = QHBoxLayout(self.main_panel_header_widget)
         self.main_panel_header_widget_layout.setContentsMargins(0, 0, 0, 0)
         self.main_panel_header_widget_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.main_panel_header_widget_layout.addWidget(self.main_panel_view_options_combo_box)
 
         self.information_panel_header_widget = QWidget(self)
+        self.information_panel_header_widget.setStyleSheet("background-color: rgba(0, 0, 0, 0.2);")
         self.information_panel_header_widget_layout = QHBoxLayout(self.information_panel_header_widget)
         self.information_panel_header_widget_layout.setContentsMargins(0, 0, 0, 0)
         self.information_panel_header_widget_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)

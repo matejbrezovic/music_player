@@ -31,9 +31,13 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
 
         return self.cached_counts[group_key]
 
-    def preload_tracks(self):
+    def cache_tracks(self):
         start = time.time()
         for group_key in GROUP_OPTIONS:
             for group_name, _ in self.get_track_counts_grouped_by(group_key):
                 self.get_tracks_by(group_key, group_name)
         print(f"Tracks preloaded in: {time.time() - start:.6f} s")
+
+    def delete_cache(self):
+        self.cached_track_groups = {}
+        self.cached_counts = {}

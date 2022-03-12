@@ -9,7 +9,7 @@ from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyl
 from constants import *
 from data_models.navigation_group import NavigationGroup
 from repositories.cached_tracks_repository import CachedTracksRepository
-from utils import ElidedLabel
+from utils import ElidedLabel, AlwaysVisibleScrollBar
 
 
 class NavigationTableModel(QtCore.QAbstractTableModel):
@@ -117,11 +117,11 @@ class NavigationTableView(QTableView):
         self._table_delegate = NavigationTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
+        self.setVerticalScrollBar(AlwaysVisibleScrollBar())
 
         self.clicked.connect(self.temp)
         self.doubleClicked.connect(lambda index: self.group_double_clicked.emit(
             CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)))
-
 
     def temp(self, index):
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
@@ -138,7 +138,6 @@ class NavigationTableView(QTableView):
         self.groups = groups
         self._table_model.set_groups(groups)
         self._table_delegate.set_groups(groups)
-        print(self.groups)
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
         if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:

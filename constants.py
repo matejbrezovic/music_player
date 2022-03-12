@@ -2,7 +2,7 @@ from collections import defaultdict
 
 from PyQt6.QtGui import QColor
 
-SUPPORTED_AUDIO_FORMATS = ["mp3", "m4a", "ogg"]
+SUPPORTED_AUDIO_FORMATS = ["mp3", "m4a"]
 
 # Gui constants
 

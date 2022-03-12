@@ -1,5 +1,5 @@
 from random import shuffle
-from typing import List
+from typing import List, Optional
 
 from data_models.track import Track
 
@@ -11,7 +11,10 @@ class AudioPlaylist:
         self.playlist_index = 0
         self.already_played = []
         self.mode = 1  # 1 ordered, 2 shuffle, 3 repeat one
-        self.currently_playing = None
+        self.currently_playing: Optional[Track] = None
+
+    def __bool__(self):
+        return bool(self.playlist)
 
     def set_playlist(self, playlist: List[Track]) -> None:
         if playlist != self.playlist:

@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import *
 from data_models.track import Track
 from models.track_table_view import TrackTableView
 from utils import *
+from constants import *
 
 
 class TrackViewWidget(QWidget):
@@ -54,7 +55,7 @@ class TrackViewWidget(QWidget):
         self.table_view.horizontalHeader().setDefaultAlignment(Qt.AlignmentFlag.AlignLeft)
         self.table_view.verticalHeader().setVisible(False)
         # self.table_view.horizontalHeader().setVisible(False)
-        # self.table_view.setShowGrid(False)
+        self.table_view.setShowGrid(False)
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)

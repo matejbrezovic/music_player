@@ -9,6 +9,7 @@ from models.navigation_table_view import NavigationTableView
 from repositories.cached_tracks_repository import CachedTracksRepository
 from tag_manager import TagManager
 from utils import *
+from constants import *
 
 
 class NavigationPanel(QFrame):
@@ -42,21 +43,11 @@ class NavigationPanel(QFrame):
 
         self.navigation_table_view.group_clicked.connect(self.group_clicked.emit)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
-        # self.group_combo_box = TransparentComboBox(self)
-
-        # self.header_widget = QWidget()
-        # self.header_layout = QHBoxLayout(self.header_widget)
-        # self.header_layout.setContentsMargins(0, 0, 0, 0)
-        # self.header_layout.setSpacing(0)
-        # self.header_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
-        # self.header_layout.addWidget(self.group_combo_box)
-        # self.header_layout.addWidget(QWidget())
 
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
         self.vertical_layout.setSpacing(0)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        # self.vertical_layout.addWidget(self.header_widget)
         self.vertical_layout.addWidget(self.navigation_table_view)
 
         self.view_key = 0
@@ -98,6 +89,7 @@ class NavigationPanel(QFrame):
         self.navigation_table_view.set_groups(self.groups)
         # self.group_combo_box.adjustSize()
         # print("Groups fully displayed in:", time.time() - start)
+        # print("Updated Groups")
 
     def group_key_changed(self, new_key: int) -> None:
         self.navigation_table_view.selectionModel().clearSelection()
