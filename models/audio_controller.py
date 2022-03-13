@@ -23,7 +23,7 @@ class AudioController(QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("audio_controller")
-        self.setStyleSheet("QFrame#audio_controller {background-color: rgba(0, 0, 88, 0.3)}")
+        self.setStyleSheet("QFrame#audio_controller {background-color: rgba(0, 0, 88, 0.2)}")
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -134,7 +134,7 @@ class AudioController(QFrame):
         self.left_layout.addWidget(self.volume_slider)
         self.left_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
-        self.left_part.setStyleSheet("QFrame {background-color: rgba(0, 255, 7, 0.3)}")
+        # self.left_part.setStyleSheet("QFrame {background-color: rgba(0, 255, 7, 0.3)}")
         self.left_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         self.left_part.setFixedSize(self.left_layout.sizeHint())
 
@@ -149,7 +149,7 @@ class AudioController(QFrame):
         self.right_layout.addWidget(self.equalizer_button)
         self.right_layout.addWidget(self.audio_order_button)
 
-        self.right_part.setStyleSheet("QFrame {background-color: rgba(255, 0, 231, 0.3)}")
+        # self.right_part.setStyleSheet("QFrame {background-color: rgba(255, 0, 231, 0.3)}")
         self.right_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         self.right_part.setFixedSize(self.left_layout.sizeHint())
 
