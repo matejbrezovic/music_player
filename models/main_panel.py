@@ -16,6 +16,8 @@ class MainPanel(QtWidgets.QFrame):
     track_clicked = pyqtSignal(Track, int)
     track_double_clicked = pyqtSignal(Track, int)
     play_now_triggered = pyqtSignal(list)
+    queue_next_triggered = pyqtSignal(list)
+    queue_last_triggered = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -27,6 +29,8 @@ class MainPanel(QtWidgets.QFrame):
         self.track_view_widget.track_clicked.connect(self.track_clicked.emit)
         self.track_view_widget.track_double_clicked.connect(self.track_double_clicked.emit)
         self.track_view_widget.play_now_triggered.connect(self.play_now_triggered.emit)
+        self.track_view_widget.queue_next_triggered.connect(self.queue_next_triggered.emit)
+        self.track_view_widget.queue_last_triggered.connect(self.queue_last_triggered.emit)
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setSpacing(0)

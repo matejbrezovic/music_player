@@ -1,7 +1,7 @@
 from typing import List, Union
 
 from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QUrl, pyqtSignal
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
     QFrame, QToolTip
 
@@ -29,6 +29,8 @@ class AudioController(QFrame):
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.current_playlist = AudioPlaylist()
+        self.current_playlist.updated_playlist.connect(self.updated_playlist)
+
         self.total_queue_time = 0
         self._rounded_remaining_queue_time = 0  # doesn't update while track is playing
         self.remaining_queue_time = 0
@@ -165,6 +167,14 @@ class AudioController(QFrame):
             self.prev_button.setEnabled(False)
             self.next_button.setEnabled(False)
 
+    @pyqtSlot(list)
+    def queue_next(self, tracks: List[Track]) -> None:
+        self.current_playlist.queue_next(tracks)
+
+    @pyqtSlot(list)
+    def queue_last(self, tracks: List[Track]) -> None:
+        self.current_playlist.queue_last(tracks)
+
     def update_total_queue_time(self, time_in_secs: int) -> None:
         self.total_queue_time = time_in_secs
         self._rounded_remaining_queue_time = time_in_secs
@@ -193,18 +203,18 @@ class AudioController(QFrame):
         self.current_playlist.set_playlist_index(index)
 
     def play(self) -> None:
-        self.updated_playing_track.emit(self.current_playlist.currently_playing)
+        self.updated_playing_track.emit(self.current_playlist.playing_track)
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
         # self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing.file_path))
         # artist = self.current_playlist.currently_playing.artist
-        title = self.current_playlist.currently_playing.title.rsplit(".", 1)[0]
+        title = self.current_playlist.playing_track.title.rsplit(".", 1)[0]
         # if not artist:
         #     self.audio_file_name_label.setText(title)
         # else:
         #     self.audio_file_name_label.setText(" - ".join([artist, title]))
         self.audio_file_name_label.setText(title)
-        self.player.setSource(QUrl(self.current_playlist.currently_playing.file_path))
+        self.player.setSource(QUrl(self.current_playlist.playing_track.file_path))
         self.player.play()
 
     def player_duration_changed(self, duration: int) -> None:
@@ -282,7 +292,7 @@ class AudioController(QFrame):
             self.player.current_volume = self.player.audio_output.volume()
 
     def get_playing_track(self) -> Track:
-        return self.current_playlist.currently_playing
+        return self.current_playlist.playing_track
 
     def set_playing_track(self, track: Track) -> None:
         if track not in self.current_playlist.playlist:

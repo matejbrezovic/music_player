@@ -51,7 +51,7 @@ class ElidedLabel(QLabel):
     def __init__(self, *args, **kwargs):
         super().__init__(*tuple(map(str, args)) if args else "", **kwargs)
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-        self.setContentsMargins(4, 0, 4, 0)
+        # self.setContentsMargins(4, 0, 4, 0)
 
     def paintEvent(self, event) -> None:
         metrics = QFontMetrics(self.font())
@@ -217,18 +217,6 @@ class AlwaysVisibleScrollBarProxyStyle(QProxyStyle):  # TODO make scroll bar alw
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
- #        self.setStyleSheet("""
- #         QScrollBar::handle:vertical {
- #     background-color: red;
- # }
- #        """)
-
-    # def sizeHint(self) -> QSize:
-    #     size = super().sizeHint()
-    #     if not size.height():
-    #         size.setHeight(50)
-    #     return size
-
     def drawComplexControl(self,
                            control: QStyle.ComplexControl,
                            option: 'QStyleOptionComplex',
@@ -245,7 +233,6 @@ class AlwaysVisibleScrollBarProxyStyle(QProxyStyle):  # TODO make scroll bar alw
             # painter.drawRect(option.rect)
             # painter.restore()
         return super().drawComplexControl(control, option, painter, widget)
-
 
 
 class HeaderSplitter(QSplitter):

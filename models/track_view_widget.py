@@ -15,6 +15,8 @@ class TrackViewWidget(QWidget):
     track_double_clicked = pyqtSignal(Track, int)
     track_clicked = pyqtSignal(Track, int)
     play_now_triggered = pyqtSignal(list)
+    queue_next_triggered = pyqtSignal(list)
+    queue_last_triggered = pyqtSignal(list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -37,8 +39,6 @@ class TrackViewWidget(QWidget):
         self.header_splitter.splitterMoved.connect(self.update_column_width)
         self.header_splitter.setStyleSheet("QSplitter {background-color: white;}"
                                            "QSplitter::handle{background: black;}")
-
-        # self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
 
         for i, column_name in enumerate(MAIN_PANEL_COLUMN_NAMES):
             widget = ElidedLabel(column_name)
@@ -71,15 +71,10 @@ class TrackViewWidget(QWidget):
                                                                   self.displayed_tracks[model_index.row()],
                                                                   model_index.row()))
         self.table_view.play_now_triggered.connect(self.play_now_triggered.emit)
+        self.table_view.queue_next_triggered.connect(self.queue_next_triggered.emit)
+        self.table_view.queue_last_triggered.connect(self.queue_last_triggered.emit)
 
         self.table_view.setStyleSheet(SELECTION_STYLESHEET)
-
-        # header = HeaderView()
-        # self.table_view.setHorizontalHeader(header)
-        # self.table_view.setTextElideMode(Qt.TextElideMode.ElideNone)
-
-        # self._focus_frame = FocusFrame(self.table_view)
-        # self._focus_frame.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
 
         first_col_width = 26
         second_col_width = 20

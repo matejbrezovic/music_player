@@ -112,6 +112,15 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.central_widget_layout.addWidget(self.audio_controller)
 
     def _setup_signals(self) -> None:
+        def play_now_triggered(tracks: List[Track]) -> None:
+            if len(tracks) == 1:
+                if self.main_panel.displayed_tracks != self.information_panel.playing_tracks:
+                    self.audio_controller.set_playlist(self.main_panel.displayed_tracks)
+                self.audio_controller.set_playing_track(tracks[0])
+            else:
+                self.audio_controller.set_playlist(tracks)
+                self.audio_controller.set_playing_track(tracks[0])
+
         self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
         self.add_files_dialog.finished.connect(self.navigation_panel.refresh_groups)
 
@@ -127,7 +136,9 @@ class MainWindowUi(QtWidgets.QMainWindow):
                                   self.audio_controller.set_playlist_index(index),
                                   self.audio_controller.play(),
                                   ))
-        self.main_panel.play_now_triggered.connect(self.play_now_triggered)
+        self.main_panel.play_now_triggered.connect(play_now_triggered)
+        self.main_panel.queue_next_triggered.connect(self.audio_controller.queue_next)
+        self.main_panel.queue_last_triggered.connect(self.audio_controller.queue_last)
 
         self.navigation_panel.group_clicked.connect(
             lambda tracks: (self.main_panel.display_tracks(tracks)))
@@ -156,16 +167,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
 
         self.audio_controller.remaining_queue_time_changed.connect(self.queue_info_panel.update_remaining_queue_time)
-        # self.queue_info_panel.right_label_clicked.connect()
-
-    def play_now_triggered(self, tracks: List[Track]) -> None:
-        if len(tracks) == 1:
-            if self.main_panel.displayed_tracks != self.information_panel.playing_tracks:
-                self.audio_controller.set_playlist(self.main_panel.displayed_tracks)
-            self.audio_controller.set_playing_track(tracks[0])
-        else:
-            self.audio_controller.set_playlist(tracks)
-            self.audio_controller.set_playing_track(tracks[0])
+        # self.queue_info_panel.right_label_clicked.connect(...)
 
 
 if __name__ == '__main__':

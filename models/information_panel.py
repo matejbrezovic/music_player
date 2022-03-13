@@ -76,8 +76,10 @@ class InformationPanel(QtWidgets.QFrame):
         self.track_info_scroll_area.setWidget(self.track_info_scroll_area_widget)
 
         self.currently_playing_track_title = ElidedLabel("No Track")
+        self.currently_playing_track_title.setContentsMargins(4, 0, 4, 0)
         # self.currently_playing_track_title.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.currently_playing_track_info = ElidedLabel("No Info")
+        self.currently_playing_track_info.setContentsMargins(4, 0, 4, 0)
         # self.currently_playing_track_info.setStyleSheet("background-color: red")
 
         artwork_pixmap = get_artwork_pixmap("")

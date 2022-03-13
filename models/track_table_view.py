@@ -219,7 +219,6 @@ class TrackTableView(QTableView):
 
         self.padding = 4
 
-        # self.column_names = ["", "", "Artist", "Title", "Album", "Year", "Genre"]
         self._table_model = TrackTableModel(self)
         # self.setSelectionModel(QItemSelectionModel())
         self._table_delegate = TrackTableItemDelegate(self)
@@ -266,11 +265,6 @@ class TrackTableView(QTableView):
     #     return super().eventFilter(source, event)
 
     def contextMenuEvent(self, event):
-        # self.menu = QMenu(self)
-        # renameAction = QAction('Rename', self)
-        # renameAction.triggered.connect(lambda: self.play_now_action_triggered(event))
-        # self.menu.addAction(renameAction)
-        # add other required actions
         self.context_menu.popup(QtGui.QCursor.pos())
 
     def play_now_action_triggered(self, event):
@@ -315,8 +309,6 @@ class TrackTableView(QTableView):
 
     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
         return super().focusOutEvent(event)
-
-    # def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
 
 
 
