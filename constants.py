@@ -1,6 +1,9 @@
+import os
 from collections import defaultdict
 
 from PyQt6.QtGui import QColor
+
+from utils import get_project_root
 
 SUPPORTED_AUDIO_FORMATS = ["mp3", "m4a"]
 
@@ -52,16 +55,13 @@ FADE_OUT_ANIM_END_VALUE = 0
 
 # TRACKS = [DEFAULT_AUDIO_PATH + "/" + name for name in os.listdir(DEFAULT_AUDIO_PATH)]
 
-pre = "C:/My Files/My Projects/"
+ROOT = get_project_root(__file__)
 
 # Database settings
 
-DATABASE_PATH = pre + "music_player/database/test.db"
+DATABASE_PATH = os.path.join(ROOT, "database/test.db")
 
 # Settings constants
 
-DEFAULT_CONFIG_PATH = pre + "music_player/settings/config.txt"
-DEFAULT_LOADED_TRACKS_FILE_PATH = pre + "music_player/settings/tracks.txt"
-
-
-TEST_TRACKS = []
+DEFAULT_CONFIG_PATH = os.path.join(ROOT, "settings/config.txt")
+DEFAULT_LOADED_TRACKS_FILE_PATH = os.path.join(ROOT, "settings/tracks.txt")

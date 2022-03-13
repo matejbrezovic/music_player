@@ -1,5 +1,6 @@
 import datetime
 import typing
+from os import path
 from typing import Optional
 
 import mutagen
@@ -20,6 +21,18 @@ def classify(module):
                 {key: staticmethod(value) if callable(value) else value
                  for key, value in ((name, getattr(module, name))
                                     for name in dir(module))})
+
+
+def get_project_root(file_path: str) -> str:
+    anchor_file = "main.py"
+    dir_path = path.dirname(file_path)
+    while dir_path != '/' and not path.exists(path.join(dir_path, anchor_file)):
+        dir_path = path.dirname(dir_path)
+
+    if dir_path == '/':
+        dir_path = path.dirname(file_path)
+
+    return dir_path
 
 
 def delete_items(layout: QLayout) -> None:
@@ -219,9 +232,9 @@ class AlwaysVisibleScrollBarProxyStyle(QProxyStyle):  # TODO make scroll bar alw
 
     def drawComplexControl(self,
                            control: QStyle.ComplexControl,
-                           option: 'QStyleOptionComplex',
+                           option: QStyleOptionComplex,
                            painter: QtGui.QPainter,
-                           widget: typing.Optional[QWidget] = ...) -> None:
+                           widget: Optional[QWidget] = ...) -> None:
 
         print(control)
         if control == QStyle.ComplexControl.CC_ScrollBar:
@@ -260,37 +273,35 @@ class PathCheckbox(QCheckBox):
 
 
 class TransparentComboBox(QComboBox):
+    default_stylesheet = ''' 
+                       QComboBox {
+                           color: black;
+                           selection-color: black;
+                           selection-background-color: rgba(255, 255, 255, 0);
+                           background-color: rgba(255, 255, 255, 0);
+                       }
+                       QComboBox QAbstractItemView {
+                           background-color: white;
+                           min-width: 150px;
+                       }
+                       QComboBox:open {
+                           color: black;
+                       }
+                       QComboBox:drop-down:open {
+                           color: black;
+                           background-color: rgba(255, 255, 255, 0);
+                       }
+                       QComboBox:down-arrow:open {
+                           color: black;
+                           background-color: rgba(255, 255, 255, 0);
+                       }
+                       '''
+    hide_combobox = '''QComboBox::drop-down:!hover {
+                            background-color: rgba(255, 255, 255, 0);
+                        }'''
+
     def __init__(self, parent=None):
         super().__init__(parent)
-
-        self.default_stylesheet = ''' 
-                QComboBox {
-                    color: black;
-                    selection-color: black;
-                    selection-background-color: rgba(255, 255, 255, 0);
-                    background-color: rgba(255, 255, 255, 0);
-                }
-
-                QComboBox QAbstractItemView {
-                    background-color: white;
-                    min-width: 150px;
-                }
-                QComboBox:open {
-                    color: black;
-                }
-                QComboBox:drop-down:open {
-                    color: black;
-                    background-color: rgba(255, 255, 255, 0);
-                }
-                QComboBox:down-arrow:open {
-                    color: black;
-                    background-color: rgba(255, 255, 255, 0);
-                }
-
-                '''
-        self.hide_combobox = '''QComboBox::drop-down:!hover {
-                                    background-color: rgba(255, 255, 255, 0);
-                                }'''
 
         self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
         self.setUpdatesEnabled(True)
@@ -309,13 +320,6 @@ class TransparentComboBox(QComboBox):
     def leaveEvent(self, *args, **kwargs):
         super().leaveEvent(*args, **kwargs)
         self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
-
-    # def paintEvent(self, e: QtGui.QPaintEvent) -> None:
-    #     print("Paint")
-    #     super().paintEvent(e)
-    #
-    # def test(self):
-    #     print("Test")
 
 
 class ImprovedSlider(QSlider):
