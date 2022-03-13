@@ -14,7 +14,7 @@ from utils import get_formatted_time, format_player_position_to_seconds, TrackNo
 
 
 class AudioController(QFrame):
-    updated_playing_track = pyqtSignal(Track)
+    updated_playing_track = pyqtSignal(Track, int)
     updated_playlist = pyqtSignal(list)
     paused = pyqtSignal(Track)
     unpaused = pyqtSignal(Track)
@@ -169,11 +169,15 @@ class AudioController(QFrame):
 
     @pyqtSlot(list)
     def queue_next(self, tracks: List[Track]) -> None:
-        self.current_playlist.queue_next(tracks)
+        insert_index = self.current_playlist.playing_track_index + 1
+        new_playlist = self.current_playlist.playlist[:insert_index] + tracks + self.current_playlist.playlist[insert_index:]
+        self.set_playlist(new_playlist)
+        # self.current_playlist.queue_next(tracks)
 
     @pyqtSlot(list)
     def queue_last(self, tracks: List[Track]) -> None:
-        self.current_playlist.queue_last(tracks)
+        new_playlist = self.current_playlist.playlist + tracks
+        self.set_playlist(new_playlist)
 
     def update_total_queue_time(self, time_in_secs: int) -> None:
         self.total_queue_time = time_in_secs
@@ -192,7 +196,8 @@ class AudioController(QFrame):
     def set_player_position(self, position: int) -> None:
         self.player.setPosition(position)
 
-    def set_playlist(self, playlist: List[Union[Track]]) -> None:
+    def set_playlist(self, playlist: List[Track]) -> None:
+        print("New playlist:\n", "\n".join(str(t) for t in playlist))
         self.prev_button.setEnabled(True)
         self.next_button.setEnabled(True)
         self.current_playlist.set_playlist(playlist)
@@ -200,10 +205,11 @@ class AudioController(QFrame):
         self.update_total_queue_time(sum(track.length for track in playlist))
 
     def set_playlist_index(self, index: int) -> None:
+        print("New index:", index)
         self.current_playlist.set_playlist_index(index)
 
     def play(self) -> None:
-        self.updated_playing_track.emit(self.current_playlist.playing_track)
+        self.updated_playing_track.emit(self.current_playlist.playing_track, self.current_playlist.playing_track_index)
         self.play_button.setIcon(self.pause_icon)
         self.user_action = 1
         # self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing.file_path))

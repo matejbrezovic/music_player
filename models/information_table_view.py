@@ -155,8 +155,8 @@ class InformationTableItemDelegate(QStyledItemDelegate):
 
 class InformationTableView(QTableView):
     set_new_tracks = pyqtSignal()
-    track_clicked = pyqtSignal(Track)
-    track_double_clicked = pyqtSignal(Track)
+    track_clicked = pyqtSignal(Track, int)
+    track_double_clicked = pyqtSignal(Track, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -166,8 +166,8 @@ class InformationTableView(QTableView):
         self.setItemDelegate(self._table_delegate)
         self._tracks: List[Track] = []
 
-        self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()]))
-        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()]))
+        self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()], index.row()))
+        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()], index.row()))
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._table_model.set_tracks(tracks)

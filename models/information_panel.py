@@ -2,7 +2,7 @@ import math
 from typing import List
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QSize
+from PyQt6.QtCore import QSize, pyqtSlot
 from PyQt6.QtWidgets import *
 
 from data_models.track import Track
@@ -12,9 +12,9 @@ from utils import *
 from constants import *
 
 
-class InformationPanel(QtWidgets.QFrame):
-    track_clicked = pyqtSignal(Track)
-    track_double_clicked = pyqtSignal(Track)
+class InformationPanel(QFrame):
+    track_clicked = pyqtSignal(Track, int)
+    track_double_clicked = pyqtSignal(Track, int)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -126,7 +126,8 @@ class InformationPanel(QtWidgets.QFrame):
         self.information_table_view.set_tracks(tracks)
         # global_timer.stop()
 
-    def set_playing_track(self, track: Track) -> None:
+    @pyqtSlot(Track, int)
+    def set_playing_track(self, track: Track, track_index: int = None) -> None:
         def get_track_info(track: Track) -> str:
             f = TagManager().load_file(track.file_path)
             extension = track.file_path.split(".")[-1].upper()
@@ -143,7 +144,14 @@ class InformationPanel(QtWidgets.QFrame):
         self.currently_playing_track_image_label.pixmap = artwork_pixmap
         self.currently_playing_track_image_label.setPixmap(artwork_pixmap)
 
-        self.information_table_view.set_currently_playing_track_index(self.playing_tracks.index(track))
+
+        print("Inf index:", track_index)
+        if track_index is None:
+            self.information_table_view.set_currently_playing_track_index(self.playing_tracks.index(track))
+        else:
+            self.information_table_view.set_currently_playing_track_index(track_index)
+
+    # def set_playing_track_index(self):
 
     def pause_playing_track(self) -> None:
         self.information_table_view.set_paused()
