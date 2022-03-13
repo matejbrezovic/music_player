@@ -1,11 +1,12 @@
 import io
 import sys
+import time
 
 from PIL import Image, ImageFilter
 from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, QBuffer
-from PyQt6.QtGui import QPixmap, QImage, QPainter
+from PyQt6.QtCore import Qt, QBuffer, QRect, QSize, QPoint, QByteArray
+from PyQt6.QtGui import QPixmap, QImage, QPainter, QPalette, QBrush
 from PyQt6.QtWidgets import *
 
 from utils import get_artwork_pixmap
@@ -65,37 +66,58 @@ class BlurWindowPixmapUi(QMainWindow):
                                       Qt.AspectRatioMode.KeepAspectRatio,
                                       Qt.TransformationMode.SmoothTransformation)
 
-        self.label = QLabel(self)
+        self.label = QLabel()
         self.label.setFixedSize(300, 300)
         self.label.setPixmap(self.pixmap)
 
         self.blurred_label = QLabel(self)
-        self.blurred_label.setFixedSize(200, 200)
+        self.blurred_label.setFixedSize(400, 200)
 
         # blurred_pixmap = self.blur_pixmap(self.pixmap)
+        start = time.time()
         img = self.pixmap.toImage()
         buffer = QBuffer()
         buffer.open(QBuffer.OpenModeFlag.ReadWrite)
-        img.save(buffer, "PNG")
+        img.save(buffer, "JPG")
         pil_im = Image.open(io.BytesIO(buffer.data()))
 
         blur_img = pil_im.filter(ImageFilter.GaussianBlur(80))
 
-        # blur_img.show()
-
-        # blurred_pixmap = QPixmap.fromImage(ImageQt(blur_img))
-
         im2 = blur_img.convert("RGBA")
         data = im2.tobytes("raw", "BGRA")
         qim = QtGui.QImage(data, blur_img.size[0], blur_img.size[1], QtGui.QImage.Format.Format_ARGB32)
+
+        start_y = qim.height() - 50
+        new_height = 30
+
+        qim = qim.copy(0, start_y, qim.width(), new_height)
+        qim = qim.scaled(400, qim.height(), Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.FastTransformation)
+
+
         blurred_pixmap = QtGui.QPixmap.fromImage(qim)
 
-        print(blurred_pixmap)
-        self.blurred_label.setPixmap(blurred_pixmap)
+        print("Blurred in", time.time() - start)
 
-        self.central_widget_layout.addWidget(self.label)
-        self.central_widget_layout.addWidget(self.blurred_label)
-        self.central_widget.setLayout(self.central_widget_layout)
+        print(blurred_pixmap)
+
+        blurred_pixmap = blurred_pixmap.scaled(self.blurred_label.width(), qim.height(),
+                                                           Qt.AspectRatioMode.IgnoreAspectRatio,
+                                                           Qt.TransformationMode.SmoothTransformation)
+
+        palette = QPalette()
+        palette.setBrush(self.backgroundRole(), QBrush(blurred_pixmap))
+        self.setPalette(palette)
+
+        # self.blurred_label.setPixmap(blurred_pixmap)
+
+        # self.central_widget_layout.addWidget(self.label)
+
+        # painter = QPainter(self)
+        # painter.scale(100, 20)
+        # painter.drawPixmap(QRect(QPoint(10, 10), QSize(100, 20)), blurred_pixmap)
+
+        # self.central_widget_layout.addWidget(self.blurred_label)
+        # self.central_widget.setLayout(self.central_widget_layout)
 
 
     # def blur_pixmap(self, pix: QPixmap) -> QPixmap:
@@ -120,6 +142,6 @@ class BlurWindowPixmapUi(QMainWindow):
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main_window = BlurWindowPixmapUi()
-    main_window.setFixedSize(400, 400)
+    main_window.resize(400, 400)
     main_window.show()
     sys.exit(app.exec())

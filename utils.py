@@ -1,12 +1,14 @@
 import datetime
+import io
 import typing
 from os import path
 from typing import Optional
 
 import mutagen
+from PIL import Image, ImageFilter
 from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui, QtCore
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette, QColor
 from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QWidget, QComboBox, \
     QStyle, QStyleOption, QStyleOptionComplex, QProxyStyle, \
@@ -391,6 +393,22 @@ def get_default_artwork_pixmap(default_type: str) -> QPixmap:
     if default_type.lower() in ('album', 'artist', 'composer', 'folder'):
         return QPixmap(f"icons/{default_type.lower()}.png")
     return QPixmap("icons/misc.png")
+
+
+def get_blurred_pixmap(pixmap: QPixmap) -> QPixmap:
+    img = pixmap.toImage()
+    buffer = QBuffer()
+    buffer.open(QBuffer.OpenModeFlag.ReadWrite)
+    img.save(buffer, "JPG")
+    pil_im = Image.open(io.BytesIO(buffer.data()))
+
+    blur_img = pil_im.filter(ImageFilter.GaussianBlur(80))
+
+    im2 = blur_img.convert("RGBA")
+    data = im2.tobytes("raw", "BGRA")
+    qim = QtGui.QImage(data, blur_img.size[0], blur_img.size[1], QtGui.QImage.Format.Format_ARGB32)
+
+    return QPixmap.fromImage(qim)
 
 
 def get_formatted_time(track_duration: int) -> str:

@@ -144,8 +144,7 @@ class InformationPanel(QFrame):
         self.currently_playing_track_image_label.pixmap = artwork_pixmap
         self.currently_playing_track_image_label.setPixmap(artwork_pixmap)
 
-
-        print("Inf index:", track_index)
+        # print("Inf index:", track_index)
         if track_index is None:
             self.information_table_view.set_currently_playing_track_index(self.playing_tracks.index(track))
         else:

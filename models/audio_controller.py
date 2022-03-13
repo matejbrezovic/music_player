@@ -1,7 +1,10 @@
+from time import sleep
 from typing import List, Union
 
+import pixel as pixel
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot
+from PyQt6.QtGui import QPalette, QBrush, QPixmap, QPainter, QPaintEvent
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
     QFrame, QToolTip
 
@@ -10,7 +13,7 @@ from data_models.track import Track
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
 from utils import get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError, \
-    ImprovedSlider
+    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap
 
 
 class AudioController(QFrame):
@@ -92,10 +95,10 @@ class AudioController(QFrame):
                                                               QSizePolicy.Policy.Preferred))
         self.offset_label = QLabel(self.seek_slider_time_label.text())
         self.offset_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
-        self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
+        # self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
         self.audio_file_name_label = QLabel("---")
         self.audio_file_name_label.setMaximumWidth(400)
-        self.seek_slider_time_label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 0)}")
+        # self.seek_slider_time_label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 0)}")
         self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
                                                              QSizePolicy.Policy.Preferred))
@@ -167,10 +170,57 @@ class AudioController(QFrame):
             self.prev_button.setEnabled(False)
             self.next_button.setEnabled(False)
 
+        # self.setBa
+
+        # self.background_pixmap = get_artwork_pixmap("C:/home/matey/Music/03 Ice in My Veins.mp3")
+        # self.background_pixmap = QPixmap("C:/My Files/My Projects/music_player/icons/album.png")
+        self.background_pixmap = None
+
+        # label = QLabel()
+        # label.setPixmap(self.background_pixmap)
+        # label.setFixedSize(100, 100)
+        # label.show()
+        # sleep(10)
+
+        # palette = QPalette()
+        # palette.setBrush(self.backgroundRole(), QBrush(self.background_pixmap))
+        # self.setPalette(palette)
+
+        # self.default_background_color = QColor(0, 0, 0, 0.3)
+
+    def paintEvent(self, event: QtGui.QPaintEvent) -> None:
+        if self.background_pixmap:
+            painter = QPainter(self)
+
+            painter.drawPixmap(self.rect(), self.background_pixmap)
+        # super().paintEvent(event)
+
+
+    def update_background_pixmap(self, track: Track) -> None:
+        pixmap = get_artwork_pixmap(track.file_path)
+        if not pixmap:
+            self.background_pixmap = None
+            self.repaint()
+            return None
+        pixmap = get_blurred_pixmap(pixmap)
+
+        # label = QLabel()
+        # label.setPixmap(pixmap)
+        # label.show()
+        # sleep(10)
+
+        start_y = pixmap.height() // 1.5
+        new_height = 60
+
+        pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
+        self.background_pixmap = pixmap
+        self.repaint()
+
     @pyqtSlot(list)
     def queue_next(self, tracks: List[Track]) -> None:
         insert_index = self.current_playlist.playing_track_index + 1
-        new_playlist = self.current_playlist.playlist[:insert_index] + tracks + self.current_playlist.playlist[insert_index:]
+        new_playlist = self.current_playlist.playlist[:insert_index] + tracks + \
+            self.current_playlist.playlist[insert_index:]
         self.set_playlist(new_playlist)
         # self.current_playlist.queue_next(tracks)
 
@@ -197,7 +247,7 @@ class AudioController(QFrame):
         self.player.setPosition(position)
 
     def set_playlist(self, playlist: List[Track]) -> None:
-        print("New playlist:\n", "\n".join(str(t) for t in playlist))
+        # print("New playlist:\n", "\n".join(str(t) for t in playlist))
         self.prev_button.setEnabled(True)
         self.next_button.setEnabled(True)
         self.current_playlist.set_playlist(playlist)
@@ -205,7 +255,7 @@ class AudioController(QFrame):
         self.update_total_queue_time(sum(track.length for track in playlist))
 
     def set_playlist_index(self, index: int) -> None:
-        print("New index:", index)
+        # print("New index:", index)
         self.current_playlist.set_playlist_index(index)
 
     def play(self) -> None:
@@ -221,7 +271,9 @@ class AudioController(QFrame):
         #     self.audio_file_name_label.setText(" - ".join([artist, title]))
         self.audio_file_name_label.setText(title)
         self.player.setSource(QUrl(self.current_playlist.playing_track.file_path))
+        self.update_background_pixmap(self.current_playlist.playing_track)
         self.player.play()
+
 
     def player_duration_changed(self, duration: int) -> None:
         self.seek_slider.setRange(0, duration - 120)
