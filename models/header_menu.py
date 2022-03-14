@@ -28,7 +28,7 @@ class HeaderMenu(QWidget):
         self.main_panel_view_options_combo_box = TransparentComboBox(self)
         self.main_panel_view_options_combo_box.setFixedSize(150, 24)
         self.main_panel_view_options_combo_box.currentIndexChanged.connect(self.main_panel_view_key_changed.emit)
-        self.main_panel_view_options_combo_box.addItems(MAIN_PANAL_VIEW_OPTIONS)
+        self.main_panel_view_options_combo_box.addItems(MAIN_PANEL_VIEW_OPTIONS)
 
         self.navigation_panel_group_combo_box = TransparentComboBox(self)
         self.navigation_panel_group_combo_box.currentIndexChanged.connect(self.navigation_panel_group_key_changed.emit)

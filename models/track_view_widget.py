@@ -62,6 +62,7 @@ class TrackViewWidget(QWidget):
         self.table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.table_view.setIconSize(QSize(22, 22))
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table_view.setFrameShape(QFrame.Shape.NoFrame)
         self.table_view.set_new_tracks.connect(self.update_column_width)
 
         self.table_view.clicked.connect(lambda model_index: self.track_clicked.emit(
@@ -73,8 +74,8 @@ class TrackViewWidget(QWidget):
         self.table_view.play_now_triggered.connect(self.play_now_triggered.emit)
         self.table_view.queue_next_triggered.connect(self.queue_next_triggered.emit)
         self.table_view.queue_last_triggered.connect(self.queue_last_triggered.emit)
-
-        self.table_view.setStyleSheet(SELECTION_STYLESHEET)
+        #
+        # self.table_view.setStyleSheet(SELECTION_STYLESHEET)
 
         first_col_width = 26
         second_col_width = 20

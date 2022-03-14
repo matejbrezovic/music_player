@@ -8,12 +8,14 @@ import mutagen
 from PIL import Image, ImageFilter
 from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui, QtCore
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QObject, QEvent
-from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette, QColor, QIcon
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QObject, QEvent, QPointF
+from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette, QColor, QIcon, QEnterEvent
 from PyQt6.QtWidgets import *
 from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
+
+import constants
 
 
 def classify(module):
@@ -410,18 +412,26 @@ def get_blurred_pixmap(pixmap: QPixmap) -> QPixmap:
 
 
 class HoverButton(QPushButton):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.backup_icon = None
+        self.is_in_dark_mode = True
 
     def enterEvent(self, event: QtGui.QEnterEvent) -> None:
-        self.backup_icon = self.icon()
-        self.setIcon(get_hover_icon(self.backup_icon))
-        print("enter")
+        if self.isEnabled():
+            self.backup_icon = self.icon()
+            self.setIcon(get_hover_icon(self.backup_icon, self.is_in_dark_mode))
+            print("enter")
 
-    def leaveEvent(self, a0: QtCore.QEvent) -> None:
-        self.setIcon(self.backup_icon)
-        print("leave")
+    def leaveEvent(self, e: QtCore.QEvent) -> None:
+        if self.isEnabled():
+            self.setIcon(self.backup_icon)
+            print("leave")
+
+    def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
+        self.clicked.emit()
+        self.enterEvent(QEnterEvent(QPointF(1, 1), QPointF(1, 1), QPointF(1, 1)))
+
 
     # def setIcon(self, icon: QIcon, sender=None) -> None:
     #     if self.icon is None and sender is None:
@@ -439,23 +449,27 @@ def change_icon_color(icon: QIcon, color: QColor) -> QIcon:
     return icon
 
 
-def get_hover_icon(icon: QIcon) -> QIcon:
+def get_hover_icon(icon: QIcon, is_in_dark_mode: bool) -> QIcon:
     pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
     mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
-    pixmap.fill(QColor("grey"))
+
+    color = constants.DARK_AUDIO_CONTROLLER_HOVER_COLOR if is_in_dark_mode \
+        else constants.LIGHT_AUDIO_CONTROLLER_HOVER_COLOR
+
+    pixmap.fill(color)
     pixmap.setMask(mask)
     icon = QIcon(pixmap)
     # icon = get_icon_with_updated_states(QIcon(pixmap))
     return icon
 
 
-def get_icon_with_updated_states(icon: QIcon) -> QIcon:
-    pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
-    mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
-    pixmap.fill(QColor(20, 20, 20))
-    pixmap.setMask(mask)
-    icon.addPixmap(pixmap, QIcon.Mode.Active)
-    return icon
+# def get_icon_with_updated_states(icon: QIcon) -> QIcon:
+#     pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
+#     mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
+#     pixmap.fill(QColor(20, 20, 20))
+#     pixmap.setMask(mask)
+#     icon.addPixmap(pixmap, QIcon.Mode.Active)
+#     return icon
 
 
 def get_formatted_time(track_duration: int) -> str:

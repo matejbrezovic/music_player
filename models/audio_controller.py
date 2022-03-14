@@ -49,9 +49,11 @@ class AudioController(QFrame):
         self.player.durationChanged.connect(self.player_duration_changed)
 
         self.play_button = HoverButton(self)
-        self.prev_button = QPushButton(self)
-        self.next_button = QPushButton(self)
+        self.prev_button = HoverButton(self)
+        self.next_button = HoverButton(self)
 
+        # self.play_button.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        #
         self.play_button.setStyleSheet("background: transparent")
         self.prev_button.setStyleSheet("background: transparent")
         self.next_button.setStyleSheet("background: transparent")
@@ -204,10 +206,32 @@ class AudioController(QFrame):
 
         # super().paintEvent(event)
 
-    def set_color_to(self, color: QColor) -> None:
+    # def set_color_to(self, color: QColor) -> None:
+    #     name = color.name()
+    #     print(name)
+    #     self.setStyleSheet(self.default_stylesheet + f"QWidget {{color: {name};}}")
+    #
+    #     self.play_icon = change_icon_color(self.play_icon, color)
+    #     self.pause_icon = change_icon_color(self.pause_icon, color)
+    #     self.prev_icon = change_icon_color(self.prev_icon, color)
+    #     self.next_icon = change_icon_color(self.next_icon, color)
+    #     self.volume_on_icon = change_icon_color(self.volume_on_icon, color)
+    #     self.volume_off_icon = change_icon_color(self.volume_off_icon, color)
+    #
+    #     if self.is_playing:
+    #         self.play_button.setIcon(self.play_icon)
+    #     else:
+    #         self.play_button.setIcon(self.pause_icon)
+    #
+    #     if self.is_muted:
+    #         self.volume_button.setIcon(self.volume_off_icon)
+    #     else:
+    #         self.volume_button.setIcon(self.volume_on_icon)
+    #     self.prev_button.setIcon(self.prev_icon)
+    #     self.next_button.setIcon(self.next_icon)
 
-
-
+    def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
+        color = DARK_AUDIO_CONTROLLER_COLOR if dark_mode_enabled else LIGHT_AUDIO_CONTROLLER_COLOR
         name = color.name()
         print(name)
         self.setStyleSheet(self.default_stylesheet + f"QWidget {{color: {name};}}")
@@ -218,8 +242,6 @@ class AudioController(QFrame):
         self.next_icon = change_icon_color(self.next_icon, color)
         self.volume_on_icon = change_icon_color(self.volume_on_icon, color)
         self.volume_off_icon = change_icon_color(self.volume_off_icon, color)
-
-
 
         if self.is_playing:
             self.play_button.setIcon(self.play_icon)
@@ -233,13 +255,21 @@ class AudioController(QFrame):
         self.prev_button.setIcon(self.prev_icon)
         self.next_button.setIcon(self.next_icon)
 
-    def update_background_pixmap(self, track: Track) -> None:
+        self.play_button.is_in_dark_mode = dark_mode_enabled
+        self.volume_button.is_in_dark_mode = dark_mode_enabled
+        self.prev_button.is_in_dark_mode = dark_mode_enabled
+        self.next_button.is_in_dark_mode = dark_mode_enabled
+        # self.play_button.is_in_dark_mode = dark_mode_enabled
+        # self.play_button.is_in_dark_mode = dark_mode_enabled
+        # self.play_button.is_in_dark_mode = dark_mode_enabled
 
+    def update_background_pixmap(self, track: Track) -> None:
         start = time.time()
         pixmap = get_artwork_pixmap(track.file_path)
         if not pixmap:
             self.background_pixmap = None
-            self.set_color_to(QColor("black"))
+            # self.set_color_to(DARK_AUDIO_CONTROLLER_COLOR)
+            self.set_dark_mode_enabled(True)
             self.repaint()
             return None
         pixmap = get_blurred_pixmap(pixmap)
@@ -249,7 +279,7 @@ class AudioController(QFrame):
 
         pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
         self.background_pixmap = pixmap
-        self.set_color_to(QColor("white"))
+        self.set_dark_mode_enabled(False)
         self.repaint()
         print("Audio controller background updated in:", time.time() - start)
 
