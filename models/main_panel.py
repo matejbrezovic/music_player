@@ -5,6 +5,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QVBoxLayout
 
+import global_timer
 from constants import *
 from data_models.track import Track
 from models.track_view_widget import TrackViewWidget
@@ -44,12 +45,13 @@ class MainPanel(QtWidgets.QFrame):
 
     def display_tracks(self, tracks: List[Track]) -> None:
         # global_timer.print_elapsed_time()
-        start = time.time()
+        # start = time.time()
         if self.displayed_tracks == tracks:
             return
         self.track_view_widget.set_tracks(tracks)
         self.displayed_tracks = tracks
-        print("Tracks displayed in:", time.time() - start)
+        # global_timer.print_elapsed_time()
+        # print("Tracks displayed in:", time.time() - start)
 
     def select_track(self, track: Track) -> None:
         self.track_view_widget.select_row_by_track(track)

@@ -1,9 +1,10 @@
+import time
 from time import sleep
 from typing import List, Union
 
 import pixel as pixel
 from PyQt6 import QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot, QRect
 from PyQt6.QtGui import QPalette, QBrush, QPixmap, QPainter, QPaintEvent
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
     QFrame, QToolTip
@@ -23,10 +24,12 @@ class AudioController(QFrame):
     unpaused = pyqtSignal(Track)
     remaining_queue_time_changed = pyqtSignal(int)
 
+    default_stylesheet = "QFrame#audio_controller {background-color: rgba(0, 0, 88, 0.2)}"
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self.setObjectName("audio_controller")
-        self.setStyleSheet("QFrame#audio_controller {background-color: rgba(0, 0, 88, 0.2)}")
+        self.setStyleSheet(self.default_stylesheet)
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
 
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
@@ -193,28 +196,32 @@ class AudioController(QFrame):
             painter = QPainter(self)
 
             painter.drawPixmap(self.rect(), self.background_pixmap)
+            brush = QBrush(QColor(0, 0, 0, 170))
+            painter.setBrush(brush)
+            painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_DestinationIn)
+            painter.drawRect(self.rect())
+
         # super().paintEvent(event)
 
-
     def update_background_pixmap(self, track: Track) -> None:
+
+        start = time.time()
         pixmap = get_artwork_pixmap(track.file_path)
         if not pixmap:
             self.background_pixmap = None
+            self.setStyleSheet(self.default_stylesheet + "QWidget {color: black;}")
             self.repaint()
             return None
         pixmap = get_blurred_pixmap(pixmap)
-
-        # label = QLabel()
-        # label.setPixmap(pixmap)
-        # label.show()
-        # sleep(10)
 
         start_y = pixmap.height() // 1.5
         new_height = 60
 
         pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
         self.background_pixmap = pixmap
+        self.setStyleSheet(self.default_stylesheet + "QWidget {color: white;}")
         self.repaint()
+        print("Audio controller background updated in:", time.time() - start)
 
     @pyqtSlot(list)
     def queue_next(self, tracks: List[Track]) -> None:

@@ -6,6 +6,7 @@ from PyQt6.QtGui import QIcon, QPen, QBrush, QPainter
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle, \
     QStyleOptionViewItem, QApplication
 
+import global_timer
 from constants import *
 from data_models.navigation_group import NavigationGroup
 from repositories.cached_tracks_repository import CachedTracksRepository
@@ -149,6 +150,8 @@ class NavigationTableView(QTableView):
     #         CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title))
 
     def single_click_action(self, index):
+        # global_timer.timer_init()
+        # global_timer.start()
         # print("click")
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
         self.group_clicked.emit(tracks)
