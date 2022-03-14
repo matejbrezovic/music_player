@@ -8,11 +8,9 @@ import mutagen
 from PIL import Image, ImageFilter
 from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui, QtCore
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer
-from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette, QColor
-from PyQt6.QtWidgets import QLabel, QSizePolicy, QFrame, QGridLayout, QSplitter, QLayout, QCheckBox, QWidget, QComboBox, \
-    QStyle, QStyleOption, QStyleOptionComplex, QProxyStyle, \
-    QSlider, QStyleOptionSlider, QScrollBar
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QObject, QEvent
+from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette, QColor, QIcon
+from PyQt6.QtWidgets import *
 from mutagen import MutagenError
 from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
@@ -409,6 +407,55 @@ def get_blurred_pixmap(pixmap: QPixmap) -> QPixmap:
     qim = QtGui.QImage(data, blur_img.size[0], blur_img.size[1], QtGui.QImage.Format.Format_ARGB32)
 
     return QPixmap.fromImage(qim)
+
+
+class HoverButton(QPushButton):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.backup_icon = None
+
+    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+        self.backup_icon = self.icon()
+        self.setIcon(get_hover_icon(self.backup_icon))
+        print("enter")
+
+    def leaveEvent(self, a0: QtCore.QEvent) -> None:
+        self.setIcon(self.backup_icon)
+        print("leave")
+
+    # def setIcon(self, icon: QIcon, sender=None) -> None:
+    #     if self.icon is None and sender is None:
+    #         self.backup_icon = icon
+    #     super().setIcon(icon)
+
+
+def change_icon_color(icon: QIcon, color: QColor) -> QIcon:
+    pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
+    mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
+    pixmap.fill(color)
+    pixmap.setMask(mask)
+    icon = QIcon(pixmap)
+    # icon = get_icon_with_updated_states(QIcon(pixmap))
+    return icon
+
+
+def get_hover_icon(icon: QIcon) -> QIcon:
+    pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
+    mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
+    pixmap.fill(QColor("grey"))
+    pixmap.setMask(mask)
+    icon = QIcon(pixmap)
+    # icon = get_icon_with_updated_states(QIcon(pixmap))
+    return icon
+
+
+def get_icon_with_updated_states(icon: QIcon) -> QIcon:
+    pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
+    mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
+    pixmap.fill(QColor(20, 20, 20))
+    pixmap.setMask(mask)
+    icon.addPixmap(pixmap, QIcon.Mode.Active)
+    return icon
 
 
 def get_formatted_time(track_duration: int) -> str:

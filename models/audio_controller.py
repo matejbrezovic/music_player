@@ -5,7 +5,7 @@ from typing import List, Union
 import pixel as pixel
 from PyQt6 import QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot, QRect
-from PyQt6.QtGui import QPalette, QBrush, QPixmap, QPainter, QPaintEvent
+from PyQt6.QtGui import QPalette, QBrush, QPixmap, QPainter, QPaintEvent, QIcon
 from PyQt6.QtWidgets import QStyle, QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
     QFrame, QToolTip
 
@@ -14,7 +14,7 @@ from data_models.track import Track
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
 from utils import get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError, \
-    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap
+    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton
 
 
 class AudioController(QFrame):
@@ -41,29 +41,39 @@ class AudioController(QFrame):
         self._rounded_remaining_queue_time = 0  # doesn't update while track is playing
         self.remaining_queue_time = 0
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
+        self.is_playing = False
+        self.is_muted = False
 
         self.player = AudioPlayer(self)
         self.player.positionChanged.connect(self.player_position_changed)
         self.player.durationChanged.connect(self.player_duration_changed)
 
-        self.play_button = QPushButton(self)
+        self.play_button = HoverButton(self)
         self.prev_button = QPushButton(self)
         self.next_button = QPushButton(self)
 
-        # self.play_button.setStyleSheet("background: transparent")
-        # self.prev_button.setStyleSheet("background: transparent")
-        # self.next_button.setStyleSheet("background: transparent")
+        self.play_button.setStyleSheet("background: transparent")
+        self.prev_button.setStyleSheet("background: transparent")
+        self.next_button.setStyleSheet("background: transparent")
 
         self.play_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.prev_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.next_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
 
-        self.play_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
-        self.pause_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPause)
-        self.prev_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaSkipBackward)
-        self.next_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaSkipForward)
-        self.volume_on_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaVolume)
-        self.volume_off_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaVolumeMuted)
+        # self.play_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
+        # self.pause_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPause)
+        # self.prev_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaSkipBackward)
+        # self.next_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaSkipForward)
+        # self.volume_on_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaVolume)
+        # self.volume_off_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaVolumeMuted)
+
+        self.play_icon = QIcon(QPixmap(ROOT + "/icons/play.png"))
+        self.pause_icon = QIcon(QPixmap(ROOT + "/icons/pause.png"))
+        self.prev_icon = QIcon(QPixmap(ROOT + "/icons/rewind.png"))
+        self.next_icon = QIcon(QPixmap(ROOT + "/icons/fast-forward.png"))
+        self.volume_on_icon = QIcon(QPixmap(ROOT + "/icons/volume.png"))
+        self.volume_off_icon = QIcon(QPixmap(ROOT + "/icons/mute.png"))
+
         self.play_button.setIcon(self.play_icon)
         self.prev_button.setIcon(self.prev_icon)
         self.next_button.setIcon(self.next_icon)
@@ -85,6 +95,7 @@ class AudioController(QFrame):
         self.volume_button.setIcon(self.volume_on_icon)
         self.volume_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.volume_button.clicked.connect(self.volume_button_clicked)
+        self.volume_button.setStyleSheet("background-color: transparent;")
 
         self.seek_slider = SeekSlider(self)
         self.seek_slider.setMinimum(0)
@@ -117,14 +128,20 @@ class AudioController(QFrame):
         self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
                                                                  QSizePolicy.Policy.Expanding))
 
-        self.equalizer_button = QPushButton("Eq")
-        self.equalizer_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
+        # self.equalizer_button = QPushButton("Eq")
+        # self.equalizer_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
 
         self.audio_order_button_modes = ("O", "S", "R")  # order, shuffle, repeat single
         self.audio_order_button_mode_index = 0
         self.audio_order_button = QPushButton("O")
         self.audio_order_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.audio_order_button.clicked.connect(self.change_audio_order)
+
+        # self.button_icon_dict = {
+        #     self.play_button: (self.play_icon, self.pause_icon),
+        #     self.next_button: (self.next_icon, ),
+        #     self.prev_button: (self.prev_icon, ),
+        # }
 
         # Layout logic
         self.left_part = QFrame(self)
@@ -152,7 +169,7 @@ class AudioController(QFrame):
 
         self.right_layout = QHBoxLayout(self.right_part)
         self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.right_layout.addWidget(self.equalizer_button)
+        # self.right_layout.addWidget(self.equalizer_button)
         self.right_layout.addWidget(self.audio_order_button)
 
         # self.right_part.setStyleSheet("QFrame {background-color: rgba(255, 0, 231, 0.3)}")
@@ -173,23 +190,7 @@ class AudioController(QFrame):
             self.prev_button.setEnabled(False)
             self.next_button.setEnabled(False)
 
-        # self.setBa
-
-        # self.background_pixmap = get_artwork_pixmap("C:/home/matey/Music/03 Ice in My Veins.mp3")
-        # self.background_pixmap = QPixmap("C:/My Files/My Projects/music_player/icons/album.png")
         self.background_pixmap = None
-
-        # label = QLabel()
-        # label.setPixmap(self.background_pixmap)
-        # label.setFixedSize(100, 100)
-        # label.show()
-        # sleep(10)
-
-        # palette = QPalette()
-        # palette.setBrush(self.backgroundRole(), QBrush(self.background_pixmap))
-        # self.setPalette(palette)
-
-        # self.default_background_color = QColor(0, 0, 0, 0.3)
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         if self.background_pixmap:
@@ -203,13 +204,42 @@ class AudioController(QFrame):
 
         # super().paintEvent(event)
 
+    def set_color_to(self, color: QColor) -> None:
+
+
+
+        name = color.name()
+        print(name)
+        self.setStyleSheet(self.default_stylesheet + f"QWidget {{color: {name};}}")
+
+        self.play_icon = change_icon_color(self.play_icon, color)
+        self.pause_icon = change_icon_color(self.pause_icon, color)
+        self.prev_icon = change_icon_color(self.prev_icon, color)
+        self.next_icon = change_icon_color(self.next_icon, color)
+        self.volume_on_icon = change_icon_color(self.volume_on_icon, color)
+        self.volume_off_icon = change_icon_color(self.volume_off_icon, color)
+
+
+
+        if self.is_playing:
+            self.play_button.setIcon(self.play_icon)
+        else:
+            self.play_button.setIcon(self.pause_icon)
+
+        if self.is_muted:
+            self.volume_button.setIcon(self.volume_off_icon)
+        else:
+            self.volume_button.setIcon(self.volume_on_icon)
+        self.prev_button.setIcon(self.prev_icon)
+        self.next_button.setIcon(self.next_icon)
+
     def update_background_pixmap(self, track: Track) -> None:
 
         start = time.time()
         pixmap = get_artwork_pixmap(track.file_path)
         if not pixmap:
             self.background_pixmap = None
-            self.setStyleSheet(self.default_stylesheet + "QWidget {color: black;}")
+            self.set_color_to(QColor("black"))
             self.repaint()
             return None
         pixmap = get_blurred_pixmap(pixmap)
@@ -219,7 +249,7 @@ class AudioController(QFrame):
 
         pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
         self.background_pixmap = pixmap
-        self.setStyleSheet(self.default_stylesheet + "QWidget {color: white;}")
+        self.set_color_to(QColor("white"))
         self.repaint()
         print("Audio controller background updated in:", time.time() - start)
 
@@ -267,7 +297,9 @@ class AudioController(QFrame):
 
     def play(self) -> None:
         self.updated_playing_track.emit(self.current_playlist.playing_track, self.current_playlist.playing_track_index)
+        self.update_background_pixmap(self.current_playlist.playing_track)
         self.play_button.setIcon(self.pause_icon)
+        self.is_playing = True
         self.user_action = 1
         # self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing.file_path))
         # artist = self.current_playlist.currently_playing.artist
@@ -278,7 +310,6 @@ class AudioController(QFrame):
         #     self.audio_file_name_label.setText(" - ".join([artist, title]))
         self.audio_file_name_label.setText(title)
         self.player.setSource(QUrl(self.current_playlist.playing_track.file_path))
-        self.update_background_pixmap(self.current_playlist.playing_track)
         self.player.play()
 
 
@@ -306,12 +337,14 @@ class AudioController(QFrame):
 
     def pause(self, fade=True) -> None:
         self.play_button.setIcon(self.play_icon)
+        self.is_playing = False
         self.user_action = 2
         self.player.pause(fade=fade)
         self.paused.emit(self.get_playing_track())
 
     def unpause(self, fade=True) -> None:
         self.play_button.setIcon(self.pause_icon)
+        self.is_playing = True
         self.user_action = 1
         self.player.play(fade=fade)
         self.unpaused.emit(self.get_playing_track())
@@ -343,18 +376,22 @@ class AudioController(QFrame):
         self.volume_slider_position = volume_value
         if volume_value == 0:
             self.volume_button.setIcon(self.volume_off_icon)
+            self.is_muted = True
         else:
             self.volume_button.setIcon(self.volume_on_icon)
+            self.is_muted = False
 
     def volume_button_clicked(self) -> None:
         if self.player.audio_output.volume():
             self.volume_slider_position_backup = self.volume_slider_position
             self.volume_slider.setSliderPosition(0)
             self.player.current_volume = self.player.audio_output.volume()
+            self.is_muted = True
         else:
             self.volume_slider_position = self.volume_slider_position_backup
             self.volume_slider.setSliderPosition(self.volume_slider_position)
             self.player.current_volume = self.player.audio_output.volume()
+            self.is_muted = False
 
     def get_playing_track(self) -> Track:
         return self.current_playlist.playing_track
