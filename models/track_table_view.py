@@ -264,10 +264,6 @@ class TrackTableView(QTableView):
     @pyqtSlot()
     def output_to_action_triggered(self) -> None:
         audio_output = self.sender().text()
-        print(audio_output)
-        # audio_output = audio_output.text()
-        # print(audio_output)
-
         self.output_to_triggered.emit(audio_output)
 
     def contextMenuEvent(self, event):

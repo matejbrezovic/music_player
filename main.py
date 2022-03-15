@@ -137,7 +137,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
                                   self.audio_controller.play(),
                                   ))
         self.main_panel.play_now_triggered.connect(play_now_triggered)
-        self.main_panel.queue_next_triggered.connect(self.audio_controller.queue_next)
+        self.main_panel.queue_next_triggered.connect(self.audio_controller.queue_next)  # TODO update queue info panel
         self.main_panel.queue_last_triggered.connect(self.audio_controller.queue_last)
         self.main_panel.output_to_triggered.connect(self.audio_controller.set_audio_output)
 

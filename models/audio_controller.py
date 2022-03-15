@@ -105,6 +105,7 @@ class AudioController(QFrame):
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.seek_slider_time_label = QLabel("0:00/0:00")
+        # self.seek_slider_time_label.setStyleSheet("background-color: green;")
         # self.seek_slider_time_label.setFixedWidth(80)
         # self.seek_slider_time_label.setStyleSheet("background-color: red;")
         self.seek_slider_time_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
@@ -114,9 +115,10 @@ class AudioController(QFrame):
         self.offset_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
         self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
         self.audio_file_name_label = QLabel("---")
+        # self.audio_file_name_label.setStyleSheet("background-color: red;}")
         self.audio_file_name_label.setMaximumWidth(400)
         # self.seek_slider_time_label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 0)}")
-        self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
                                                              QSizePolicy.Policy.Preferred))
         self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -162,7 +164,7 @@ class AudioController(QFrame):
         self.middle_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.middle_layout.addWidget(self.name_time_label_container)
         self.middle_layout.addWidget(self.seek_slider)
-        self.middle_layout.setContentsMargins(0, 4, 0, 6)
+        self.middle_layout.setContentsMargins(0, 0, 0, 0)
 
         self.right_layout = QHBoxLayout(self.right_part)
         self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
@@ -174,7 +176,7 @@ class AudioController(QFrame):
         self.right_part.setFixedSize(self.left_layout.sizeHint())
 
         self.main_layout = QHBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 0, 0, 0)
+        self.main_layout.setContentsMargins(0, 6, 0, 4)
         self.main_layout.addWidget(self.left_part)
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
@@ -236,8 +238,12 @@ class AudioController(QFrame):
         # self.play_button.is_in_dark_mode = dark_mode_enabled
 
     def update_background_pixmap(self, track: Track) -> None:
+        # self.repaint()
         start = time.time()
         pixmap = get_artwork_pixmap(track.file_path)
+        # if track.album == self.current_playlist.playing_track.album and \
+        #         track.title == self.current_playlist.playing_track.title:
+        #     return
         if not pixmap:
             self.background_pixmap = None
             # self.set_color_to(DARK_AUDIO_CONTROLLER_COLOR)
@@ -298,6 +304,7 @@ class AudioController(QFrame):
         self.current_playlist.set_playlist_index(index)
 
     def play(self) -> None:
+        self.seek_slider_time_label.setText("0:00/0:00")
         self.updated_playing_track.emit(self.current_playlist.playing_track, self.current_playlist.playing_track_index)
         self.update_background_pixmap(self.current_playlist.playing_track)
         self.play_button.setIcon(self.pause_icon)
