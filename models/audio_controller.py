@@ -404,6 +404,9 @@ class AudioController(QFrame):
         self.set_playlist_index(self.current_playlist.playlist.index(track))
         self.play()
 
+    def set_audio_output(self, audio_output: str) -> None:
+        self.player.set_audio_output(audio_output)
+
 
 class VolumeSlider(ImprovedSlider):
     light_stylesheet = f"""
@@ -543,3 +546,4 @@ class SeekSlider(ImprovedSlider):
         else:
             self.setStyleSheet(self.light_stylesheet)
         # print(self.styleSheet())
+

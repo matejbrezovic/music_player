@@ -139,6 +139,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.main_panel.play_now_triggered.connect(play_now_triggered)
         self.main_panel.queue_next_triggered.connect(self.audio_controller.queue_next)
         self.main_panel.queue_last_triggered.connect(self.audio_controller.queue_last)
+        self.main_panel.output_to_triggered.connect(self.audio_controller.set_audio_output)
 
         self.navigation_panel.group_clicked.connect(
             lambda tracks: (self.main_panel.display_tracks(tracks)))

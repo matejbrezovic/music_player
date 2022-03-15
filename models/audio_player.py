@@ -1,5 +1,6 @@
 from PyQt6.QtCore import QPropertyAnimation, QEasingCurve
-from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput, QAudioDevice, QMediaDevices
+from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
+import weakref
 
 
 from constants import *
@@ -13,11 +14,11 @@ class AudioPlayer(QMediaPlayer):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        # self.__audio_output = QAudioOutput()
         self.audio_output = QAudioOutput()
-        self.devices = QMediaDevices.audioOutputs()
-        # print([d.description() for d in self.devices])
 
-        # print(QAudioDevice.
+        # print([d.description() for d in self.audio_outputs])
+
         # self.audio_output.volumeChanged.connect(lambda: print("Changed volume:", self.audio_output.volume()))
         self.setAudioOutput(self.audio_output)
         self.audioOutput().setVolume(STARTING_AUDIO_VOLUME / 100)
@@ -57,3 +58,10 @@ class AudioPlayer(QMediaPlayer):
             self.fade_out_anim.start()
         else:
             super().pause()
+
+    def set_audio_output(self, audio_output_name: str) -> None:
+        audio_output_devices = QMediaDevices.audioOutputs()
+        index = [d.description() for d in audio_output_devices].index(audio_output_name)
+        self.audio_output.setDevice(audio_output_devices[index])
+        self.setAudioOutput(self.audio_output)
+

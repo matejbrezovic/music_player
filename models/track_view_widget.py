@@ -15,6 +15,7 @@ class TrackViewWidget(QWidget):
     track_double_clicked = pyqtSignal(Track, int)
     track_clicked = pyqtSignal(Track, int)
     play_now_triggered = pyqtSignal(list)
+    output_to_triggered = pyqtSignal(str)
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
 
@@ -74,6 +75,7 @@ class TrackViewWidget(QWidget):
         self.table_view.play_now_triggered.connect(self.play_now_triggered.emit)
         self.table_view.queue_next_triggered.connect(self.queue_next_triggered.emit)
         self.table_view.queue_last_triggered.connect(self.queue_last_triggered.emit)
+        self.table_view.output_to_triggered.connect(self.output_to_triggered.emit)
         #
         # self.table_view.setStyleSheet(SELECTION_STYLESHEET)
 

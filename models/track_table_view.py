@@ -1,20 +1,17 @@
 from __future__ import annotations
-import sys
-import time
-from typing import List, Optional, Any
 
-from IPython.core.inputtransformer import tr
+import sys
+from typing import List, Optional, Any, cast
+
 from PyQt6 import QtCore, QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QEvent, QItemSelectionModel
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut
+from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
-    QStyledItemDelegate, QToolButton, QMenu, QVBoxLayout, QPushButton, QWidget, QStyleOptionHeader
+    QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QStyleOptionHeader, QFrame
 
 from constants import *
 from data_models.track import Track
-from models.app import App
-from models.audio_controller import AudioController
-from repositories.cached_tracks_repository import CachedTracksRepository
 from repositories.tracks_repository import TracksRepository
 from utils import get_artwork_pixmap, format_seconds
 
@@ -211,6 +208,7 @@ class TrackTableHeader(QHeaderView):
 class TrackTableView(QTableView):
     set_new_tracks = pyqtSignal()
     play_now_triggered = pyqtSignal(list)
+    output_to_triggered = pyqtSignal(str)
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
 
@@ -238,7 +236,7 @@ class TrackTableView(QTableView):
         self.context_menu.setContentsMargins(0, 0, 0, 0)
 
         self.play_now_action = QAction("Play Now", self)
-        self.play_now_shortcut = QShortcut(QKeySequence('Alt+M'), self) # TODO shortcuts
+        self.play_now_shortcut = QShortcut(QKeySequence('Alt+M'), self)  # TODO shortcuts
         self.play_now_shortcut.activated.connect(self.play_now_action_triggered)
         self.play_now_action.setShortcut(QKeySequence("Ctrl+T"))
         self.play_now_shortcut.setContext(Qt.ShortcutContext.WidgetShortcut)
@@ -252,6 +250,25 @@ class TrackTableView(QTableView):
         self.queue_last_action = QAction("Queue Last", self)
         self.queue_last_action.triggered.connect(lambda event: self.queue_last_action_triggered(event))
         self.context_menu.addAction(self.queue_last_action)
+
+        self.play_more_menu = self.context_menu.addMenu("Play More...")
+        self.output_to_menu = self.play_more_menu.addMenu("Output To")
+
+        self.audio_output_actions = []
+
+        for audio_output in (a.description() for a in QMediaDevices.audioOutputs()):
+            action = QAction(audio_output, self)
+            action.triggered.connect(lambda _: self.output_to_action_triggered())
+            self.output_to_menu.addAction(action)
+
+    @pyqtSlot()
+    def output_to_action_triggered(self) -> None:
+        audio_output = self.sender().text()
+        print(audio_output)
+        # audio_output = audio_output.text()
+        # print(audio_output)
+
+        self.output_to_triggered.emit(audio_output)
 
     def contextMenuEvent(self, event):
         self.context_menu.popup(QtGui.QCursor.pos())
@@ -299,7 +316,6 @@ class TrackTableView(QTableView):
         return super().focusOutEvent(event)
 
 
-
 class TestMainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
@@ -315,12 +331,12 @@ class TestMainWindow(QtWidgets.QMainWindow):
         # self.table_view.horizontalHeader().setVisible(False)
 
         self.table_view.setShowGrid(False)
-        self.table_view.setStyleSheet(SELECTION_STYLESHEET)
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.table_view.setFrameShape(QFrame.Shape.NoFrame)
 
         # self.view = QTableView(self)
         # self.view.setModel(self.tableModel)
@@ -343,33 +359,33 @@ class TestMainWindow(QtWidgets.QMainWindow):
         self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # Mode set to Interactive to allow resizing
         self.table_view.horizontalHeader().setMinimumSectionSize(10)
 
-        hideButton = QPushButton('Hide Column')
-        hideButton.clicked.connect(self.hideColumn)
+        hide_button = QPushButton('Hide Column')
+        hide_button.clicked.connect(self.hide_column)
 
-        unhideButton = QPushButton('Unhide Column')
-        unhideButton.clicked.connect(self.unhideColumn)
+        unhide_button = QPushButton('Unhide Column')
+        unhide_button.clicked.connect(self.unhide_column)
 
-    def hideColumn(self):
+    def hide_column(self):
         self.table_view.model().setColumnCount(1)
 
-    def unhideColumn(self):
+    def unhide_column(self):
         self.table_view.model().setColumnCount(10)
 
     # Added a reimplementation of the resize event
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        tableSize = self.table_view.width()
-        sideHeaderWidth = self.table_view.verticalHeader().width()
-        tableSize -= sideHeaderWidth
-        numberOfColumns = self.table_view.model().columnCount()
+        table_size = self.table_view.width()
+        side_header_width = self.table_view.verticalHeader().width()
+        table_size -= side_header_width
+        number_of_columns = self.table_view.model().columnCount()
 
-        remainingWidth = tableSize % numberOfColumns
-        for columnNum in range(self.table_view.model().columnCount()):
-            if remainingWidth > 0:
-                self.table_view.setColumnWidth(columnNum, int(tableSize / numberOfColumns) + 1)
-                remainingWidth -= 1
+        remaining_width = table_size % number_of_columns
+        for column_num in range(self.table_view.model().columnCount()):
+            if remaining_width > 0:
+                self.table_view.setColumnWidth(column_num, int(table_size / number_of_columns) + 1)
+                remaining_width -= 1
             else:
-                self.table_view.setColumnWidth(columnNum, int(tableSize / numberOfColumns))
+                self.table_view.setColumnWidth(column_num, int(table_size / number_of_columns))
 
 
 if __name__ == '__main__':
