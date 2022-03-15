@@ -3,9 +3,10 @@ import sys
 import time
 from typing import List, Optional, Any
 
+from IPython.core.inputtransformer import tr
 from PyQt6 import QtCore, QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QEvent, QItemSelectionModel
-from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction
+from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut
 from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
     QStyledItemDelegate, QToolButton, QMenu, QVBoxLayout, QPushButton, QWidget, QStyleOptionHeader
 
@@ -220,23 +221,27 @@ class TrackTableView(QTableView):
         self.padding = 4
 
         self._table_model = TrackTableModel(self)
-        # self.setSelectionModel(QItemSelectionModel())
         self._table_delegate = TrackTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
-        # self.clicked.connect(lambda index: print(index.row()))
         self._table_header = TrackTableHeader(Qt.Orientation.Horizontal, self)
         self.setHorizontalHeader(self._table_header)
 
         self.horizontalHeader().setStyleSheet(f"QHeaderView::item {{padding {self.padding};}}")
-
         self.verticalHeader().setDefaultSectionSize(22)
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
 
+        self._setup_context_menu()
+
+    def _setup_context_menu(self):
         self.context_menu = QMenu(self)
         self.context_menu.setContentsMargins(0, 0, 0, 0)
 
         self.play_now_action = QAction("Play Now", self)
+        self.play_now_shortcut = QShortcut(QKeySequence('Alt+M'), self) # TODO shortcuts
+        self.play_now_shortcut.activated.connect(self.play_now_action_triggered)
+        self.play_now_action.setShortcut(QKeySequence("Ctrl+T"))
+        self.play_now_shortcut.setContext(Qt.ShortcutContext.WidgetShortcut)
         self.play_now_action.triggered.connect(lambda event: self.play_now_action_triggered(event))
         self.context_menu.addAction(self.play_now_action)
 
@@ -248,41 +253,24 @@ class TrackTableView(QTableView):
         self.queue_last_action.triggered.connect(lambda event: self.queue_last_action_triggered(event))
         self.context_menu.addAction(self.queue_last_action)
 
-        # self.set_tracks(CachedTracksRepository().get_tracks())
-        # self.set_tracks([])
-
-    # def eventFilter(self, source: QTableView, event) -> bool:
-    #     if event.type() == QEvent.Type.ContextMenu and source is self:
-    #         menu = QMenu()
-    #         menu.addAction('Action 1')
-    #         menu.addAction('Action 2')
-    #         menu.addAction('Action 3')
-    #
-    #         if menu.exec(event.globalPos()):
-    #             item = source.itemAt(event.pos())
-    #             print(item.text())
-    #         return True
-    #     return super().eventFilter(source, event)
-
     def contextMenuEvent(self, event):
         self.context_menu.popup(QtGui.QCursor.pos())
 
-    def play_now_action_triggered(self, event):
+    def play_now_action_triggered(self, _=None):
+        print("play")
         if not self._tracks:
             return
 
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
-        # print(self.selected_track_indexes)
-        # print([self._tracks[i] for i in self.selected_track_indexes])
         self.play_now_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
-    def queue_next_action_triggered(self, event):
+    def queue_next_action_triggered(self, _=None):
         if not self._tracks:
             return
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.queue_next_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
-    def queue_last_action_triggered(self, event):
+    def queue_last_action_triggered(self, _=None):
         if not self._tracks:
             return
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])

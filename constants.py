@@ -27,27 +27,24 @@ DEFAULT_AUDIO_PATH = "/home/matey/Music"
 
 # Table views constants
 
-# SELECTION_COLOR = "rgba(166, 223, 231, 0.8)"
-# LOST_FOCUS_COLOR = "rgba(0, 0, 0, 0.2)"
 SELECTION_QCOLOR = QColor(156, 206, 233)  # QColor(166, 223, 231)
 SELECTION_QCOLOR_BORDER = QColor(110, 189, 232)  # QColor(100, 140, 200)
 LOST_FOCUS_QCOLOR = QColor(0, 0, 0, 50)
 LOST_FOCUS_QCOLOR_BORDER = QColor(0, 0, 0, 60)
-
-
-# SELECTION_STYLESHEET = f"QTableView {{selection-background-color: {SELECTION_COLOR}; " \ # TODO delete
-#                        f"selection-color: black; border: 0px; outline: 0}}"
-#
-# LOST_FOCUS_STYLESHEET = f"QTableView {{selection-background-color: {LOST_FOCUS_COLOR}; " \
-#                         f"selection-color: black; border: 0px}}"
 
 # Audio controller style
 
 DARK_AUDIO_CONTROLLER_COLOR = QColor("black")
 LIGHT_AUDIO_CONTROLLER_COLOR = QColor("white")
 DARK_AUDIO_CONTROLLER_HOVER_COLOR = QColor(80, 80, 80)
-LIGHT_AUDIO_CONTROLLER_HOVER_COLOR = QColor(160, 160, 160)
+LIGHT_AUDIO_CONTROLLER_HOVER_COLOR = QColor(190, 190, 190)
 
+LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_BACKGROUND = QColor("lightGray")
+LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_PASSED_BACKGROUND = QColor(220, 220, 220)
+LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_HANDLE_BACKGROUND = QColor("red")
+DARK_AUDIO_CONTROLLER_SEEK_SLIDER_BACKGROUND = QColor("lightGray")
+DARK_AUDIO_CONTROLLER_SEEK_SLIDER_PASSED_BACKGROUND = QColor("darkGray")
+DARK_AUDIO_CONTROLLER_SEEK_SLIDER_HANDLE_BACKGROUND = QColor("black")
 
 MAIN_PANEL_COLUMN_NAMES = ("", "", "Artist", "Title", "Album", "Year", "Genre", "Rating", "Time")
 MAIN_PANEL_VIEW_OPTIONS = ("Tracks", "Album and Tracks", "Album Covers", "Artists")

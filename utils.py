@@ -421,12 +421,12 @@ class HoverButton(QPushButton):
         if self.isEnabled():
             self.backup_icon = self.icon()
             self.setIcon(get_hover_icon(self.backup_icon, self.is_in_dark_mode))
-            print("enter")
+            # print("enter")
 
     def leaveEvent(self, e: QtCore.QEvent) -> None:
         if self.isEnabled():
             self.setIcon(self.backup_icon)
-            print("leave")
+            # print("leave")
 
     def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
         self.clicked.emit()

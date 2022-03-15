@@ -33,7 +33,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # TracksRepository().create_groups()
         self._setup_ui()
 
-        self.setWindowTitle('music player v0.0.12')
+        self.setWindowTitle('music player v0.0.13')
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
