@@ -3,8 +3,6 @@ import string
 import sys
 from typing import List
 
-from PyQt6.QtWidgets import *
-
 from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
 from utils import *

@@ -1,7 +1,7 @@
 import time
 from typing import Union, List, Tuple
-from constants import *
 
+from constants import *
 from data_models.track import Track
 from repositories.singleton import Singleton
 from repositories.tracks_repository import TracksRepository

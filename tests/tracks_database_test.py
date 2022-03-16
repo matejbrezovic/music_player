@@ -1,6 +1,5 @@
 import time
 
-from constants import DATABASE_PATH
 from repositories.tracks_repository import TracksRepository
 from repositories.tracks_repository_json import TracksRepository as JSONTracksRepository
 

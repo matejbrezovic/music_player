@@ -9,7 +9,6 @@ import time
 
 from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import *
 
 from data_models.track import Track
 from models.add_files_dialog import AddFilesDialog

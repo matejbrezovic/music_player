@@ -1,15 +1,13 @@
 from typing import List
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QSize
-from PyQt6.QtWidgets import *
 
+from constants import *
 from data_models.navigation_group import NavigationGroup
 from models.navigation_table_view import NavigationTableView
 from repositories.cached_tracks_repository import CachedTracksRepository
 from tag_manager import TagManager
 from utils import *
-from constants import *
 
 
 class NavigationPanel(QFrame):

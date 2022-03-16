@@ -1,7 +1,5 @@
 from PyQt6.QtCore import QPropertyAnimation, QEasingCurve
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
-import weakref
-
 
 from constants import *
 

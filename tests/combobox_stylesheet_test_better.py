@@ -1,7 +1,7 @@
 import sys
 
-from PyQt6.QtWidgets import QComboBox, QStyleFactory
 from PyQt6.QtCore import Qt
+from PyQt6.QtWidgets import QComboBox, QStyleFactory
 from PyQt6.QtWidgets import QWidget, QMainWindow, QVBoxLayout, QApplication
 
 

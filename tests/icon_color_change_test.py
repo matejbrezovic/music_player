@@ -3,9 +3,9 @@ import sys
 from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtGui import QPixmap, QIcon
 from PyQt6.QtWidgets import *
-from constants import *
-from utils import change_icon_color, get_icon_with_updated_states
 
+from constants import *
+from utils import get_icon_with_updated_states
 
 
 class IconChangeMainWindowUi(QMainWindow):

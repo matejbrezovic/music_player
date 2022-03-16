@@ -3,10 +3,9 @@ import sys
 import time
 
 from PIL import Image, ImageFilter
-from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, QBuffer, QRect, QSize, QPoint, QByteArray
-from PyQt6.QtGui import QPixmap, QImage, QPainter, QPalette, QBrush
+from PyQt6.QtCore import Qt, QBuffer
+from PyQt6.QtGui import QPixmap, QPalette, QBrush
 from PyQt6.QtWidgets import *
 
 from utils import get_artwork_pixmap

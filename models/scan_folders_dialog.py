@@ -1,16 +1,14 @@
 from __future__ import annotations
 
-import os
 from typing import Union, List, Tuple
 
-from PyQt6.QtWidgets import QDialog, QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout, \
+from PyQt6.QtWidgets import QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout, \
     QVBoxLayout
 
 from config import Config
-from repositories.cached_tracks_repository import CachedTracksRepository
-from repositories.tracks_repository import TracksRepository
-from utils import *
 from constants import *
+from repositories.cached_tracks_repository import CachedTracksRepository
+from utils import *
 
 
 # TODO only overwrite files from folders which were scanned, not other ones; don't allow to proceed when no

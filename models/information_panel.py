@@ -1,15 +1,13 @@
 import math
 from typing import List
 
-from PyQt6 import QtWidgets
-from PyQt6.QtCore import QSize, pyqtSlot
-from PyQt6.QtWidgets import *
+from PyQt6.QtCore import pyqtSlot
 
+from constants import *
 from data_models.track import Track
 from models.information_table_view import InformationTableView
 from tag_manager import TagManager
 from utils import *
-from constants import *
 
 
 class InformationPanel(QFrame):

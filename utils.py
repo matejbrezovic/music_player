@@ -1,6 +1,5 @@
 import datetime
 import io
-import typing
 from os import path
 from typing import Optional
 
@@ -8,8 +7,8 @@ import mutagen
 from PIL import Image, ImageFilter
 from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui, QtCore
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QObject, QEvent, QPointF
-from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QPalette, QColor, QIcon, QEnterEvent
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QPointF
+from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent
 from PyQt6.QtWidgets import *
 from mutagen import MutagenError
 from mutagen.id3 import ID3
@@ -26,9 +25,9 @@ def classify(module):
 
 
 def get_project_root(file_path: str) -> str:
-    anchor_file = "main.py"
+    anchor_files = ("main.py", "Qt6Widgets.dll")
     dir_path = path.dirname(file_path)
-    while dir_path != '/' and not path.exists(path.join(dir_path, anchor_file)):
+    while dir_path != '/' and not any([path.exists(path.join(dir_path, a)) for a in anchor_files]):
         dir_path = path.dirname(dir_path)
 
     if dir_path == '/':

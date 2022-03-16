@@ -5,7 +5,7 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
-    QFrame, QStylePainter, QStyleOption, QStyleOptionSlider, QStyle, QSlider
+    QFrame
 
 from constants import *
 from data_models.track import Track

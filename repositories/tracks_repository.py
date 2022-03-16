@@ -1,6 +1,5 @@
 import sqlite3
-import time
-from typing import List, Union, Iterable, Tuple, Generator
+from typing import List, Union, Iterable, Tuple
 
 import mutagen.mp3
 from PyQt6 import QtWidgets

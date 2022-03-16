@@ -3,8 +3,8 @@ from typing import List
 from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import QWidget, QSplitter, QVBoxLayout, QHBoxLayout
 
-from utils import TransparentComboBox
 from constants import *
+from utils import TransparentComboBox
 
 
 class HeaderMenu(QWidget):

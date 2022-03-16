@@ -1,8 +1,8 @@
 from typing import List, Any
 
 from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint, QLineF, QLine
-from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QIcon
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint
+from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate, \
     QStyle, QStyleOptionViewItem, QApplication
 

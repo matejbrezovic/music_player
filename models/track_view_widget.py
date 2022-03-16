@@ -1,14 +1,12 @@
 from typing import List
 
-from PyQt6 import QtWidgets, QtCore
-from PyQt6.QtCore import QSize, QEvent, QModelIndex
-from PyQt6.QtWidgets import *
+from PyQt6 import QtWidgets
 
+from constants import *
 # from auto_resizing_header_view_test import HeaderView
 from data_models.track import Track
 from models.track_table_view import TrackTableView
 from utils import *
-from constants import *
 
 
 class TrackViewWidget(QWidget):

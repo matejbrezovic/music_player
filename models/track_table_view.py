@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-from typing import List, Optional, Any, cast
+from typing import List, Optional, Any
 
 from PyQt6 import QtCore, QtWidgets, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot
@@ -57,11 +57,16 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                 artwork_pixmap = track.artwork_pixmap
                 if artwork_pixmap is None:
                     new_pixmap = get_artwork_pixmap(track.file_path)
+                    print("Got artwork pixmap:", index.row())
                     track.artwork_pixmap = new_pixmap if new_pixmap else ""
                     artwork_pixmap = track.artwork_pixmap
                 if not artwork_pixmap:
                     return None
                 return artwork_pixmap
+                    # .scaled(self._table_view.columnWidth(index.column()),
+                    #                          self._table_view.columnWidth(index.column()),
+                    #                          Qt.AspectRatioMode.IgnoreAspectRatio,
+                    #                          Qt.TransformationMode.SmoothTransformation)
                 # icon = QIcon(artwork_pixmap)
                 # icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
                 # return icon if icon else None
@@ -117,10 +122,11 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                                   self.index(self.rowCount(), 1))
 
 
-class TrackTableItemDelegate(QStyledItemDelegate):
+class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawing speed
     def __init__(self, parent: TrackTableView = None):
         super().__init__(parent)
         self._table_view: TrackTableView = parent
+        self.last_height = self._table_view.height()
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         painter.setPen(QPen(Qt.PenStyle.NoPen))
@@ -146,23 +152,6 @@ class TrackTableItemDelegate(QStyledItemDelegate):
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 
-        if index.data(Qt.ItemDataRole.DecorationRole):
-            decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
-            rect = option.rect
-            rect.setRect(rect.left() + 1, rect.top() + 1,
-                         rect.width() - 2, rect.height() - 2)
-
-            if index.column() == 1:
-                height = rect.height()
-                rect.setHeight(rect.width())
-                rect.translate(0, (height - rect.width()) / 2)
-
-            pixmap = decoration_value.scaled(rect.width(), rect.width(),
-                                             Qt.AspectRatioMode.KeepAspectRatio,
-                                             Qt.TransformationMode.SmoothTransformation)
-
-            painter.drawPixmap(rect, pixmap)
-
         if index.data(Qt.ItemDataRole.DisplayRole):
             painter.setPen(QPen(Qt.GlobalColor.black))
             text = f"{index.data(Qt.ItemDataRole.DisplayRole)}"
@@ -174,6 +163,30 @@ class TrackTableItemDelegate(QStyledItemDelegate):
                 # padding = 4
                 option.rect.setLeft(option.rect.left() + self._table_view.padding)
                 painter.drawText(option.rect, alignment, elided_text)
+
+        # if self.last_height == self._table_view.height():
+        #     return
+        # else:
+        #     self.last_height = self._table_view.height()
+
+
+        if index.data(Qt.ItemDataRole.DecorationRole):
+            pixmap = index.data(Qt.ItemDataRole.DecorationRole)
+            rect = option.rect
+            rect.setRect(rect.left() + 1, rect.top() + 1,
+                         rect.width() - 2, rect.height() - 2)
+
+            if index.column() == 1:
+                height = rect.height()
+                rect.setHeight(rect.width())
+                rect.translate(0, (height - rect.width()) / 2)
+
+            pixmap = pixmap.scaled(rect.width(), rect.height(),
+                                   Qt.AspectRatioMode.KeepAspectRatio,
+                                   Qt.TransformationMode.SmoothTransformation)
+            # print("Painted pixmap")
+
+            painter.drawPixmap(rect, pixmap)
 
 
 class TrackTableHeader(QHeaderView):
@@ -236,10 +249,14 @@ class TrackTableView(QTableView):
         self.context_menu.setContentsMargins(0, 0, 0, 0)
 
         self.play_now_action = QAction("Play Now", self)
-        self.play_now_shortcut = QShortcut(QKeySequence('Alt+M'), self)  # TODO shortcuts
-        self.play_now_shortcut.activated.connect(self.play_now_action_triggered)
-        self.play_now_action.setShortcut(QKeySequence("Ctrl+T"))
-        self.play_now_shortcut.setContext(Qt.ShortcutContext.WidgetShortcut)
+        self.play_now_shortcut_enter = QShortcut(QKeySequence("Alt+Enter"), self)
+        self.play_now_shortcut_enter.activated.connect(self.play_now_action_triggered)
+        self.play_now_shortcut_enter.setContext(Qt.ShortcutContext.WidgetShortcut)
+        self.play_now_shortcut_return = QShortcut(QKeySequence("Alt+Return"), self)
+        self.play_now_shortcut_return.activated.connect(self.play_now_action_triggered)
+        self.play_now_shortcut_return.setContext(Qt.ShortcutContext.WidgetShortcut)
+        self.play_now_action.setShortcut(QKeySequence("Alt+Enter"))
+
         self.play_now_action.triggered.connect(lambda event: self.play_now_action_triggered(event))
         self.context_menu.addAction(self.play_now_action)
 
@@ -255,7 +272,6 @@ class TrackTableView(QTableView):
         self.output_to_menu = self.play_more_menu.addMenu("Output To")
 
         self.audio_output_actions = []
-
         for audio_output in (a.description() for a in QMediaDevices.audioOutputs()):
             action = QAction(audio_output, self)
             action.triggered.connect(lambda _: self.output_to_action_triggered())
@@ -264,16 +280,18 @@ class TrackTableView(QTableView):
     @pyqtSlot()
     def output_to_action_triggered(self) -> None:
         audio_output = self.sender().text()
+        print()
         self.output_to_triggered.emit(audio_output)
 
     def contextMenuEvent(self, event):
         self.context_menu.popup(QtGui.QCursor.pos())
 
-    def play_now_action_triggered(self, _=None):
+    def play_now_action_triggered(self, e=None):
         print("play")
         if not self._tracks:
             return
 
+        print(e)
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.play_now_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 

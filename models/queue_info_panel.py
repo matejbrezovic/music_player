@@ -1,7 +1,7 @@
 from typing import List
 
 from PyQt6.QtCore import Qt
-from PyQt6.QtWidgets import QWidget, QHBoxLayout, QSizePolicy, QFrame
+from PyQt6.QtWidgets import QHBoxLayout, QSizePolicy, QFrame
 
 from data_models.track import Track
 from models.audio_controller import AudioController

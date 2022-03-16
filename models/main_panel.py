@@ -1,16 +1,13 @@
-import time
 from typing import List
 
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import Qt, pyqtSignal
 from PyQt6.QtWidgets import QVBoxLayout
 
-import global_timer
 from constants import *
 from data_models.track import Track
 from models.track_view_widget import TrackViewWidget
 from tag_manager import TagManager
-from utils import TransparentComboBox
 
 
 class MainPanel(QtWidgets.QFrame):

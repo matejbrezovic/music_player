@@ -5,8 +5,8 @@ from random import randint, choice
 from string import ascii_letters
 from typing import List, Optional
 
-from PyQt6 import QtGui
 from PyQt6 import QtCore, QtWidgets
+from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
 from PyQt6.QtGui import QPainter, QPen, QBrush, QFontMetrics, QColor
 from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
