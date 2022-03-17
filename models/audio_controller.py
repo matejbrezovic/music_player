@@ -5,14 +5,14 @@ from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
-    QFrame
+    QFrame, QToolTip
 
 from constants import *
 from data_models.track import Track
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
 from utils import get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError, \
-    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton
+    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds
 
 
 class AudioController(QFrame):
@@ -324,6 +324,7 @@ class AudioController(QFrame):
     def player_duration_changed(self, duration: int) -> None:
         self.seek_slider.setRange(0, duration - 120)
         self.seek_slider_time_label.setText(get_formatted_time(self.player.duration()))
+        self.seek_slider.set_length_in_seconds(format_player_position_to_seconds(self.player.duration()))
 
     def player_position_changed(self, position: int, sender_type=False) -> None:  # TODO why sender_type?
         if not sender_type:
@@ -461,7 +462,7 @@ class VolumeSlider(ImprovedSlider):
             self.setStyleSheet(self.light_stylesheet)
 
 
-class SeekSlider(ImprovedSlider):
+class SeekSlider(ImprovedSlider):  # TODO add transparent background
     light_stylesheet = f"""
     QSplitter::groove {{
         height: 2px;
@@ -470,7 +471,7 @@ class SeekSlider(ImprovedSlider):
     
     QSlider::handle {{
         height: 2px;
-        background: {LIGHT_AUDIO_CONTROLLER_HOVER_COLOR.name()};
+        background: {LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_HANDLE_BACKGROUND.name()};
     }}
     
     QSlider::add-page {{
@@ -492,7 +493,7 @@ class SeekSlider(ImprovedSlider):
     QSlider::handle {{
         height: 2px;
         width: 2px;
-        background: {DARK_AUDIO_CONTROLLER_HOVER_COLOR.name()};
+        background: {DARK_AUDIO_CONTROLLER_SEEK_SLIDER_HANDLE_BACKGROUND.name()};
     }}
     
     QSlider::add-page {{
@@ -504,14 +505,18 @@ class SeekSlider(ImprovedSlider):
     }}
     """
 
-    def __init__(self, parent: AudioController, *args, **kwargs):
+    def __init__(self, audio_controller: AudioController, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.parent = parent  # TODO remove self.parent
-        self.backup_volume = self.parent.player.audio_output.volume()
+        self.audio_controller = audio_controller  # TODO remove self.parent
+        self.backup_volume = self.audio_controller.player.audio_output.volume()
         self.backup_action = -1
         self.setFixedHeight(6)
         # self.setContentsMargins(0, 0, 0, 10)
         self.setStyleSheet(self.dark_stylesheet)
+        self.setMouseTracking(True)
+        # self.setToolTip("AAAAA")
+        self.length_in_seconds = format_player_position_to_seconds(self.audio_controller.player.duration())
+        self.formatted_length_in_seconds = format_seconds(self.length_in_seconds)
     #
     # def paintEvent(self, ev: QtGui.QPaintEvent) -> None:
     #     painter = QPainter(self)
@@ -528,24 +533,28 @@ class SeekSlider(ImprovedSlider):
     #     self.style().drawComplexControl(QStyle.ComplexControl.CC_Slider, option, painter, self)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        super(SeekSlider, self).mousePressEvent(event)
-        self.backup_action = self.parent.user_action
-        self.parent.player.setPosition(self.pixel_pos_to_range_value(event.pos()))
-        self.backup_volume = self.parent.player.audio_output.volume()
-        self.parent.pause(fade=False)
+        super().mousePressEvent(event)
+        # print("press")
+        self.backup_action = self.audio_controller.user_action
+        self.audio_controller.player.setPosition(self.pixel_pos_to_range_value(event.pos()))
+        self.backup_volume = self.audio_controller.player.audio_output.volume()
+        self.audio_controller.pause(fade=False)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        val = self.pixel_pos_to_range_value(event.pos())
-        self.setValue(val)
-        self.parent.player.setPosition(val)
+        seconds = int((event.pos().x() / self.width()) * self.length_in_seconds)
+        formatted_seconds = format_seconds(seconds)
+        tool_tip_str = f"{formatted_seconds}/{self.formatted_length_in_seconds}"
+
+        QToolTip.showText(event.globalPosition().toPoint(), tool_tip_str, self)
 
     def mouseReleaseEvent(self, ev: QtGui.QMouseEvent) -> None:
+        # print("release")
         # handles unmuting audio and updating player
-        self.parent.player.audio_output.setVolume(self.backup_volume)
-        self.parent.set_player_position(self.sliderPosition())
+        self.audio_controller.player.audio_output.setVolume(self.backup_volume)
+        self.audio_controller.set_player_position(self.sliderPosition())
 
         if self.backup_action == 1:
-            self.parent.unpause(fade=False)
+            self.audio_controller.unpause(fade=False)
 
     def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
         if dark_mode_enabled:
@@ -553,4 +562,8 @@ class SeekSlider(ImprovedSlider):
         else:
             self.setStyleSheet(self.light_stylesheet)
         # print(self.styleSheet())
+
+    def set_length_in_seconds(self, length_in_seconds: int) -> None:
+        self.length_in_seconds = length_in_seconds
+        self.formatted_length_in_seconds = format_seconds(length_in_seconds)
 

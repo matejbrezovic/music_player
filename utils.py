@@ -498,7 +498,7 @@ def format_seconds(time_in_seconds: int) -> str:
 
 
 def format_player_position_to_seconds(position: int) -> int:
-    return int((position / 1000) % 60)
+    return int(position / 1000)
 
 
 if __name__ == "__main__":
