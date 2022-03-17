@@ -45,6 +45,7 @@ class AudioPlayer(QMediaPlayer):
             self.fade_in_anim.setEndValue(self.current_volume)
             self.fade_in_anim.start()
         else:
+            print("current_volume:", self.current_volume)
             self.audioOutput().setVolume(self.current_volume)
         super().play()
 

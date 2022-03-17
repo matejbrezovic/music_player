@@ -1,9 +1,10 @@
 import time
+import typing
 from typing import List
 
 from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot
-from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot, QEvent
+from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QHoverEvent
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
     QFrame, QToolTip
 
@@ -379,6 +380,7 @@ class AudioController(QFrame):
         self.play()
 
     def volume_changed(self, volume_value: int) -> None:
+        print("volume changed:", volume_value)
         self.player.audio_output.setVolume(volume_value / 100)
         self.player.current_volume = volume_value / 100
         self.volume_slider.setSliderPosition(volume_value)
@@ -513,8 +515,6 @@ class SeekSlider(ImprovedSlider):  # TODO add transparent background
         self.setFixedHeight(6)
         # self.setContentsMargins(0, 0, 0, 10)
         self.setStyleSheet(self.dark_stylesheet)
-        self.setMouseTracking(True)
-        # self.setToolTip("AAAAA")
         self.length_in_seconds = format_player_position_to_seconds(self.audio_controller.player.duration())
         self.formatted_length_in_seconds = format_seconds(self.length_in_seconds)
     #
@@ -534,27 +534,44 @@ class SeekSlider(ImprovedSlider):  # TODO add transparent background
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         super().mousePressEvent(event)
+        if not self.length_in_seconds:
+            return
+
         # print("press")
         self.backup_action = self.audio_controller.user_action
         self.audio_controller.player.setPosition(self.pixel_pos_to_range_value(event.pos()))
-        self.backup_volume = self.audio_controller.player.audio_output.volume()
+        # self.backup_volume = self.audio_controller.volume_slider.value() / 100
+        # print(self.backup_volume)
         self.audio_controller.pause(fade=False)
+        self.audio_controller.player.current_volume = self.audio_controller.volume_slider.value() / 100
 
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        seconds = int((event.pos().x() / self.width()) * self.length_in_seconds)
-        formatted_seconds = format_seconds(seconds)
-        tool_tip_str = f"{formatted_seconds}/{self.formatted_length_in_seconds}"
+    def event(self, event):
+        if event.type() == QEvent.Type.HoverMove:
+            if not self.length_in_seconds:
+                return True
+            # event = typing.cast(event, QHoverEvent)
+            seconds = int((event.oldPos().x() / self.width()) * self.length_in_seconds)
+            seconds = max(0, min(seconds, self.length_in_seconds))
+            formatted_seconds = format_seconds(seconds)
+            tool_tip_str = f"{formatted_seconds}/{self.formatted_length_in_seconds}"
+            QToolTip.showText(self.mapToGlobal(event.globalPosition().toPoint()), tool_tip_str, self)
 
-        QToolTip.showText(event.globalPosition().toPoint(), tool_tip_str, self)
+            return True
+        return super().event(event)
 
     def mouseReleaseEvent(self, ev: QtGui.QMouseEvent) -> None:
+        if not self.length_in_seconds:
+            return
         # print("release")
         # handles unmuting audio and updating player
-        self.audio_controller.player.audio_output.setVolume(self.backup_volume)
+
         self.audio_controller.set_player_position(self.sliderPosition())
 
         if self.backup_action == 1:
+            # self.audio_controller.player.audio_output.current_volume = self.backup_volume
             self.audio_controller.unpause(fade=False)
+
+        print(self.backup_volume)
 
     def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
         if dark_mode_enabled:
