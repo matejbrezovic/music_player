@@ -1,3 +1,4 @@
+import os
 import sqlite3
 from typing import List, Union, Iterable, Tuple
 
@@ -20,16 +21,16 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         cursor = conn.cursor()
 
         cursor.execute("INSERT INTO tracks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (None,
-                                                                                 track.file_path,
-                                                                                 track.title,
-                                                                                 track.album,
-                                                                                 track.artist,
-                                                                                 track.composer,
-                                                                                 track.genre,
-                                                                                 track.year,
-                                                                                 track.length,
-                                                                                 track.rating
-                                                                                 ))
+                                                                                    track.file_path,
+                                                                                    track.title,
+                                                                                    track.album,
+                                                                                    track.artist,
+                                                                                    track.composer,
+                                                                                    track.genre,
+                                                                                    track.year,
+                                                                                    track.length,
+                                                                                    track.rating
+                                                                                    ))
         conn.commit()
         conn.close()
 
@@ -44,6 +45,10 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
             if track not in existing_tracks:
                 tracks_to_add.append(track)
         self.add_tracks(tracks_to_add)
+
+    def set_tracks(self, tracks: Iterable[Track]) -> None:
+        self.reset_table("tracks")
+        self.add_tracks(tracks)
 
     def get_track_counts_grouped_by(self, group_key: str) -> List[Tuple[str, int]]:
         conn = self.get_connection()
@@ -232,10 +237,15 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         for i, file_path in enumerate(file_paths):
             try:
                 loaded_file = tag_manager.load_file(file_path)
+
+                title = loaded_file["title"].first
+                if not title:
+                    title = os.path.basename(file_path).split("-", 1)[-1].strip()
+
                 tracks.append(Track(
                     i,
                     file_path,
-                    file_path.rsplit("/")[-1],
+                    title,
                     loaded_file["album"].first,
                     loaded_file["artist"].first,
                     loaded_file["composer"].first,
@@ -244,6 +254,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                     int(loaded_file["#length"].first),
                     # get_artwork_pixmap(file_path, "album")
                 ))
+                print(tracks[i].title)
             except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError):
                 # TODO cannot convert '2020-10-26T20:39:57-04:00' to int type for year so ValueError (can be improved)
                 continue

@@ -55,7 +55,7 @@ class TracksRepository:
                 tracks.append(Track(
                     i,
                     file_path,
-                    file_path.rsplit("/")[-1],
+                    loaded_file["title"].first,
                     loaded_file["album"].first,
                     loaded_file["artist"].first,
                     loaded_file["composer"].first,

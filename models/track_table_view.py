@@ -57,7 +57,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                 artwork_pixmap = track.artwork_pixmap
                 if artwork_pixmap is None:
                     new_pixmap = get_artwork_pixmap(track.file_path)
-                    print("Got artwork pixmap:", index.row())
+                    # print("Got artwork pixmap:", index.row())
                     track.artwork_pixmap = new_pixmap if new_pixmap else ""
                     artwork_pixmap = track.artwork_pixmap
                 if not artwork_pixmap:
@@ -196,6 +196,8 @@ class TrackTableHeader(QHeaderView):
         self.setSortIndicatorShown(True)
         self.setSectionsMovable(True)
         self.setFirstSectionMovable(False)
+
+
 
         self.section_text = MAIN_PANEL_COLUMN_NAMES
 

@@ -3,10 +3,10 @@ import typing
 from typing import List
 
 from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot, QEvent
+from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot, QEvent, QSize
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QHoverEvent
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
-    QFrame, QToolTip
+    QFrame, QToolTip, QSpacerItem
 
 from constants import *
 from data_models.track import Track
@@ -57,7 +57,7 @@ class AudioController(QFrame):
         self.prev_button.setStyleSheet("background: transparent")
         self.next_button.setStyleSheet("background: transparent")
 
-        self.play_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
+        self.play_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT + 10, CONTROLLER_BUTTON_WIDTH + 10)
         self.prev_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.next_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
 
@@ -76,6 +76,7 @@ class AudioController(QFrame):
         self.volume_off_icon = QIcon(QPixmap(ROOT + "/icons/mute.png"))
 
         self.play_button.setIcon(self.play_icon)
+        self.play_button.setIconSize(self.size() - QSize(26, 26))
         self.prev_button.setIcon(self.prev_icon)
         self.next_button.setIcon(self.next_icon)
 
@@ -145,17 +146,21 @@ class AudioController(QFrame):
 
         # Layout logic
         self.left_part = QFrame(self)
+        # self.left_part.setStyleSheet("background: green;")
         self.middle_part = QFrame(self)
         self.right_part = QFrame(self)
 
         self.left_layout = QHBoxLayout(self.left_part)
-        self.left_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+        self.left_layout.setContentsMargins(0, 0, 0, 0)
+        self.left_layout.setSpacing(0)
+        self.left_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         self.left_layout.addWidget(self.prev_button)
         self.left_layout.addWidget(self.play_button)
         self.left_layout.addWidget(self.next_button)
+        self.left_layout.addSpacerItem(QSpacerItem(40, 10))
         self.left_layout.addWidget(self.volume_button)
         self.left_layout.addWidget(self.volume_slider)
-        self.left_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
+        # self.left_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
         # self.left_part.setStyleSheet("QFrame {background-color: rgba(0, 255, 7, 0.3)}")
         self.left_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
@@ -168,6 +173,7 @@ class AudioController(QFrame):
         self.middle_layout.setContentsMargins(0, 0, 0, 0)
 
         self.right_layout = QHBoxLayout(self.right_part)
+        self.right_layout.setContentsMargins(0, 0, 0, 0)
         self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
         # self.right_layout.addWidget(self.equalizer_button)
         self.right_layout.addWidget(self.audio_order_button)
@@ -177,7 +183,7 @@ class AudioController(QFrame):
         self.right_part.setFixedSize(self.left_layout.sizeHint())
 
         self.main_layout = QHBoxLayout(self)
-        self.main_layout.setContentsMargins(0, 6, 0, 4)
+        self.main_layout.setContentsMargins(4, 6, 4, 4)
         self.main_layout.addWidget(self.left_part)
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
@@ -533,17 +539,21 @@ class SeekSlider(ImprovedSlider):  # TODO add transparent background
     #     self.style().drawComplexControl(QStyle.ComplexControl.CC_Slider, option, painter, self)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        super().mousePressEvent(event)
         if not self.length_in_seconds:
             return
-
-        # print("press")
+        super().mousePressEvent(event)
+        print("press")
         self.backup_action = self.audio_controller.user_action
         self.audio_controller.player.setPosition(self.pixel_pos_to_range_value(event.pos()))
         # self.backup_volume = self.audio_controller.volume_slider.value() / 100
         # print(self.backup_volume)
         self.audio_controller.pause(fade=False)
         self.audio_controller.player.current_volume = self.audio_controller.volume_slider.value() / 100
+
+    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+        if not self.length_in_seconds:
+            return
+        super().mouseMoveEvent(event)
 
     def event(self, event):
         if event.type() == QEvent.Type.HoverMove:
@@ -571,7 +581,7 @@ class SeekSlider(ImprovedSlider):  # TODO add transparent background
             # self.audio_controller.player.audio_output.current_volume = self.backup_volume
             self.audio_controller.unpause(fade=False)
 
-        print(self.backup_volume)
+        # print(self.backup_volume)
 
     def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
         if dark_mode_enabled:

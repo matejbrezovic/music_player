@@ -86,9 +86,10 @@ class ScanFoldersDialog(QDialog):
                 for file in files:
                     if file.rsplit(".")[-1] in SUPPORTED_AUDIO_FORMATS:
                         found_file_paths.append(f"{root}/{file}")
-        tracks = CachedTracksRepository().convert_file_paths_to_tracks([file_path.replace("\\", "/").replace("//", "/") for
-                                                                  file_path in found_file_paths])
-        CachedTracksRepository().add_new_tracks(tracks)
+        tracks = CachedTracksRepository().convert_file_paths_to_tracks(
+            [file_path.replace("\\", "/").replace("//", "/") for file_path in found_file_paths])
+
+        CachedTracksRepository().set_tracks(tracks)
         CachedTracksRepository().delete_cache()
         CachedTracksRepository().cache_tracks()
         self.done(0)
