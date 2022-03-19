@@ -53,6 +53,8 @@ class TrackViewWidget(QWidget):
         # self.table_view.horizontalHeader().pa
         self.table_view.horizontalHeader().setMinimumSectionSize(4)
         self.table_view.horizontalHeader().setDefaultAlignment(Qt.AlignmentFlag.AlignLeft)
+        # self.table_view.verticalHeader().setOffset(-20)
+        # print(self.table_view.verticalOffset())
         self.table_view.verticalHeader().setVisible(False)
         # self.table_view.horizontalHeader().setVisible(False)
         self.table_view.setShowGrid(False)

@@ -326,8 +326,8 @@ class TransparentComboBox(QComboBox):
 class ImprovedSlider(QSlider):
     value_changed = pyqtSignal(int)
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         if event.button() == QtCore.Qt.MouseButton.LeftButton:
@@ -431,7 +431,6 @@ class HoverButton(QPushButton):
         self.clicked.emit()
         self.enterEvent(QEnterEvent(QPointF(1, 1), QPointF(1, 1), QPointF(1, 1)))
 
-
     # def setIcon(self, icon: QIcon, sender=None) -> None:
     #     if self.icon is None and sender is None:
     #         self.backup_icon = icon
@@ -491,10 +490,14 @@ def format_seconds(time_in_seconds: int) -> str:
     if time_in_seconds < 60:
         return f"0:{time_in_seconds}"
     # print("0:".join(str(datetime.timedelta(seconds=time_in_seconds)).split("00:")[-2:]))
-    step_one = "".join(str(datetime.timedelta(seconds=time_in_seconds)).split("0:")[-1:]).split()[-1].lstrip("0")
+    step_one = "".join(str(datetime.timedelta(seconds=time_in_seconds)))
+    step_two = step_one.split("0:", 1)[-1]
+    step_three = step_two.split()[-1]
+    step_four = step_three.lstrip("0")
     # if not step_one.split(":")[-1].startswith("0") and len(step_one.split(":")[-1]) <= 1:
     #     step_one = step_one.replace(":", ":0")
-    return step_one
+    # print(step_one, step_two, step_three, step_four)
+    return step_four
 
 
 def format_player_position_to_seconds(position: int) -> int:

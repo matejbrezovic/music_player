@@ -274,6 +274,7 @@ class MainWindow(QMainWindow):
         model = Model()
         view.setModel(model)
         header.init_sizes()
+        view.verticalHeader().setOffset(-40)
         # header.setFixedWidth(600)
         header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
         header.setStyleSheet("background-color: lightBlue;")

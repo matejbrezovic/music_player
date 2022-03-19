@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayo
 
 from constants import *
 from data_models.track import Track
+from marquee_label_test import MarqueeLabel
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
 from utils import get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError, \
@@ -386,7 +387,7 @@ class AudioController(QFrame):
         self.play()
 
     def volume_changed(self, volume_value: int) -> None:
-        print("volume changed:", volume_value)
+        # print("volume changed:", volume_value)
         self.player.audio_output.setVolume(volume_value / 100)
         self.player.current_volume = volume_value / 100
         self.volume_slider.setSliderPosition(volume_value)
@@ -542,7 +543,7 @@ class SeekSlider(ImprovedSlider):  # TODO add transparent background
         if not self.length_in_seconds:
             return
         super().mousePressEvent(event)
-        print("press")
+        # print("press")
         self.backup_action = self.audio_controller.user_action
         self.audio_controller.player.setPosition(self.pixel_pos_to_range_value(event.pos()))
         # self.backup_volume = self.audio_controller.volume_slider.value() / 100

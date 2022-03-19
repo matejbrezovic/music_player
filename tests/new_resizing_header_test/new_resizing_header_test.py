@@ -1,58 +1,55 @@
 import sys
+from typing import Any, Optional
 
-from PyQt6.QtCore import QAbstractTableModel
-from PyQt6.QtWidgets import QWidget, QHeaderView, QTableView, QPushButton, QVBoxLayout, QApplication
-
-
-# class MyModel(QAbstractTableModel):
-#     def __init__(self, *args):
-#         super().__init__(*args)
-#
-#     def data(self):
+from PyQt5 import QtWidgets, QtCore
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QFrame, QMainWindow, QWidget, \
+    QHBoxLayout
 
 
-class MyWindow(QWidget):
-    def __init__(self, *args):
-        QWidget.__init__(self, *args)
+class Model(QtCore.QAbstractTableModel):
+    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
+        super(Model, self).__init__(parent)
+        self.__data = []
+        for i in range(10):
+            row = [0, 1, 2, 3, 42222222222, 5, 6, 74444444]
+            self.__data.append(row)
 
-        self.tableModel = QAbstractTableModel(self) #Set the model as part of your class to access it in the event handler
+    def rowCount(self, index: Optional[QtCore.QModelIndex] = None) -> int:
+        return len(self.__data)
 
-        self.view = QTableView(self)
-        self.view.setModel(self.tableModel) #Modified here too
-        self.view.horizontalHeader().setResizeMode(QHeaderView.ResizeMode.Interactive) #Mode set to Interactive to allow resizing
+    def columnCount(self, index: Optional[QtCore.QModelIndex] = None) -> int:
+        return len(self.__data[0])
 
-        hideButton=QPushButton('Hide Column')
-        hideButton.clicked.connect(self.hideColumn)
-
-        unhideButton=QPushButton('Unhide Column')
-        unhideButton.clicked.connect(self.unhideColumn)
-
-        layout = QVBoxLayout(self)
-        layout.addWidget(self.view)
-        layout.addWidget(hideButton)
-        layout.addWidget(unhideButton)
-        self.setLayout(layout)
-
-    def hideColumn(self):
-        self.view.model().setColumnCount(1)
-
-    def unhideColumn(self):
-        self.view.model().setColumnCount(10)
-
-    #Added a reimplementation of the resize event
-    def resizeEvent(self, event):
-        tableSize = self.view.width() #Retrieves your QTableView width
-        sideHeaderWidth = self.view.verticalHeader().width() #Retrieves the left header width
-        tableSize -= sideHeaderWidth #Perform a substraction to only keep all the columns width
-        numberOfColumns = self.tableModel.columnCount() #Retrieves the number of columns
-
-        for columnNum in range( self.tableModel.columnCount()): #For each column
-            self.view.setColumnWidth(columnNum, int(tableSize/numberOfColumns) ) #Set the width = tableSize / nbColumns
-        super().resizeEvent(event) #Restores the original behaviour of the resize event
+    def data(self, index: QtCore.QModelIndex,
+             role: QtCore.Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
+        if role in [Qt.ItemDataRole.DisplayRole, Qt.ItemDataRole.EditRole]:
+            return self.__data[index.row()][index.column()]
+        return None
 
 
-if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    main_window = MyWindow()
-    main_window.show()
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.resize(700, 700)
+
+        self.central_widget = QWidget()
+        self.central_widget_layout = QHBoxLayout(self.central_widget)
+
+        view = QtWidgets.QTableView()
+        view.resize(600, 600)
+        view.setFrameShape(QFrame.Shape.NoFrame)
+        model = Model()
+        view.setModel(model)
+        view.verticalHeader().setOffset(-40)
+
+        self.central_widget_layout.addWidget(view)
+
+        self.setCentralWidget(self.central_widget)
+
+
+if __name__ == "__main__":
+    app = QtWidgets.QApplication(sys.argv)
+    mw = MainWindow()
+    mw.show()
     sys.exit(app.exec())

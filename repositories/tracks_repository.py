@@ -254,7 +254,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                     int(loaded_file["#length"].first),
                     # get_artwork_pixmap(file_path, "album")
                 ))
-                print(tracks[i].title)
+                # print(tracks[i].title)
             except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError):
                 # TODO cannot convert '2020-10-26T20:39:57-04:00' to int type for year so ValueError (can be improved)
                 continue

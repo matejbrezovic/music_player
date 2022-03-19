@@ -206,7 +206,7 @@ class InformationTableView(QTableView):
 class TrackInfoWidget(QWidget):
     def __init__(self, title: str, artist: str, duration: str, parent=None):
         super().__init__(parent)
-        print("CREATED")
+        # print("CREATED")
         self.v_layout = QVBoxLayout()
         self.v_layout.setContentsMargins(4, 0, 4, 0)
         self.v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
