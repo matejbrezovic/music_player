@@ -5,7 +5,8 @@ from typing import Any, Optional
 from PyQt6 import QtWidgets, QtCore, QtGui
 from PyQt6.QtCore import pyqtSlot, Qt
 from PyQt6.QtGui import QFontMetrics
-from PyQt6.QtWidgets import QHeaderView, QStyledItemDelegate, QStyleOptionViewItem, QFrame
+from PyQt6.QtWidgets import QHeaderView, QStyledItemDelegate, QStyleOptionViewItem, QFrame, QMainWindow, QWidget, \
+    QHBoxLayout, QLabel
 
 
 class HeaderView(QtWidgets.QHeaderView):
@@ -17,31 +18,35 @@ class HeaderView(QtWidgets.QHeaderView):
         self.padding = 4
 
         self.setMinimumSectionSize(5)
-        self.setStretchLastSection(True)
+        # self.setMouseTracking(False)
+        # self.setStretchLastSection(True)
         self.setCascadingSectionResizes(True)
-        self.setSectionsMovable(True)
+        # self.setSectionsMovable(True)
         self.setFirstSectionMovable(False)
         self.setFrameShape(QFrame.Shape.NoFrame)
         self.sectionMoved.connect(self.section_moved)
-        self.sectionResized.connect(self.section_resized)
+        # self.sectionResized.connect(self.section_resized)
         self.__section_moved_recursions = 0
         self.__section_resized_recursions = 0
+        self.__init_resize_counter = 20
+        self.__last_mouse_x = None
+        self.__is_dragging_left = False
 
         self.fixed_section_indexes = (0, 1)
 
         timer = QtCore.QTimer(self)
         timer.setSingleShot(True)
         timer.setTimerType(Qt.TimerType.PreciseTimer)
-        # timer.timeout.connect(self._update_sizes)
+        timer.timeout.connect(self._update_sizes)
 
         resize_mode_timer = QtCore.QTimer(self)
         resize_mode_timer.setTimerType(Qt.TimerType.PreciseTimer)
         resize_mode_timer.setSingleShot(True)
-        # resize_mode_timer.timeout.connect(lambda: self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive))
+        resize_mode_timer.timeout.connect(lambda: self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive))
 
         self._resize_mode_timer = weakref.proxy(resize_mode_timer)
         self._timer = weakref.proxy(timer)
-        # self.sectionResized.connect(self._handle_resize)
+        self.sectionResized.connect(self._handle_resize)
 
         # self.setTextElideMode(Qt.TextElideMode.ElideLeft)
         self.setDefaultAlignment(Qt.AlignmentFlag.AlignLeft)
@@ -138,6 +143,15 @@ class HeaderView(QtWidgets.QHeaderView):
             self.moveSection(newVisualIndex, oldVisualIndex)
 
     def section_resized(self, logical_index: int, old_size: int, new_size: int) -> None:
+        if self.__init_resize_counter:
+            self.__init_resize_counter -= 1
+            return
+        # print("RESIZE")
+
+
+        last_section_width = self.length() - sum([self.sectionSize(i) for i in range(self.count() - 1)])
+        print(f"Last: {last_section_width}, Total: {self.width()}")
+
         if self.__section_resized_recursions:
             self.__section_resized_recursions = 0
             return
@@ -148,15 +162,55 @@ class HeaderView(QtWidgets.QHeaderView):
         self.__section_resized_recursions += 1
         count = self.model().columnCount()
         width = self.width()
-        sum = self.length()
+        section_sum = self.length()
 
-        if sum != width:
-            if logical_index < count:
-                next_header_size = self.sectionSize(logical_index + 1)
-                if next_header_size > sum - width:
-                    self.resizeSection(logical_index + 1, next_header_size - (sum - width))
-                else:
-                    self.resizeSection(logical_index, old_size)
+        print(f"Section sum: {section_sum}, Width: {width}")
+        print("-----------------------------------------------")
+
+        if section_sum >= width + 5:
+            self.resizeSection(logical_index, new_size - (section_sum - width - 5))
+            # if logical_index + 1 == count:
+            #     self.resizeSection(logical_index, old_size)
+            # else:
+            #     self.resizeSection(logical_index, old_size)
+            # if logical_index + 1 <= count:
+            #
+            #     self.resizeSection(logical_index, old_size)
+            #     next_header_size = self.sectionSize(logical_index + 1)
+            #     if next_header_size > section_sum - width:
+            #         self.resizeSection(logical_index + 1, next_header_size - (section_sum - width))
+            #     else:
+            #         self.resizeSection(logical_index, old_size)
+
+        # self.proportions = [self.sectionSize(i) / width for i in range(self.count())]
+
+    # def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
+    #     if self.__last_mouse_x is None:
+    #         self.__last_mouse_x = e.pos().x()
+    #     # print("Press")
+    #     super().mousePressEvent(e)
+    #
+    # def mouseMoveEvent(self, e: QtGui.QMouseEvent) -> None:
+    #     # print("Move")
+    #     if e.buttons() == Qt.MouseButton.LeftButton:
+    #         # print(e.buttons()
+    #
+    #         new_x = e.pos().x()
+    #         if self.__last_mouse_x - 1 < new_x:  # dragging right
+    #             # count = self.model().columnCount()
+    #             width = self.width()
+    #             section_sum = self.length()
+    #             self.__is_dragging_left = False
+    #             ...
+    #             if section_sum >= width + 4:
+    #                 return
+    #         else:
+    #             print("left")
+    #             self.__is_dragging_left = True
+    #             # print("left")
+    #         self.__last_mouse_x = e.pos().x()
+    #         # print("MOVE")
+    #     super().mouseMoveEvent(e)
 
 
 class Model(QtCore.QAbstractTableModel):
@@ -189,23 +243,43 @@ class Model(QtCore.QAbstractTableModel):
         return None
 
 
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.resize(700, 700)
+
+        self.central_widget = QWidget()
+        self.central_widget_layout = QHBoxLayout(self.central_widget)
+
+        view = QtWidgets.QTableView()
+        view.resize(600, 600)
+        header = HeaderView()
+        # view.setFixedSize(600, 600)
+        # header.setFixedWidth(600)
+        view.setHorizontalHeader(header)
+        view.setFrameShape(QFrame.Shape.NoFrame)
+        model = Model()
+        view.setModel(model)
+        header.init_sizes()
+        # header.setFixedWidth(600)
+        header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
+        header.setStyleSheet("background-color: lightBlue;")
+        view.horizontalHeader().resizeSection(0, 30)
+        view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
+        view.horizontalHeader().resizeSection(1, 30)
+        view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+
+        label = QLabel()
+        label.setStyleSheet("background-color: red;")
+
+        self.central_widget_layout.addWidget(view)
+        self.central_widget_layout.addWidget(label)
+
+        self.setCentralWidget(self.central_widget)
+
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
-    view = QtWidgets.QTableView()
-    view.resize(600, 600)
-    header = HeaderView()
-    # view.setFixedSize(600, 600)
-    # header.setFixedWidth(600)
-    view.setHorizontalHeader(header)
-    view.setFrameShape(QFrame.Shape.NoFrame)
-    model = Model()
-    view.setModel(model)
-    header.init_sizes()
-    header.setSectionResizeMode(6, QHeaderView.ResizeMode.Stretch)
-    # header.setStyleSheet("background-color: red;")
-    view.horizontalHeader().resizeSection(0, 30)
-    view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
-    view.horizontalHeader().resizeSection(1, 30)
-    view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
-    view.show()
-    app.exec()
+    mw = MainWindow()
+    mw.show()
+    sys.exit(app.exec())
