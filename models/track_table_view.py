@@ -24,15 +24,17 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         self.is_playing = False
         self.playing_track_index: Optional[int] = None
 
-        self.playing_speaker_pixmap = QPixmap("icons/speaker_playing.png").scaled(
-            16, 16,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation)
+        self.playing_speaker_pixmap = QPixmap("icons/speaker_playing.png")\
+            # .scaled(
+            # 16, 16,
+            # Qt.AspectRatioMode.KeepAspectRatio,
+            # Qt.TransformationMode.SmoothTransformation)
 
-        self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png").scaled(
-            16, 16,
-            Qt.AspectRatioMode.KeepAspectRatio,
-            Qt.TransformationMode.SmoothTransformation)
+        self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png")\
+            # .scaled(
+            # 16, 16,
+            # Qt.AspectRatioMode.KeepAspectRatio,
+            # Qt.TransformationMode.SmoothTransformation)
 
     def set_tracks(self, tracks: List[Track]) -> None:
         # global_timer.print_elapsed_time()

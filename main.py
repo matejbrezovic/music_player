@@ -13,7 +13,7 @@ from data_models.track import Track
 from models.add_files_dialog import AddFilesDialog
 from models.app import App
 from models.audio_controller import AudioController
-from models.header_menu import HeaderMenu
+from models.header_menu_widget import HeaderMenuWidget
 from models.information_panel import InformationPanel
 from models.main_panel import MainPanel
 from models.navigation_panel import NavigationPanel
@@ -31,7 +31,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # TracksRepository().create_groups()
         self._setup_ui()
 
-        self.setWindowTitle('music player v0.0.13')
+        self.setWindowTitle(APPLICATION_NAME)
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
         # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
 
@@ -85,7 +85,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.information_panel = InformationPanel(self)
         self.audio_controller = AudioController(self)
         self.queue_info_panel = QueueInfoPanel(self.audio_controller, self)
-        self.header_menu = HeaderMenu(self)
+        self.header_menu = HeaderMenuWidget(self)
         self.horizontal_splitter = FixedHorizontalSplitter(self)
         self.horizontal_splitter.sizes_changed.connect(self.header_menu.set_sizes)
 

@@ -4,6 +4,11 @@ from PyQt6.QtGui import QColor
 
 import utils
 
+
+APPLICATION_NAME = "Music Player"
+APPLICATION_VERSION = "0.0.14"
+
+
 SUPPORTED_AUDIO_FORMATS = ["mp3", "m4a"]
 
 # Gui constants
@@ -59,4 +64,3 @@ DATABASE_PATH = os.path.join(ROOT, "database/test.db")
 # Settings constants
 
 DEFAULT_CONFIG_PATH = os.path.join(ROOT, "settings/config.txt")
-DEFAULT_LOADED_TRACKS_FILE_PATH = os.path.join(ROOT, "settings/tracks.txt")

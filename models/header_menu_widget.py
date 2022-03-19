@@ -7,7 +7,7 @@ from constants import *
 from utils import TransparentComboBox
 
 
-class HeaderMenu(QWidget):
+class HeaderMenuWidget(QWidget):
     main_panel_view_key_changed = pyqtSignal(int)
     navigation_panel_group_key_changed = pyqtSignal(int)
     information_panel_view_key_changed = pyqtSignal(int)

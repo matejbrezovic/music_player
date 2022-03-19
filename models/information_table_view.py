@@ -179,7 +179,7 @@ class InformationTableView(QTableView):
         self._table_delegate.is_playing = True
         self._table_model.set_currently_playing_track_index(index)
         self._table_delegate.set_currently_playing_track_index(index)
-        # print("Curretnly playing:", index)
+        # print("Currently playing:", index)
         # print("Bottom index:", self.rowAt(self.height()))
         if self.rowAt(self.rect().height()) == index:
             self.scrollTo(self._table_model.index(index - 2, 0), QAbstractItemView.ScrollHint.PositionAtTop)
@@ -206,7 +206,7 @@ class InformationTableView(QTableView):
 class TrackInfoWidget(QWidget):
     def __init__(self, title: str, artist: str, duration: str, parent=None):
         super().__init__(parent)
-        # print("CREATED")
+        print("CREATED")
         self.v_layout = QVBoxLayout()
         self.v_layout.setContentsMargins(4, 0, 4, 0)
         self.v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
