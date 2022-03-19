@@ -4,7 +4,7 @@ from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint
 from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate, \
-    QStyle, QStyleOptionViewItem, QApplication
+    QStyle, QStyleOptionViewItem, QApplication, QAbstractItemView
 
 from constants import *
 from data_models.track import Track
@@ -179,6 +179,11 @@ class InformationTableView(QTableView):
         self._table_delegate.is_playing = True
         self._table_model.set_currently_playing_track_index(index)
         self._table_delegate.set_currently_playing_track_index(index)
+        # print("Curretnly playing:", index)
+        # print("Bottom index:", self.rowAt(self.height()))
+        if self.rowAt(self.rect().height()) == index:
+            self.scrollTo(self._table_model.index(index - 2, 0), QAbstractItemView.ScrollHint.PositionAtTop)
+
         self.viewport().repaint()
 
     def set_paused(self) -> None:
@@ -252,11 +257,3 @@ class TrackInfoWidget(QWidget):
 
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
         # self.setStyleSheet("background:transparent;")
-
-    def set_playing(self):
-        # image_label = QLabel()
-        self.image_label.setFixedWidth(20)
-        self.image_label.setStyleSheet("background-color: red")
-        # image_label.setPixmap(QPixmap("icons/speaker_playing.png"))
-
-        # self.main_horizontal_layout.insertWidget(0, image_label)

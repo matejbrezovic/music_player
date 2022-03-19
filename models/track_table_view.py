@@ -4,11 +4,11 @@ import sys
 from typing import List, Optional, Any
 
 from PyQt6 import QtCore, QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot, QEvent
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
-    QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QStyleOptionHeader, QFrame
+    QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame
 
 from constants import *
 from data_models.track import Track
@@ -25,12 +25,12 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         self.playing_track_index: Optional[int] = None
 
         self.playing_speaker_pixmap = QPixmap("icons/speaker_playing.png").scaled(
-            16, 22,
+            16, 16,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation)
 
         self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png").scaled(
-            16, 22,
+            16, 16,
             Qt.AspectRatioMode.KeepAspectRatio,
             Qt.TransformationMode.SmoothTransformation)
 
@@ -62,11 +62,10 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                     artwork_pixmap = track.artwork_pixmap
                 if not artwork_pixmap:
                     return None
-                return artwork_pixmap
-                    # .scaled(self._table_view.columnWidth(index.column()),
-                    #                          self._table_view.columnWidth(index.column()),
-                    #                          Qt.AspectRatioMode.IgnoreAspectRatio,
-                    #                          Qt.TransformationMode.SmoothTransformation)
+                return artwork_pixmap.scaled(self._table_view.columnWidth(index.column()),
+                                             self._table_view.columnWidth(index.column()),
+                                             Qt.AspectRatioMode.KeepAspectRatio,
+                                             Qt.TransformationMode.SmoothTransformation)
                 # icon = QIcon(artwork_pixmap)
                 # icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
                 # return icon if icon else None
@@ -115,11 +114,11 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 
     def set_playing_track_index(self, index: Optional[int]) -> None:
         self.playing_track_index = index
-        # print("Playing track index: ", index)
-        if self.playing_track_index is not None:
-            # print("Set playing")
-            self.dataChanged.emit(self.index(0, 1),
-                                  self.index(self.rowCount(), 1))
+        self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
+        # if index is None:
+        #     self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
+        # else:
+        #     self.dataChanged.emit(self.index(self.playing_track_index, 1), self.index(self.playing_track_index, 1))
 
 
 class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawing speed
@@ -142,9 +141,9 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
             painter.setPen(QPen(QBrush(border_color), 1))
             painter.drawLine(option.rect.topLeft(), option.rect.topRight())
             # bottom_left = option.rect.bottomLeft() # buggy
-            # bottom_left.setY(bottom_left.y())
+            # bottom_left.setY(bottom_left.y() + 1)
             # bottom_right = option.rect.bottomRight()
-            # bottom_right.setY(bottom_right.y())
+            # bottom_right.setY(bottom_right.y() + 1)
             # painter.drawLine(bottom_left, bottom_right)
             # print(index.row(), len(self._table_view.selectedIndexes()) // len(MAIN_PANEL_COLUMN_NAMES) - 1)
             # if index.row() == self._table_view.selectedIndexes()[-1].row():  # might be ruining performance
@@ -160,14 +159,8 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
                                                                    option.rect.width())
                 alignment = Qt.AlignmentFlag.AlignVCenter if index.column() else Qt.AlignmentFlag.AlignCenter
 
-                # padding = 4
                 option.rect.setLeft(option.rect.left() + self._table_view.padding)
                 painter.drawText(option.rect, alignment, elided_text)
-
-        # if self.last_height == self._table_view.height():
-        #     return
-        # else:
-        #     self.last_height = self._table_view.height()
 
         if index.data(Qt.ItemDataRole.DecorationRole):
             pixmap = index.data(Qt.ItemDataRole.DecorationRole)
@@ -175,14 +168,17 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
             rect.setRect(rect.left() + 1, rect.top() + 1,
                          rect.width() - 2, rect.height() - 2)
 
+            # print(index.row(), index.column())
+
             if index.column() == 1:
                 height = rect.height()
-                rect.setHeight(rect.width())
-                rect.translate(0, (height - rect.width()) / 2)
+                width = rect.width()
+                rect.setHeight(width)
+                rect.translate(0, (height - width) / 2)
 
-            pixmap = pixmap.scaled(rect.width(), rect.height(),
-                                   Qt.AspectRatioMode.KeepAspectRatio,
-                                   Qt.TransformationMode.SmoothTransformation)
+                pixmap = pixmap.scaled(width, width,
+                                       Qt.AspectRatioMode.KeepAspectRatio,
+                                       Qt.TransformationMode.SmoothTransformation)
             # print("Painted pixmap")
 
             painter.drawPixmap(rect, pixmap)
@@ -197,26 +193,52 @@ class TrackTableHeader(QHeaderView):
         self.setSectionsMovable(True)
         self.setFirstSectionMovable(False)
 
-
+        self.sectionMoved.connect(self.section_moved)
+        self.__section_moved_recursions = 0
 
         self.section_text = MAIN_PANEL_COLUMN_NAMES
+
+        self.setStyleSheet("""
+        QHeaderView {
+        border-bottom: 1px solid gray;
+        border-top: 0px;
+        border-right: 0px;
+        border-left: 0px;
+        }
+        """)
+
+    def section_moved(self, logical_index: int, old_visual_index: int, new_visual_index: int) -> None:
+        """Prevents section 1 from moving."""
+        if self.__section_moved_recursions:
+            self.__section_moved_recursions = 0
+            return
+        # print(logical_index, old_visual_index, new_visual_index)
+        if {0, 1} & {old_visual_index, new_visual_index}:
+            self.__section_moved_recursions += 1
+            self.moveSection(new_visual_index, old_visual_index)
 
     def text(self, section: int):
         if isinstance(self.model(), QtCore.QAbstractItemModel):
             return self.section_text[section]
 
-    def initStyleOptionForIndex(self, option: QStyleOptionHeader, section_index: int) -> None:
-        text = self.section_text[section_index]
-        elided_text: str = self.fontMetrics().elidedText(text, Qt.TextElideMode.ElideRight, self.sectionSize(section_index))
-        option.text = elided_text
-        # print(section_index, option.text, self.sectionSize(section_index))
-        super().initStyleOptionForIndex(option, section_index)
+    def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logicalIndex: int) -> None:
+        elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logicalIndex),
+                                                                Qt.TextElideMode.ElideRight,
+                                                                self.sectionSize(logicalIndex))
 
-    # def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logicalIndex: int) -> None:
-    #     elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logicalIndex), Qt.TextElideMode.ElideRight,
-    #                                                             self.sectionSize(logicalIndex))
-    #     rect.setLeft(rect.left() + self.padding)
-    #     painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
+        top = rect.topRight()
+        top.setY(top.y() + 1)
+        bottom = rect.bottomRight()
+        bottom.setY(bottom.y() - 2)
+
+        painter.setPen(Qt.GlobalColor.gray)
+        painter.drawLine(top, bottom)
+
+        # painter.drawLine(rect.bottomLeft(), rect.bottomRight())
+
+        painter.setPen(Qt.GlobalColor.black)
+        rect.setLeft(rect.left() + self.padding)
+        painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
 
 
 class TrackTableView(QTableView):
@@ -238,8 +260,8 @@ class TrackTableView(QTableView):
         self.setItemDelegate(self._table_delegate)
         self._table_header = TrackTableHeader(Qt.Orientation.Horizontal, self)
         self.setHorizontalHeader(self._table_header)
+        self.setTextElideMode(Qt.TextElideMode.ElideRight)
 
-        self.horizontalHeader().setStyleSheet(f"QHeaderView::item {{padding {self.padding};}}")
         self.verticalHeader().setDefaultSectionSize(22)
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
 
@@ -305,11 +327,11 @@ class TrackTableView(QTableView):
         self.context_menu.popup(QtGui.QCursor.pos())
 
     def play_now_action_triggered(self, e=None):
-        print("play")
+        # print("play")
         if not self._tracks:
             return
 
-        print(e)
+        # print(e)
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.play_now_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 

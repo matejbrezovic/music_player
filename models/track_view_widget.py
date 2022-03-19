@@ -45,6 +45,7 @@ class TrackViewWidget(QWidget):
             self.header_splitter.addWidget(widget)
             self.header_splitter.setCollapsible(i, False)
 
+        # noinspection PyTypeChecker
         self.table_view = TrackTableView(self)
         # self.table_view.setStyleSheet("""
         # QTableView::item{padding: 10px;}
@@ -55,8 +56,10 @@ class TrackViewWidget(QWidget):
         self.table_view.verticalHeader().setVisible(False)
         # self.table_view.horizontalHeader().setVisible(False)
         self.table_view.setShowGrid(False)
-        self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
+        self.table_view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
+        self.table_view.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.table_view.setIconSize(QSize(22, 22))
@@ -74,7 +77,7 @@ class TrackViewWidget(QWidget):
         self.table_view.queue_next_triggered.connect(self.queue_next_triggered.emit)
         self.table_view.queue_last_triggered.connect(self.queue_last_triggered.emit)
         self.table_view.output_to_triggered.connect(self.output_to_triggered.emit)
-        #
+
         # self.table_view.setStyleSheet(SELECTION_STYLESHEET)
 
         first_col_width = 26
@@ -117,23 +120,24 @@ class TrackViewWidget(QWidget):
         self.table_view.selectionModel().clearSelection()
         self.table_view.scrollToTop()
 
-    def set_selected_row_index(self, index: int) -> None:
-        self.selected_row_index = index
-
-    def select_row_by_index(self, index: int) -> None:
-        self.table_view.selectRow(index)
-        self.set_selected_row_index(index)
-
-    def select_row_by_track(self, track: Track) -> None:
-        if track not in self.displayed_tracks:
-            self.table_view.clearSelection()
-            return
-        self.select_row_by_index(self.displayed_tracks.index(track))
+    # def set_selected_row_index(self, index: int) -> None: # TODO remove, unneeded
+    #     self.selected_row_index = index
+    #
+    # def select_row_by_index(self, index: int) -> None:
+    #     self.table_view.selectRow(index)
+    #     self.set_selected_row_index(index)
+    #
+    # def select_row_by_track(self, track: Track) -> None:
+    #     if track not in self.displayed_tracks:
+    #         self.table_view.clearSelection()
+    #         return
+    #     self.select_row_by_index(self.displayed_tracks.index(track))
 
     def set_playing_track(self, track: Track) -> None:
-        if track not in self.displayed_tracks:
-            return
         self.playing_track = track
+        if track not in self.displayed_tracks:
+            self.table_view.set_playing_track_index(None)
+            return
         self.table_view.set_playing_track_index(self.displayed_tracks.index(track))
         self.table_view.set_unpaused()
 

@@ -27,7 +27,7 @@ DEFAULT_AUDIO_PATH = "/home/matey/Music"
 
 # Table views constants
 
-SELECTION_QCOLOR = QColor(156, 206, 233)  # QColor(166, 223, 231)
+SELECTION_QCOLOR = QColor(189, 232, 255)  # QColor(166, 223, 231)
 SELECTION_QCOLOR_BORDER = QColor(110, 189, 232)  # QColor(100, 140, 200)
 LOST_FOCUS_QCOLOR = QColor(0, 0, 0, 50)
 LOST_FOCUS_QCOLOR_BORDER = QColor(0, 0, 0, 60)

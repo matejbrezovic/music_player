@@ -17,11 +17,11 @@ class HeaderView(QtWidgets.QHeaderView):
 
         self.padding = 4
 
-        self.setMinimumSectionSize(5)
+        self.setMinimumSectionSize(3)
         # self.setMouseTracking(False)
         # self.setStretchLastSection(True)
         self.setCascadingSectionResizes(True)
-        # self.setSectionsMovable(True)
+        self.setSectionsMovable(True)
         self.setFirstSectionMovable(False)
         self.setFrameShape(QFrame.Shape.NoFrame)
         self.sectionMoved.connect(self.section_moved)
@@ -33,6 +33,7 @@ class HeaderView(QtWidgets.QHeaderView):
         self.__is_dragging_left = False
 
         self.fixed_section_indexes = (0, 1)
+        self.minimum_last_section_size = 60
 
         timer = QtCore.QTimer(self)
         timer.setSingleShot(True)
@@ -42,7 +43,7 @@ class HeaderView(QtWidgets.QHeaderView):
         resize_mode_timer = QtCore.QTimer(self)
         resize_mode_timer.setTimerType(Qt.TimerType.PreciseTimer)
         resize_mode_timer.setSingleShot(True)
-        resize_mode_timer.timeout.connect(lambda: self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive))
+        # resize_mode_timer.timeout.connect(lambda: self.setSectionResizeMode(QHeaderView.ResizeMode.Interactive))
 
         self._resize_mode_timer = weakref.proxy(resize_mode_timer)
         self._timer = weakref.proxy(timer)
@@ -81,8 +82,12 @@ class HeaderView(QtWidgets.QHeaderView):
             if not self.proportions:
                 break
 
+            # if i == self.count() - 1 and self.sectionSize(i) >= self.minimum_last_section_size:
+                # self.setSectionResizeMode(i, QHeaderView.ResizeMode.Fixed)
+
             if i not in self.fixed_section_indexes:
-                self.resizeSection(i, int(self.proportions[i] * width_without_fixed))
+                # if self.sectionSize(i) > self.minimumSectionSize() + 1:
+                self.resizeSection(i, int(self.proportions[i] * width))
 
         self._timer.start(1)
 
@@ -92,22 +97,31 @@ class HeaderView(QtWidgets.QHeaderView):
         width = self.width()
         sizes = [self.sectionSize(self.logicalIndex(i)) for i in range(self.count())]
         # width_without_fixed = width - sum([self.sectionSize(i) for i in self.fixed_section_indexes])
-        index = len(sizes) - 1
+        minimum_section_size = self.minimumSectionSize()
+        index = self.count() - 1
         i = 0
         while index >= 0 and sum(sizes) > width:
             i += 1
             if i > 100:
                 break
-            if sizes[index] > 5 and index not in self.fixed_section_indexes:  # minimum width (5)
+            if sizes[index] > minimum_section_size and index not in self.fixed_section_indexes:  # minimum width (5)
                 new_width = width - (sum(sizes) - sizes[index])
-                if new_width < 5:
-                    new_width = 5
+                if new_width < minimum_section_size:
+                    new_width = minimum_section_size
+                # if index == self.count() - 1 and self.sectionSize(index) <= self.minimum_last_section_size:
+                #     print("AAAAa")
+                #     new_width = self.minimum_last_section_size
                 sizes[index] = new_width
             index -= 1
         for j, value in enumerate(sizes):
+            # print(self.count())
+            # if j == self.count() - 1 and self.sectionSize(j) <= self.minimum_last_section_size:
+            #     continue
             self.resizeSection(self.logicalIndex(j), value)
         if not self.proportions:
             self.proportions = [self.sectionSize(i) / width for i in range(self.count())]
+
+        print(self.sectionSize(6))
 
     def text(self, section):
         if isinstance(self.model(), QtCore.QAbstractItemModel):
@@ -147,7 +161,6 @@ class HeaderView(QtWidgets.QHeaderView):
             self.__init_resize_counter -= 1
             return
         # print("RESIZE")
-
 
         last_section_width = self.length() - sum([self.sectionSize(i) for i in range(self.count() - 1)])
         print(f"Last: {last_section_width}, Total: {self.width()}")
@@ -268,6 +281,8 @@ class MainWindow(QMainWindow):
         view.horizontalHeader().setSectionResizeMode(0, QHeaderView.ResizeMode.Fixed)
         view.horizontalHeader().resizeSection(1, 30)
         view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
+        # view.horizontalHeader().resizeSection(5, 80)
+        # view.horizontalHeader().setSectionResizeMode(5, QHeaderView.ResizeMode.Fixed)
 
         label = QLabel()
         label.setStyleSheet("background-color: red;")
