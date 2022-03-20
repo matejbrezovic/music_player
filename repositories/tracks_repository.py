@@ -7,9 +7,8 @@ from PyQt6 import QtWidgets
 
 from data_models.track import Track
 from repositories.base_repository import BaseRepository
-from repositories.singleton import Singleton
 from tag_manager import TagManager
-from utils import get_artwork_pixmap
+from utils import get_artwork_pixmap, Singleton
 
 
 class TracksRepository(BaseRepository, metaclass=Singleton):

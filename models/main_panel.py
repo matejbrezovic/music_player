@@ -39,6 +39,9 @@ class MainPanel(QtWidgets.QFrame):
         # self.main_layout.addWidget(self.view_options_combo_box)
         self.main_layout.addWidget(self.track_view_widget)
 
+        # self.track_view_widget.set_tracks(CachedTracksRepository().get_tracks())
+        # self.track_view_widget.set_tracks([])
+
     def view_key_changed(self) -> None:
         ...
 
@@ -52,8 +55,8 @@ class MainPanel(QtWidgets.QFrame):
         # global_timer.print_elapsed_time()
         # print("Tracks displayed in:", time.time() - start)
 
-    def select_track(self, track: Track) -> None:
-        self.track_view_widget.select_row_by_track(track)
+    # def select_track(self, track: Track) -> None: # TODO remove
+    #     self.track_view_widget.select_row_by_track(track)
 
     def set_playing_track(self, track: Track) -> None:
         # print("SET")

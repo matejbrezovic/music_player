@@ -90,7 +90,7 @@ class InformationTableItemDelegate(QStyledItemDelegate):
                 border_color = SELECTION_QCOLOR_BORDER
             else:
                 fill_color = LOST_FOCUS_QCOLOR
-                border_color = fill_color
+                border_color = LOST_FOCUS_QCOLOR_BORDER
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
             painter.setPen(QPen(QBrush(border_color), 1))

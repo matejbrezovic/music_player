@@ -1,11 +1,10 @@
 import time
-import typing
 from typing import List
 
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot, QEvent, QSize
-from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QHoverEvent
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QLayout, QPushButton, \
+from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton, \
     QFrame, QToolTip, QSpacerItem
 
 from constants import *
@@ -14,7 +13,7 @@ from marquee_label_test import MarqueeLabel
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
 from utils import get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError, \
-    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds, ElidedLabel
+    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds
 
 
 class AudioController(QFrame):

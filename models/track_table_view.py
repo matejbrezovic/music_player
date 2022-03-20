@@ -36,6 +36,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
             # Qt.AspectRatioMode.KeepAspectRatio,
             # Qt.TransformationMode.SmoothTransformation)
 
+
     def set_tracks(self, tracks: List[Track]) -> None:
         # global_timer.print_elapsed_time()
         self.layoutAboutToBeChanged.emit()

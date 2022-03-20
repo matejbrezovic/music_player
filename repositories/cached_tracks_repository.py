@@ -3,7 +3,7 @@ from typing import Union, List, Tuple
 
 from constants import *
 from data_models.track import Track
-from repositories.singleton import Singleton
+from utils import Singleton
 from repositories.tracks_repository import TracksRepository
 
 
