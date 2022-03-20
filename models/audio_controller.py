@@ -14,7 +14,7 @@ from marquee_label_test import MarqueeLabel
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
 from utils import get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError, \
-    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds
+    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds, ElidedLabel
 
 
 class AudioController(QFrame):
@@ -108,22 +108,27 @@ class AudioController(QFrame):
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.seek_slider_time_label = QLabel("0:00/0:00")
+        self.seek_slider_time_label.setMaximumWidth(100)
         # self.seek_slider_time_label.setStyleSheet("background-color: green;")
         # self.seek_slider_time_label.setFixedWidth(80)
         # self.seek_slider_time_label.setStyleSheet("background-color: red;")
-        self.seek_slider_time_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
-                                                              QSizePolicy.Policy.Preferred))
+        # self.seek_slider_time_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum,
+        #                                                       QSizePolicy.Policy.Minimum))
         self.offset_label = QLabel(self.seek_slider_time_label.text())
+        self.offset_label.setMaximumWidth(100)
         # self.offset_label.setFixedWidth(self.seek_slider_time_label.width())
-        self.offset_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred))
+        # self.offset_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum))
         self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
-        self.audio_file_name_label = QLabel("---")
+        self.audio_file_name_label = MarqueeLabel(self)
+        # self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        # self.audio_file_name_label.setStyleSheet("background-color: red;")
+        self.audio_file_name_label.setText("---")
         # self.audio_file_name_label.setStyleSheet("background-color: red;}")
-        self.audio_file_name_label.setMaximumWidth(400)
+        # self.audio_file_name_label.setMaximumWidth(400)
         # self.seek_slider_time_label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 0)}")
         self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
-                                                             QSizePolicy.Policy.Preferred))
+        # self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
+        #                                                      QSizePolicy.Policy.Preferred))
         self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.name_time_label_container = QFrame(self)
@@ -320,7 +325,7 @@ class AudioController(QFrame):
         self.user_action = 1
         # self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing.file_path))
         # artist = self.current_playlist.currently_playing.artist
-        title = self.current_playlist.playing_track.title.rsplit(".", 1)[0]
+        title = self.current_playlist.playing_track.title
         # if not artist:
         #     self.audio_file_name_label.setText(title)
         # else:
@@ -456,8 +461,8 @@ class VolumeSlider(ImprovedSlider):
     }}
     """
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
 
         self.value_changed.connect(self.slider_moved)
 
@@ -514,8 +519,8 @@ class SeekSlider(ImprovedSlider):  # TODO add transparent background
     }}
     """
 
-    def __init__(self, audio_controller: AudioController, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, audio_controller: AudioController, *args):
+        super().__init__(*args)
         self.audio_controller = audio_controller  # TODO remove self.parent
         self.backup_volume = self.audio_controller.player.audio_output.volume()
         self.backup_action = -1
