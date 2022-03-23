@@ -51,8 +51,6 @@ class AudioController(QFrame):
         self.prev_button = HoverButton(self)
         self.next_button = HoverButton(self)
 
-        # self.play_button.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
-        #
         self.play_button.setStyleSheet("background: transparent")
         self.prev_button.setStyleSheet("background: transparent")
         self.next_button.setStyleSheet("background: transparent")
@@ -60,13 +58,7 @@ class AudioController(QFrame):
         self.play_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT + 10, CONTROLLER_BUTTON_WIDTH + 10)
         self.prev_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.next_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
-
-        # self.play_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPlay)
-        # self.pause_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaPause)
-        # self.prev_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaSkipBackward)
-        # self.next_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaSkipForward)
-        # self.volume_on_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaVolume)
-        # self.volume_off_icon = self.style().standardIcon(QStyle.StandardPixmap.SP_MediaVolumeMuted)
+        self.play_button.setIconSize(QSize(22, 22))
 
         self.play_icon = QIcon(QPixmap(ROOT + "/icons/play.png"))
         self.pause_icon = QIcon(QPixmap(ROOT + "/icons/pause.png"))
@@ -76,7 +68,6 @@ class AudioController(QFrame):
         self.volume_off_icon = QIcon(QPixmap(ROOT + "/icons/mute.png"))
 
         self.play_button.setIcon(self.play_icon)
-        self.play_button.setIconSize(self.size() - QSize(26, 26))
         self.prev_button.setIcon(self.prev_icon)
         self.next_button.setIcon(self.next_icon)
 
@@ -108,26 +99,12 @@ class AudioController(QFrame):
 
         self.seek_slider_time_label = QLabel("0:00/0:00")
         self.seek_slider_time_label.setMaximumWidth(100)
-        # self.seek_slider_time_label.setStyleSheet("background-color: green;")
-        # self.seek_slider_time_label.setFixedWidth(80)
-        # self.seek_slider_time_label.setStyleSheet("background-color: red;")
-        # self.seek_slider_time_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum,
-        #                                                       QSizePolicy.Policy.Minimum))
         self.offset_label = QLabel(self.seek_slider_time_label.text())
         self.offset_label.setMaximumWidth(100)
-        # self.offset_label.setFixedWidth(self.seek_slider_time_label.width())
-        # self.offset_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum))
         self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
         self.audio_file_name_label = MarqueeLabel(self)
-        # self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        # self.audio_file_name_label.setStyleSheet("background-color: red;")
         self.audio_file_name_label.setText("---")
-        # self.audio_file_name_label.setStyleSheet("background-color: red;}")
-        # self.audio_file_name_label.setMaximumWidth(400)
-        # self.seek_slider_time_label.setStyleSheet("QLabel {background-color: rgba(0, 0, 0, 0)}")
         self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        # self.audio_file_name_label.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
-        #                                                      QSizePolicy.Policy.Preferred))
         self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.name_time_label_container = QFrame(self)
@@ -139,9 +116,6 @@ class AudioController(QFrame):
         self.name_time_label_container_layout.addWidget(self.seek_slider_time_label)
         self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
                                                                  QSizePolicy.Policy.Expanding))
-
-        # self.equalizer_button = QPushButton("Eq")
-        # self.equalizer_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
 
         self.audio_order_button_modes = ("O", "S", "R")  # order, shuffle, repeat single
         self.audio_order_button_mode_index = 0
@@ -167,7 +141,6 @@ class AudioController(QFrame):
         self.left_layout.addWidget(self.volume_slider)
         # self.left_layout.setSizeConstraint(QLayout.SizeConstraint.SetMinimumSize)
 
-        # self.left_part.setStyleSheet("QFrame {background-color: rgba(0, 255, 7, 0.3)}")
         self.left_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         self.left_part.setFixedSize(self.left_layout.sizeHint())
 
@@ -180,10 +153,8 @@ class AudioController(QFrame):
         self.right_layout = QHBoxLayout(self.right_part)
         self.right_layout.setContentsMargins(0, 0, 0, 0)
         self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
-        # self.right_layout.addWidget(self.equalizer_button)
         self.right_layout.addWidget(self.audio_order_button)
 
-        # self.right_part.setStyleSheet("QFrame {background-color: rgba(255, 0, 231, 0.3)}")
         self.right_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         self.right_part.setFixedSize(self.left_layout.sizeHint())
 
@@ -192,10 +163,6 @@ class AudioController(QFrame):
         self.main_layout.addWidget(self.left_part)
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
-
-        # for child in self.children():
-        #     if isinstance(child, QWidget):
-        #         child.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         if not self.current_playlist:
             self.prev_button.setEnabled(False)
@@ -213,12 +180,9 @@ class AudioController(QFrame):
             painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_DestinationIn)
             painter.drawRect(self.rect())
 
-        # super().paintEvent(event)
-
     def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
         color = DARK_AUDIO_CONTROLLER_COLOR if dark_mode_enabled else LIGHT_AUDIO_CONTROLLER_COLOR
         name = color.name()
-        # print(name)
         self.setStyleSheet(self.default_stylesheet + f"QWidget {{color: {name};}}")
         self.seek_slider.set_dark_mode_enabled(dark_mode_enabled)
 
@@ -245,20 +209,12 @@ class AudioController(QFrame):
         self.volume_button.is_in_dark_mode = dark_mode_enabled
         self.prev_button.is_in_dark_mode = dark_mode_enabled
         self.next_button.is_in_dark_mode = dark_mode_enabled
-        # self.play_button.is_in_dark_mode = dark_mode_enabled
-        # self.play_button.is_in_dark_mode = dark_mode_enabled
-        # self.play_button.is_in_dark_mode = dark_mode_enabled
 
     def update_background_pixmap(self, track: Track) -> None:
-        # self.repaint()
         start = time.time()
         pixmap = get_artwork_pixmap(track.file_path)
-        # if track.album == self.current_playlist.playing_track.album and \
-        #         track.title == self.current_playlist.playing_track.title:
-        #     return
         if not pixmap:
             self.background_pixmap = None
-            # self.set_color_to(DARK_AUDIO_CONTROLLER_COLOR)
             self.set_dark_mode_enabled(True)
             self.repaint()
             return None
@@ -325,10 +281,6 @@ class AudioController(QFrame):
         # self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing.file_path))
         # artist = self.current_playlist.currently_playing.artist
         title = self.current_playlist.playing_track.title
-        # if not artist:
-        #     self.audio_file_name_label.setText(title)
-        # else:
-        #     self.audio_file_name_label.setText(" - ".join([artist, title]))
         self.audio_file_name_label.setText(title)
         self.player.setSource(QUrl(self.current_playlist.playing_track.file_path))
         self.player.play()

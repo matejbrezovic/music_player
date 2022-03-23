@@ -18,7 +18,7 @@ class InformationPanel(QFrame):
         super().__init__(parent)
         # self.setObjectName("information_panel")
         # self.setStyleSheet("InformationPanel {background-color: rgba(0, 0, 0, 0.3)}")
-        self.setMinimumWidth(PANEL_MIN_WIDTH * 1.8)
+        self.setMinimumWidth(PANEL_MIN_WIDTH)
 
         self.playing_tracks: List[Track] = []
 
@@ -65,6 +65,7 @@ class InformationPanel(QFrame):
         self.track_info_widget_layout.setContentsMargins(0, 0, 0, 0)
         self.track_info_scroll_area = QScrollArea(self)
         self.track_info_scroll_area.setWidgetResizable(True)
+        self.track_info_scroll_area.verticalScrollBar().setSingleStep(8)
         self.track_info_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.track_info_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.track_info_scroll_area_widget = QWidget(self)
@@ -126,13 +127,13 @@ class InformationPanel(QFrame):
 
     @pyqtSlot(Track, int)
     def set_playing_track(self, track: Track, track_index: int = None) -> None:
-        def get_track_info(track: Track) -> str:
-            f = TagManager().load_file(track.file_path)
-            extension = track.file_path.split(".")[-1].upper()
+        def get_track_info(t: Track) -> str:
+            f = TagManager().load_file(t.file_path)
+            extension = t.file_path.split(".")[-1].upper()
             samplerate = f'{str(round(f["#samplerate"].first / 1000, 1))} kHz'
             bitrate = f'{str(math.floor(f["#bitrate"].first / 1000))}k'
             channels = "Stereo" if f["#channels"].first == 2 else "Mono"
-            return f"{extension} {bitrate}, {samplerate}, {channels}, {format_seconds(track.length)}"
+            return f"{extension} {bitrate}, {samplerate}, {channels}, {format_seconds(t.length)}"
 
         self.currently_playing_track_title.setText(track.title)
         self.currently_playing_track_info.setText(get_track_info(track))

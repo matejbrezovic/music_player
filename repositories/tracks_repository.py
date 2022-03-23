@@ -174,29 +174,29 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
         return tracks
 
-    def get_track_by_title(self, title: str) -> Track:
-        conn = self.get_connection()
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-
-        selected_row = cursor.execute(f"SELECT * FROM tracks WHERE name LIKE '%{title}%'").fetchone()
-
-        track = Track(
-            track_id=selected_row["track_id"],
-            file_path=selected_row["file_path"],
-            title=selected_row["title"],
-            album=selected_row["album"],
-            artist=selected_row["artist"],
-            composer=selected_row["composer"],
-            genre=selected_row["genre"],
-            year=selected_row["year"],
-            length=selected_row["length"]
-        )
-
-        if QtWidgets.QApplication.instance() is not None:
-            track.artwork_pixmap = get_artwork_pixmap(track.file_path)
-
-        return track
+    # def get_track_by_title(self, title: str) -> Track:
+    #     conn = self.get_connection()
+    #     conn.row_factory = sqlite3.Row
+    #     cursor = conn.cursor()
+    #
+    #     selected_row = cursor.execute(f"SELECT * FROM tracks WHERE name LIKE '%{title}%'").fetchone()
+    #
+    #     track = Track(
+    #         track_id=selected_row["track_id"],
+    #         file_path=selected_row["file_path"],
+    #         title=selected_row["title"],
+    #         album=selected_row["album"],
+    #         artist=selected_row["artist"],
+    #         composer=selected_row["composer"],
+    #         genre=selected_row["genre"],
+    #         year=selected_row["year"],
+    #         length=selected_row["length"]
+    #     )
+    #
+    #     if QtWidgets.QApplication.instance() is not None:
+    #         track.artwork_pixmap = get_artwork_pixmap(track.file_path)
+    #
+    #     return track
 
     def get_track_by_id(self, track_id: int) -> Track:
         conn = self.get_connection()

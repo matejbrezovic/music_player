@@ -72,10 +72,9 @@ def delete_grid_layout_items(layout: QGridLayout) -> None:
 
 
 class ElidedLabel(QLabel):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*tuple(map(str, args)) if args else "", **kwargs)
+    def __init__(self, *args):
+        super().__init__(*tuple(map(str, args)) if args else "")
         self.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Preferred)
-        # self.setContentsMargins(4, 0, 4, 0)
 
     def paintEvent(self, event) -> None:
         metrics = QFontMetrics(self.font())
@@ -211,8 +210,8 @@ class FixedHorizontalSplitter(QSplitter):
 
 
 class FixedHorizontalSplitterProxyStyle(QProxyStyle):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+    def __init__(self, *args):
+        super().__init__(*args)
 
     def drawControl(self,
                     element: QStyle.ControlElement,
@@ -232,31 +231,9 @@ class FixedHorizontalSplitterProxyStyle(QProxyStyle):
 
 class QHLine(QFrame):
     def __init__(self):
-        super(QHLine, self).__init__()
+        super().__init__()
         self.setFrameShape(QFrame.Shape.HLine)
         self.setFrameShadow(QFrame.Shadow.Sunken)
-
-
-class AlwaysVisibleScrollBarProxyStyle(QProxyStyle):  # TODO make scroll bar always visible (deprecated)
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-
-    def drawComplexControl(self,
-                           control: QStyle.ComplexControl,
-                           option: QStyleOptionComplex,
-                           painter: QtGui.QPainter,
-                           widget: Optional[QWidget] = ...) -> None:
-
-        print(control)
-        if control == QStyle.ComplexControl.CC_ScrollBar:
-            print("Scroll")
-            # painter.save()
-            # option.rect.setWidth(10)
-            painter.setPen(Qt.PenStyle.NoPen)
-            painter.setBrush(QColor("red"))
-            # painter.drawRect(option.rect)
-            # painter.restore()
-        return super().drawComplexControl(control, option, painter, widget)
 
 
 class HeaderSplitter(QSplitter):
@@ -279,8 +256,8 @@ class PathCheckbox(QCheckBox):
         self.stateChanged.connect(lambda: self.state_changed.emit(True if self.checkState() == Qt.CheckState.Checked
                                                                   else False, self.path))
 
-    def set_path(self, path: str) -> None:
-        self.path = path
+    def set_path(self, p: str) -> None:
+        self.path = p
 
 
 class TransparentComboBox(QComboBox):
@@ -372,7 +349,7 @@ class ImprovedSlider(QSlider):
 
 
 class MarqueeLabel(QLabel):
-    def __init__(self, parent = None):
+    def __init__(self, parent=None):
         super().__init__(parent)
         self.static_text = QStaticText()
         self.static_text.setTextFormat(Qt.TextFormat.PlainText)
@@ -517,7 +494,6 @@ class TrackNotInPlaylistError(Exception):
 def get_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
     class NoArtworkError(Exception):
         pass
-    # return None
     # print("CREATED PIXMAP")
     pixmap = QPixmap()
     try:
@@ -569,21 +545,14 @@ class HoverButton(QPushButton):
         if self.isEnabled():
             self.backup_icon = self.icon()
             self.setIcon(get_hover_icon(self.backup_icon, self.is_in_dark_mode))
-            # print("enter")
 
     def leaveEvent(self, e: QtCore.QEvent) -> None:
         if self.isEnabled():
             self.setIcon(self.backup_icon)
-            # print("leave")
 
     def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
         self.clicked.emit()
         self.enterEvent(QEnterEvent(QPointF(1, 1), QPointF(1, 1), QPointF(1, 1)))
-
-    # def setIcon(self, icon: QIcon, sender=None) -> None:
-    #     if self.icon is None and sender is None:
-    #         self.backup_icon = icon
-    #     super().setIcon(icon)
 
 
 def change_icon_color(icon: QIcon, color: QColor) -> QIcon:
@@ -592,7 +561,6 @@ def change_icon_color(icon: QIcon, color: QColor) -> QIcon:
     pixmap.fill(color)
     pixmap.setMask(mask)
     icon = QIcon(pixmap)
-    # icon = get_icon_with_updated_states(QIcon(pixmap))
     return icon
 
 
@@ -606,17 +574,7 @@ def get_hover_icon(icon: QIcon, is_in_dark_mode: bool) -> QIcon:
     pixmap.fill(color)
     pixmap.setMask(mask)
     icon = QIcon(pixmap)
-    # icon = get_icon_with_updated_states(QIcon(pixmap))
     return icon
-
-
-# def get_icon_with_updated_states(icon: QIcon) -> QIcon:
-#     pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
-#     mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
-#     pixmap.fill(QColor(20, 20, 20))
-#     pixmap.setMask(mask)
-#     icon.addPixmap(pixmap, QIcon.Mode.Active)
-#     return icon
 
 
 def get_formatted_time(track_duration: int) -> str:
@@ -629,7 +587,6 @@ def get_formatted_time(track_duration: int) -> str:
 
 
 def format_seconds(time_in_seconds: int) -> str:
-    # print(time_in_seconds)
     if not time_in_seconds:
         return "0:00"
 
@@ -638,15 +595,27 @@ def format_seconds(time_in_seconds: int) -> str:
 
     if time_in_seconds < 60:
         return f"0:{time_in_seconds}"
-    # print("0:".join(str(datetime.timedelta(seconds=time_in_seconds)).split("00:")[-2:]))
-    step_one = "".join(str(datetime.timedelta(seconds=time_in_seconds)))
-    step_two = step_one.split("0:", 1)[-1]
-    step_three = step_two.split()[-1]
-    step_four = step_three.lstrip("0")
-    # if not step_one.split(":")[-1].startswith("0") and len(step_one.split(":")[-1]) <= 1:
-    #     step_one = step_one.replace(":", ":0")
-    # print(step_one, step_two, step_three, step_four)
-    return step_four
+    time_str = "".join(str(datetime.timedelta(seconds=time_in_seconds))).lstrip("0:")
+
+    return time_str
+
+
+def get_information_panel_formatted_time(time_in_seconds: int) -> str:
+    if not time_in_seconds:
+        return "0:00"
+
+    if time_in_seconds < 10:
+        return f"0:0{time_in_seconds}"
+
+    if time_in_seconds < 60:
+        return f"0:{time_in_seconds}"
+
+    mins = time_in_seconds // 60
+    secs = time_in_seconds % 60
+
+    if secs < 10:
+        return f"{mins}:0{secs}"
+    return f"{mins}:{secs}"
 
 
 def format_player_position_to_seconds(position: int) -> int:

@@ -31,7 +31,7 @@ class QueueInfoPanel(QFrame):
         self.is_left_label_in_detail_mode = True
 
         self.right_label = ClickableLabel(self)
-        self.right_label.clicked.connect(self.right_label_clicked)
+        # self.right_label.clicked.connect(self.right_label_clicked)
         self.right_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.right_label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.is_right_label_in_countdown_mode = False  # TODO deprecated for now
@@ -62,10 +62,11 @@ class QueueInfoPanel(QFrame):
         # self.is_right_label_in_countdown_mode = not self.is_right_label_in_countdown_mode
 
     def update_remaining_queue_time(self, time_in_secs: int) -> None:
-        if self.is_right_label_in_countdown_mode:
-            self.right_label.setText(f"queued: -{format_seconds(time_in_secs)}")
-        else:
-            self.right_label.setText(f"queued: {format_seconds(self.queue_length)}")
+        return  # deprecated
+        # if self.is_right_label_in_countdown_mode:
+        #     self.right_label.setText(f"queued: -{format_seconds(time_in_secs)}")
+        # else:
+        #     self.right_label.setText(f"queued: {format_seconds(self.queue_length)}")
 
     def update_info(self, tracks: List[Track]) -> None:
         def get_size_text(size_in_bytes: int) -> str:

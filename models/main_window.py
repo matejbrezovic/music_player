@@ -19,7 +19,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.scan_folders_dialog = ScanFoldersDialog()
         self.add_files_dialog = AddFilesDialog()
 
-        # TracksRepository().create_groups()
         self._setup_ui()
 
         self.setWindowTitle(APPLICATION_NAME)
@@ -37,8 +36,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
     def __post__(self):
         self._setup_signals()
         self.navigation_panel.refresh_groups()
-
-        # self.main_panel.track_view_widget.update_column_width()
 
     def show(self):
         super().show()
@@ -83,8 +80,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.horizontal_splitter.addWidget(self.navigation_panel)
         self.horizontal_splitter.addWidget(self.main_panel)
         self.horizontal_splitter.addWidget(self.information_panel)
-        self.horizontal_splitter.setSizes([int(PANEL_MIN_WIDTH * 1.5), MAIN_PANEL_MIN_WIDTH * 2,
-                                           int(PANEL_MIN_WIDTH * 1.5)])
+        self.horizontal_splitter.setSizes([int(PANEL_MIN_WIDTH), MAIN_PANEL_MIN_WIDTH * 2, int(PANEL_MIN_WIDTH)])
         self.horizontal_splitter.setStretchFactor(0, 0)
         self.horizontal_splitter.setStretchFactor(1, 1)
         self.horizontal_splitter.setStretchFactor(2, 0)

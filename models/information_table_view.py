@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabe
 
 from constants import *
 from data_models.track import Track
-from utils import ElidedLabel, format_seconds, get_artwork_pixmap
+from utils import ElidedLabel, format_seconds, get_artwork_pixmap, get_information_panel_formatted_time
 
 
 class InformationTableModel(QtCore.QAbstractTableModel):
@@ -111,7 +111,6 @@ class InformationTableItemDelegate(QStyledItemDelegate):
             pixmap = decoration_value.scaled(rect.width(), rect.width(),
                                              Qt.AspectRatioMode.IgnoreAspectRatio,
                                              Qt.TransformationMode.SmoothTransformation)
-
             painter.drawPixmap(rect, pixmap)
 
         if index.column() == 1:
@@ -121,7 +120,7 @@ class InformationTableItemDelegate(QStyledItemDelegate):
                 track = self._tracks[index.row()]
                 track_info_widget = TrackInfoWidget(track.title,
                                                     track.artist,
-                                                    format_seconds(track.length))
+                                                    get_information_panel_formatted_time(track.length))
                 self.track_info_widgets_mapping[index.row()] = track_info_widget
             else:
                 track_info_widget = self.track_info_widgets_mapping[index.row()]
@@ -226,7 +225,7 @@ class TrackInfoWidget(QWidget):
         dur_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         dur_label.setContentsMargins(0, 0, 0, 0)
         dur_label.setMinimumHeight(20)
-        dur_label.setFixedWidth(30)
+        dur_label.setFixedWidth(40)
 
         self.h_layout.addWidget(title_label, Qt.AlignmentFlag.AlignLeft)
         self.h_layout.addWidget(dur_label)
