@@ -24,18 +24,9 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         self.is_playing = False
         self.playing_track_index: Optional[int] = None
 
-        self.playing_speaker_pixmap = QPixmap("icons/speaker_playing.png")\
-            # .scaled(
-            # 16, 16,
-            # Qt.AspectRatioMode.KeepAspectRatio,
-            # Qt.TransformationMode.SmoothTransformation)
+        self.playing_speaker_pixmap = QPixmap("icons/speaker_playing.png")
 
-        self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png")\
-            # .scaled(
-            # 16, 16,
-            # Qt.AspectRatioMode.KeepAspectRatio,
-            # Qt.TransformationMode.SmoothTransformation)
-
+        self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png")
 
     def set_tracks(self, tracks: List[Track]) -> None:
         # global_timer.print_elapsed_time()
@@ -50,9 +41,14 @@ class TrackTableModel(QtCore.QAbstractTableModel):
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if not self._tracks:
             return None
-
-        if role == Qt.ItemDataRole.TextAlignmentRole and not index.column():
-            return Qt.AlignmentFlag.AlignCenter
+        # print(role)
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            print(index.column())
+            if not index.column():
+                return Qt.AlignmentFlag.AlignCenter
+            # if index.column() == len(MAIN_PANEL_COLUMN_NAMES) - 1:
+            #     print("Aligned Right")
+            #     return Qt.AlignmentFlag.AlignRight
 
         if role == Qt.ItemDataRole.DecorationRole:
             if not index.column():  # TODO can probably be improved
@@ -100,7 +96,6 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                    role: QtCore.Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
-                # print(f"Got data:", section)
                 return MAIN_PANEL_COLUMN_NAMES[section]
             return f"{section}"
         return None
@@ -127,6 +122,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawing speed
     def __init__(self, parent: TrackTableView = None):
         super().__init__(parent)
+        self.padding = parent.padding
         self._table_view: TrackTableView = parent
         self.last_height = self._table_view.height()
 
@@ -158,11 +154,20 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
             painter.setPen(QPen(Qt.GlobalColor.black))
             text = f"{index.data(Qt.ItemDataRole.DisplayRole)}"
             if text:
+                # if index.column() == 2:
+                #     print(option.rect.width())
                 elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
-                                                                   option.rect.width())
-                alignment = Qt.AlignmentFlag.AlignVCenter if index.column() else Qt.AlignmentFlag.AlignCenter
+                                                                   max(option.rect.width() - self.padding * 2, 18))
 
-                option.rect.setLeft(option.rect.left() + self._table_view.padding)
+                if index.column():
+                    alignment = Qt.AlignmentFlag.AlignVCenter
+                    if index.column() == len(MAIN_PANEL_COLUMN_NAMES) - 1:
+                        alignment = Qt.AlignmentFlag.AlignRight
+                else:
+                    alignment = Qt.AlignmentFlag.AlignCenter
+
+                option.rect.setLeft(option.rect.left() + self.padding)
+                option.rect.setRight(option.rect.right() - self.padding)
                 painter.drawText(option.rect, alignment, elided_text)
 
         if index.data(Qt.ItemDataRole.DecorationRole):
@@ -197,9 +202,12 @@ class TrackTableHeader(QHeaderView):
         self.setFirstSectionMovable(False)
 
         self.sectionMoved.connect(self.section_moved)
+        self.sectionResized.connect(self.section_resized)
         self.__section_moved_recursions = 0
 
         self.section_text = MAIN_PANEL_COLUMN_NAMES
+
+        self.minimum_last_section_size = self.padding * 2 + self.fontMetrics().horizontalAdvance("Time")
 
         self.setStyleSheet("""
         QHeaderView {
@@ -210,12 +218,16 @@ class TrackTableHeader(QHeaderView):
         }
         """)
 
+    def section_resized(self, logical_index: int, old_size: int, new_size: int) -> None:
+        """Sets minimum size for the last section."""
+        if logical_index == self.count() - 1 and new_size < self.minimum_last_section_size:
+            self.resizeSection(self.count() - 1, self.minimum_last_section_size)
+
     def section_moved(self, logical_index: int, old_visual_index: int, new_visual_index: int) -> None:
         """Prevents section 1 from moving."""
         if self.__section_moved_recursions:
             self.__section_moved_recursions = 0
             return
-        # print(logical_index, old_visual_index, new_visual_index)
         if {0, 1} & {old_visual_index, new_visual_index}:
             self.__section_moved_recursions += 1
             self.moveSection(new_visual_index, old_visual_index)
@@ -224,10 +236,10 @@ class TrackTableHeader(QHeaderView):
         if isinstance(self.model(), QtCore.QAbstractItemModel):
             return self.section_text[section]
 
-    def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logicalIndex: int) -> None:
-        elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logicalIndex),
+    def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logical_index: int) -> None:
+        elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logical_index),
                                                                 Qt.TextElideMode.ElideRight,
-                                                                self.sectionSize(logicalIndex))
+                                                                self.sectionSize(logical_index) - self.padding)
 
         top = rect.topRight()
         top.setY(top.y() + 1)
@@ -241,7 +253,12 @@ class TrackTableHeader(QHeaderView):
 
         painter.setPen(Qt.GlobalColor.black)
         rect.setLeft(rect.left() + self.padding)
-        painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
+        rect.setRight(rect.right() - self.padding)
+
+        if logical_index == self.count() - 1:
+            painter.drawText(rect, Qt.AlignmentFlag.AlignRight, elided_text)
+        else:
+            painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
 
 
 class TrackTableView(QTableView):

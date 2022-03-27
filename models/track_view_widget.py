@@ -67,6 +67,7 @@ class TrackViewWidget(QWidget):
         self.table_view.setIconSize(QSize(22, 22))
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.setFrameShape(QFrame.Shape.NoFrame)
+        # self.table_view.setDef
         self.table_view.set_new_tracks.connect(self.update_column_width)
 
         self.table_view.clicked.connect(lambda model_index: self.track_clicked.emit(

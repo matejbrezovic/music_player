@@ -1,14 +1,14 @@
 from typing import List, Any
 
 from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint, QTimer
 from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate, \
     QStyle, QStyleOptionViewItem, QApplication, QAbstractItemView
 
 from constants import *
 from data_models.track import Track
-from utils import ElidedLabel, format_seconds, get_artwork_pixmap, get_information_panel_formatted_time
+from utils import ElidedLabel, get_artwork_pixmap, get_information_panel_formatted_time
 
 
 class InformationTableModel(QtCore.QAbstractTableModel):
@@ -29,7 +29,6 @@ class InformationTableModel(QtCore.QAbstractTableModel):
             return Qt.AlignmentFlag.AlignTop
 
         if role == Qt.ItemDataRole.DecorationRole:
-            # return None
             if not index.column():
                 if index.row() not in self.loaded_pixmap_mapping:
                     artwork_pixmap = get_artwork_pixmap(self._tracks[index.row()].file_path)
@@ -38,9 +37,6 @@ class InformationTableModel(QtCore.QAbstractTableModel):
                     self.loaded_pixmap_mapping[index.row()] = artwork_pixmap
                 else:
                     artwork_pixmap = self.loaded_pixmap_mapping[index.row()]
-                    # artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
-                # icon = QIcon(artwork_pixmap)
-                # icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
                 return artwork_pixmap
 
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
@@ -69,7 +65,6 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         self._tracks: List[Track] = []
         self._playing_track_index = None
         self.is_playing = False
-        # self.loaded_pixmap_indexes = []
         self.track_info_widgets_mapping = {}
 
         self.pixmap_width = 16
@@ -100,7 +95,6 @@ class InformationTableItemDelegate(QStyledItemDelegate):
 
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
-        # painter.drawRect(option.rect)
 
         if index.data(Qt.ItemDataRole.DecorationRole):
             decoration_value = index.data(Qt.ItemDataRole.DecorationRole)
@@ -164,9 +158,15 @@ class InformationTableView(QTableView):
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
         self._tracks: List[Track] = []
+        self._playing_track_index = -1
 
         self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()], index.row()))
         self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()], index.row()))
+
+        self._viewport_fix_timer = QTimer(self)
+        self._viewport_fix_timer.setTimerType(Qt.TimerType.PreciseTimer)
+        self._viewport_fix_timer.setSingleShot(True)
+        self._viewport_fix_timer.timeout.connect(self.on_timeout)
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._table_model.set_tracks(tracks)
@@ -174,16 +174,21 @@ class InformationTableView(QTableView):
         self._tracks = tracks
         self.set_new_tracks.emit()
 
+    def on_timeout(self):
+        visible_index_range = range(self.rowAt(4), self.rowAt(self.rect().height()))
+        if self._playing_track_index not in visible_index_range:
+            self.scrollTo(self._table_model.index(self._playing_track_index, 0),
+                          QAbstractItemView.ScrollHint.PositionAtTop)
+        elif self._playing_track_index in visible_index_range[2:]:
+            self.scrollTo(self._table_model.index(self._playing_track_index - 2, 0),
+                          QAbstractItemView.ScrollHint.PositionAtTop)
+
     def set_currently_playing_track_index(self, index: int) -> None:
         self._table_delegate.is_playing = True
+        self._playing_track_index = index
         self._table_model.set_currently_playing_track_index(index)
         self._table_delegate.set_currently_playing_track_index(index)
-        # print("Currently playing:", index)
-        # print("Bottom index:", self.rowAt(self.height()))
-        if self.rowAt(self.rect().height()) == index:
-            self.scrollTo(self._table_model.index(index - 2, 0), QAbstractItemView.ScrollHint.PositionAtTop)
-
-        self.viewport().repaint()
+        self._viewport_fix_timer.start(1)
 
     def set_paused(self) -> None:
         self._table_delegate.is_playing = False
@@ -205,7 +210,6 @@ class InformationTableView(QTableView):
 class TrackInfoWidget(QWidget):
     def __init__(self, title: str, artist: str, duration: str, parent=None):
         super().__init__(parent)
-        # print("CREATED")
         self.v_layout = QVBoxLayout()
         self.v_layout.setContentsMargins(4, 0, 4, 0)
         self.v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -217,11 +221,8 @@ class TrackInfoWidget(QWidget):
 
         title_label = ElidedLabel(title)
         title_label.setContentsMargins(0, 0, 0, 0)
-        # title_label.setStyleSheet("background-color: red")
-        # title_label.setFixedHeight(20)
 
         dur_label = QLabel(duration)
-        # dur_label.setStyleSheet("background-color: green")
         dur_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         dur_label.setContentsMargins(0, 0, 0, 0)
         dur_label.setMinimumHeight(20)
@@ -235,8 +236,7 @@ class TrackInfoWidget(QWidget):
         self.upper_widget.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum))
         self.upper_widget.setLayout(self.h_layout)
 
-        artist_label = ElidedLabel(artist if artist else "")
-        # artist_label.setStyleSheet("background-color: blue")
+        artist_label = ElidedLabel(artist or "")
         artist_label.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.v_layout.addWidget(self.upper_widget)
@@ -245,14 +245,8 @@ class TrackInfoWidget(QWidget):
         self.main_widget_part = QWidget()
         self.main_widget_part.setLayout(self.v_layout)
 
-        self.image_label = QLabel()
-        self.image_label.setFixedWidth(20)
-        self.image_label.resize(0, 20)
-
         self.main_horizontal_layout = QHBoxLayout(self)
         self.main_horizontal_layout.setContentsMargins(0, 0, 0, 0)
-        # self.main_horizontal_layout.addWidget(self.image_label)
         self.main_horizontal_layout.addWidget(self.main_widget_part)
 
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
-        # self.setStyleSheet("background:transparent;")
