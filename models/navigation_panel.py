@@ -1,6 +1,7 @@
 from typing import List
 
 from PyQt6 import QtWidgets
+from PyQt6.QtCore import pyqtSlot
 
 from constants import *
 from data_models.navigation_group import NavigationGroup
@@ -88,6 +89,7 @@ class NavigationPanel(QFrame):
         # print("Groups fully displayed in:", time.time() - start)
         # print("Updated Groups")
 
+    @pyqtSlot(int)
     def group_key_changed(self, new_key: int) -> None:
         self.navigation_table_view.selectionModel().clearSelection()
         self.navigation_table_view.scrollToTop()
@@ -95,6 +97,7 @@ class NavigationPanel(QFrame):
         self.view_key = new_key
         self._load_groups(new_key)
 
+    @pyqtSlot()
     def refresh_groups(self) -> None:
         self._load_groups(self.view_key)
 

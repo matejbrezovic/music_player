@@ -10,6 +10,7 @@ from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
     QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame
 
+import global_timer
 from constants import *
 from data_models.track import Track
 from repositories.tracks_repository import TracksRepository
@@ -28,6 +29,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 
         self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png")
 
+    @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         # global_timer.print_elapsed_time()
         self.layoutAboutToBeChanged.emit()
@@ -100,16 +102,19 @@ class TrackTableModel(QtCore.QAbstractTableModel):
             return f"{section}"
         return None
 
+    @pyqtSlot()
     def set_paused(self) -> None:
         self.is_playing = False
         if self.playing_track_index is not None:
             self.dataChanged.emit(self.index(self.playing_track_index, 1), self.index(self.playing_track_index, 1))
 
+    @pyqtSlot()
     def set_unpaused(self) -> None:
         self.is_playing = True
         if self.playing_track_index is not None:
             self.dataChanged.emit(self.index(self.playing_track_index, 1), self.index(self.playing_track_index, 1))
 
+    @pyqtSlot(int)
     def set_playing_track_index(self, index: Optional[int]) -> None:
         self.playing_track_index = index
         self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
@@ -218,11 +223,13 @@ class TrackTableHeader(QHeaderView):
         }
         """)
 
+    @pyqtSlot(int, int, int)
     def section_resized(self, logical_index: int, old_size: int, new_size: int) -> None:
         """Sets minimum size for the last section."""
         if logical_index == self.count() - 1 and new_size < self.minimum_last_section_size:
             self.resizeSection(self.count() - 1, self.minimum_last_section_size)
 
+    @pyqtSlot(int, int, int)
     def section_moved(self, logical_index: int, old_visual_index: int, new_visual_index: int) -> None:
         """Prevents section 1 from moving."""
         if self.__section_moved_recursions:
@@ -361,23 +368,29 @@ class TrackTableView(QTableView):
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.queue_next_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
+    # @pyqtSlot()
     def queue_last_action_triggered(self, _=None):
         if not self._tracks:
             return
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.queue_last_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
+    @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks
         self._table_model.set_tracks(tracks)
         self.set_new_tracks.emit()
+        # global_timer.print_elapsed_time()
 
+    @pyqtSlot(int)
     def set_playing_track_index(self, index: Optional[int]) -> None:
         self._table_model.set_playing_track_index(index)
 
+    @pyqtSlot()
     def set_paused(self) -> None:
         self._table_model.set_paused()
 
+    @pyqtSlot()
     def set_unpaused(self) -> None:
         self._table_model.set_unpaused()
 
@@ -430,7 +443,7 @@ class TestMainWindow(QtWidgets.QMainWindow):
 
         # ===== ADDITION
 
-        self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)  # Mode set to Interactive to allow resizing
+        self.table_view.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Interactive)
         self.table_view.horizontalHeader().setMinimumSectionSize(10)
 
         hide_button = QPushButton('Hide Column')

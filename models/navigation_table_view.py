@@ -1,11 +1,13 @@
+import time
 from typing import List, Any
 
 from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QIcon, QPen, QBrush, QPainter
 from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle, \
     QStyleOptionViewItem, QApplication
 
+import global_timer
 from constants import *
 from data_models.navigation_group import NavigationGroup
 from repositories.cached_tracks_repository import CachedTracksRepository
@@ -39,6 +41,7 @@ class NavigationTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, parent: QModelIndex = QModelIndex) -> int:
         return 2
 
+    @pyqtSlot(list)
     def set_groups(self, groups: List[NavigationGroup]) -> None:
         self.layoutAboutToBeChanged.emit()
         self._groups = groups
@@ -100,6 +103,7 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
             navigation_group_widget.render(painter)
             painter.restore()
 
+    @pyqtSlot(list)
     def set_groups(self, groups: List[NavigationGroup]) -> None:
         self._groups = groups
 
@@ -124,14 +128,6 @@ class NavigationTableView(QTableView):
 
         # self.click_timer = QTimer()
 
-    def set_group_key(self, key: str) -> None:
-        self.group_key = key
-
-    def set_groups(self, groups: List[NavigationGroup]) -> None:
-        self.groups = groups
-        self._table_model.set_groups(groups)
-        self._table_delegate.set_groups(groups)
-
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
         if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
             self.clearSelection()
@@ -139,6 +135,16 @@ class NavigationTableView(QTableView):
 
     def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
         return super().focusOutEvent(event)
+
+    @pyqtSlot(str)
+    def set_group_key(self, key: str) -> None:
+        self.group_key = key
+
+    @pyqtSlot(list)
+    def set_groups(self, groups: List[NavigationGroup]) -> None:
+        self.groups = groups
+        self._table_model.set_groups(groups)
+        self._table_delegate.set_groups(groups)
 
     # def g_clicked(self, index):
     #     self.click_timer.singleShot(80, lambda: self.perform_single_click_action(index))
@@ -148,13 +154,17 @@ class NavigationTableView(QTableView):
     #     self.group_double_clicked.emit(
     #         CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title))
 
+    @pyqtSlot(QModelIndex)
     def single_click_action(self, index):
         # global_timer.timer_init()
         # global_timer.start()
         # print("click")
+        # start = time.time()
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
+        # print("Tracks got in: ", time.time() - start)
         self.group_clicked.emit(tracks)
 
+    @pyqtSlot(QModelIndex)
     def double_click_action(self, index):
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
         self.group_double_clicked.emit(tracks)

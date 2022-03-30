@@ -1,12 +1,14 @@
+import time
 from typing import List
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt, pyqtSignal
+from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import QVBoxLayout
 
 from constants import *
 from data_models.track import Track
 from models.track_view_widget import TrackViewWidget
+from repositories.cached_tracks_repository import CachedTracksRepository
 from tag_manager import TagManager
 
 
@@ -39,31 +41,35 @@ class MainPanel(QtWidgets.QFrame):
         # self.main_layout.addWidget(self.view_options_combo_box)
         self.main_layout.addWidget(self.track_view_widget)
 
-        # self.track_view_widget.set_tracks(CachedTracksRepository().get_tracks())
-        # self.track_view_widget.set_tracks([])
+        # self.track_view_widget.set_tracks(CachedTracksRepository().get_tracks()[:10])
+        # self.track_view_widget.set_tracks(CachedTracksRepository().get_tracks()[:2])
 
     def view_key_changed(self) -> None:
         ...
 
+    @pyqtSlot(list)
     def display_tracks(self, tracks: List[Track]) -> None:
         # global_timer.print_elapsed_time()
-        # start = time.time()
+        start = time.time()
         if self.displayed_tracks == tracks:
             return
         self.track_view_widget.set_tracks(tracks)
         self.displayed_tracks = tracks
         # global_timer.print_elapsed_time()
-        # print("Tracks displayed in:", time.time() - start)
+        print("Tracks displayed in:", time.time() - start)
 
     # def select_track(self, track: Track) -> None: # TODO remove
     #     self.track_view_widget.select_row_by_track(track)
 
+    @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:
         # print("SET")
         self.track_view_widget.set_playing_track(track)
 
+    @pyqtSlot()
     def pause_playing_track(self) -> None:
         self.track_view_widget.pause_playing_track()
 
+    @pyqtSlot()
     def unpause_playing_track(self) -> None:
         self.track_view_widget.unpause_playing_track()
