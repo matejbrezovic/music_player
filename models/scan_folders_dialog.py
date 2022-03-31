@@ -2,8 +2,8 @@ from __future__ import annotations
 
 from typing import Union, List, Tuple
 
-from PyQt6.QtWidgets import QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout, \
-    QVBoxLayout
+from PyQt6.QtWidgets import (QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout,
+                             QVBoxLayout)
 
 from config import Config
 from constants import *

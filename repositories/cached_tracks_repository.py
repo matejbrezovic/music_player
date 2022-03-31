@@ -3,8 +3,8 @@ from typing import Union, List, Tuple
 
 from constants import *
 from data_models.track import Track
-from utils import Singleton
 from repositories.tracks_repository import TracksRepository
+from utils import Singleton
 
 
 class CachedTracksRepository(TracksRepository, metaclass=Singleton):

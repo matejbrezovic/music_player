@@ -5,8 +5,8 @@ from typing import Any, Optional
 from PyQt6 import QtWidgets, QtCore, QtGui
 from PyQt6.QtCore import pyqtSlot, Qt
 from PyQt6.QtGui import QFontMetrics
-from PyQt6.QtWidgets import QHeaderView, QStyledItemDelegate, QStyleOptionViewItem, QFrame, QMainWindow, QWidget, \
-    QHBoxLayout, QLabel
+from PyQt6.QtWidgets import (QHeaderView, QFrame, QMainWindow, QWidget,
+                             QHBoxLayout, QLabel)
 
 
 class HeaderView(QtWidgets.QHeaderView):

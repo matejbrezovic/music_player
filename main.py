@@ -1,8 +1,8 @@
 import sys
 import time
 
-from models.main_window import MainWindowUi
 from models.app import App
+from models.main_window import MainWindowUi
 
 if __name__ == '__main__':
     start = time.time()

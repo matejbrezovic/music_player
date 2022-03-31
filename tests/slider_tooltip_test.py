@@ -1,9 +1,7 @@
 import sys
-import typing
 
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QEvent
-from PyQt6.QtGui import QHoverEvent
 from PyQt6.QtWidgets import QApplication, QMainWindow, QWidget, QVBoxLayout, QToolTip
 
 from audio_player_test import ImprovedSlider

@@ -1,7 +1,8 @@
 import time
 
-from repositories.tracks_repository import TracksRepository
 from repositories.tracks_repository_json import TracksRepository as JSONTracksRepository
+
+from repositories.tracks_repository import TracksRepository
 
 
 # TODO sql injection

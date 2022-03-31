@@ -8,7 +8,6 @@ from PyQt6.QtWidgets import QVBoxLayout
 from constants import *
 from data_models.track import Track
 from models.track_view_widget import TrackViewWidget
-from repositories.cached_tracks_repository import CachedTracksRepository
 from tag_manager import TagManager
 
 

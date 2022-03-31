@@ -8,8 +8,8 @@ from PIL import Image, ImageFilter
 from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui, QtCore
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QPointF, QTimer
-from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent, qRgba, QImage, QLinearGradient, \
-    QTransform, QStaticText
+from PyQt6.QtGui import (QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent, qRgba, QImage, QLinearGradient,
+                         QTransform, QStaticText)
 from PyQt6.QtWidgets import *
 from mutagen import MutagenError
 from mutagen.id3 import ID3
@@ -600,7 +600,7 @@ def format_seconds(time_in_seconds: int) -> str:
     return time_str
 
 
-def get_information_panel_formatted_time(time_in_seconds: int) -> str:
+def get_formatted_time_in_mins(time_in_seconds: int) -> str:
     if not time_in_seconds:
         return "0:00"
 

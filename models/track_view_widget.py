@@ -2,7 +2,6 @@ from typing import List
 
 from PyQt6 import QtWidgets
 
-from constants import *
 # from auto_resizing_header_view_test import HeaderView
 from data_models.track import Track
 from models.track_table_view import TrackTableView
@@ -30,20 +29,20 @@ class TrackViewWidget(QWidget):
         self.main_layout.setSpacing(0)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        self.header_splitter = HeaderSplitter()
-        self.header_splitter.setOrientation(Qt.Orientation.Horizontal)
-        self.header_splitter.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
-        self.header_splitter.setHandleWidth(2)
-        self.header_splitter.resized.connect(self.update_column_width)
-        self.header_splitter.splitterMoved.connect(self.update_column_width)
-        self.header_splitter.setStyleSheet("QSplitter {background-color: white;}"
-                                           "QSplitter::handle{background: black;}")
-
-        for i, column_name in enumerate(MAIN_PANEL_COLUMN_NAMES):
-            widget = ElidedLabel(column_name)
-            widget.setMinimumWidth(4)
-            self.header_splitter.addWidget(widget)
-            self.header_splitter.setCollapsible(i, False)
+        # self.header_splitter = HeaderSplitter()
+        # self.header_splitter.setOrientation(Qt.Orientation.Horizontal)
+        # self.header_splitter.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Minimum)
+        # self.header_splitter.setHandleWidth(2)
+        # self.header_splitter.resized.connect(self.update_column_width)
+        # self.header_splitter.splitterMoved.connect(self.update_column_width)
+        # self.header_splitter.setStyleSheet("QSplitter {background-color: white;}"
+        #                                    "QSplitter::handle{background: black;}")
+        #
+        # for i, column_name in enumerate(MAIN_PANEL_COLUMN_NAMES):
+        #     widget = ElidedLabel(column_name)
+        #     widget.setMinimumWidth(4)
+        #     self.header_splitter.addWidget(widget)
+        #     self.header_splitter.setCollapsible(i, False)
 
         # noinspection PyTypeChecker
         self.table_view = TrackTableView(self)
@@ -68,7 +67,7 @@ class TrackViewWidget(QWidget):
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.setFrameShape(QFrame.Shape.NoFrame)
         # self.table_view.setDef
-        self.table_view.set_new_tracks.connect(self.update_column_width)
+        # self.table_view.set_new_tracks.connect(self.update_column_width)
 
         self.table_view.clicked.connect(lambda model_index: self.track_clicked.emit(
                                                             self.displayed_tracks[model_index.row()],
@@ -87,12 +86,12 @@ class TrackViewWidget(QWidget):
         second_col_width = 20
         rating_col_width = 50
 
-        self.header_splitter.setCollapsible(0, False)
-        self.header_splitter.setCollapsible(1, False)
-        self.header_splitter.setCollapsible(7, False)
-        self.header_splitter.widget(0).setFixedWidth(first_col_width)
-        self.header_splitter.widget(1).setFixedWidth(second_col_width)
-        self.header_splitter.widget(7).setFixedWidth(rating_col_width)
+        # self.header_splitter.setCollapsible(0, False)
+        # self.header_splitter.setCollapsible(1, False)
+        # self.header_splitter.setCollapsible(7, False)
+        # self.header_splitter.widget(0).setFixedWidth(first_col_width)
+        # self.header_splitter.widget(1).setFixedWidth(second_col_width)
+        # self.header_splitter.widget(7).setFixedWidth(rating_col_width)
         self.table_view.setColumnWidth(0, first_col_width)
         self.table_view.setColumnWidth(1, second_col_width)
         self.table_view.setColumnWidth(7, rating_col_width)
@@ -108,12 +107,12 @@ class TrackViewWidget(QWidget):
 
         # self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
 
-    def update_column_width(self) -> None:
-        total_sizes = sum(self.header_splitter.sizes())
-        if not total_sizes:
-            return
-        for i in range(2, len(MAIN_PANEL_COLUMN_NAMES)):
-            self.table_view.setColumnWidth(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
+    # def update_column_width(self) -> None:
+    #     total_sizes = sum(self.header_splitter.sizes())
+    #     if not total_sizes:
+    #         return
+    #     for i in range(2, len(MAIN_PANEL_COLUMN_NAMES)):
+    #         self.table_view.setColumnWidth(i, int(self.header_splitter.sizes()[i] / total_sizes * self.width()))
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self.table_view.set_tracks(tracks)

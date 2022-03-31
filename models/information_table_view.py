@@ -3,12 +3,12 @@ from typing import List, Any
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, QRect, QPoint, QTimer
 from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter
-from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate, \
-    QStyle, QStyleOptionViewItem, QApplication, QAbstractItemView
+from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate,
+                             QStyle, QStyleOptionViewItem, QApplication, QAbstractItemView)
 
 from constants import *
 from data_models.track import Track
-from utils import ElidedLabel, get_artwork_pixmap, get_information_panel_formatted_time
+from utils import ElidedLabel, get_artwork_pixmap, get_formatted_time_in_mins
 
 
 class InformationTableModel(QtCore.QAbstractTableModel):
@@ -114,7 +114,7 @@ class InformationTableItemDelegate(QStyledItemDelegate):
                 track = self._tracks[index.row()]
                 track_info_widget = TrackInfoWidget(track.title,
                                                     track.artist,
-                                                    get_information_panel_formatted_time(track.length))
+                                                    get_formatted_time_in_mins(track.length))
                 self.track_info_widgets_mapping[index.row()] = track_info_widget
             else:
                 track_info_widget = self.track_info_widgets_mapping[index.row()]
@@ -166,7 +166,7 @@ class InformationTableView(QTableView):
         self._viewport_fix_timer = QTimer(self)
         self._viewport_fix_timer.setTimerType(Qt.TimerType.PreciseTimer)
         self._viewport_fix_timer.setSingleShot(True)
-        self._viewport_fix_timer.timeout.connect(self.on_timeout)
+        self._viewport_fix_timer.timeout.connect(self._on_timeout)
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._table_model.set_tracks(tracks)
@@ -174,7 +174,7 @@ class InformationTableView(QTableView):
         self._tracks = tracks
         self.set_new_tracks.emit()
 
-    def on_timeout(self):
+    def _on_timeout(self):
         visible_index_range = range(self.rowAt(4), self.rowAt(self.rect().height()))
         if self._playing_track_index not in visible_index_range:
             self.scrollTo(self._table_model.index(self._playing_track_index, 0),
@@ -182,6 +182,7 @@ class InformationTableView(QTableView):
         elif self._playing_track_index in visible_index_range[2:]:
             self.scrollTo(self._table_model.index(self._playing_track_index - 2, 0),
                           QAbstractItemView.ScrollHint.PositionAtTop)
+        self.viewport().repaint()
 
     def set_currently_playing_track_index(self, index: int) -> None:
         self._table_delegate.is_playing = True
@@ -189,6 +190,7 @@ class InformationTableView(QTableView):
         self._table_model.set_currently_playing_track_index(index)
         self._table_delegate.set_currently_playing_track_index(index)
         self._viewport_fix_timer.start(1)
+        # self.viewport().repaint()
 
     def set_paused(self) -> None:
         self._table_delegate.is_playing = False

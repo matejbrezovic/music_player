@@ -9,8 +9,8 @@ from PyQt6 import QtCore, QtWidgets
 from PyQt6 import QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal
 from PyQt6.QtGui import QPainter, QPen, QBrush, QFontMetrics, QColor
-from PyQt6.QtWidgets import QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle, \
-    QStyledItemDelegate, QVBoxLayout, QPushButton, QWidget
+from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
+                             QStyledItemDelegate, QVBoxLayout, QPushButton, QWidget)
 
 SELECTION_QCOLOR = QColor(156, 206, 233)
 SELECTION_QCOLOR_BORDER = QColor(110, 189, 232)

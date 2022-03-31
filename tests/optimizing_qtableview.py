@@ -1,14 +1,18 @@
 from __future__ import annotations
 
+import cProfile
+import pstats
 import sys
 from typing import List, Optional, Any
 
-from PyQt6 import QtCore, QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot, QSize
-from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut
+# from PyQt6 import QtCore, QtWidgets, QtGui
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot, QSize, QAbstractTableModel, QAbstractItemModel, QRect
+from PyQt6.QtGui import (QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut, QCursor,
+                         QFocusEvent)
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
-                             QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame)
+                             QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame, QMainWindow,
+                             QAbstractScrollArea)
 
 from constants import *
 from data_models.track import Track
@@ -16,7 +20,7 @@ from repositories.tracks_repository import TracksRepository
 from utils import get_artwork_pixmap, get_formatted_time_in_mins
 
 
-class TrackTableModel(QtCore.QAbstractTableModel):
+class TrackTableModel(QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self._table_view: QTableView = parent
@@ -46,14 +50,14 @@ class TrackTableModel(QtCore.QAbstractTableModel):
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         # TESTING
         # print(index.row())
-        self.data_called += 1
-        # print(f"Data called {self.data_called} times.")
-        if self.last_index.row() == index.row():
-            self.last_index_called += 1
-        else:
-            print(f"Index {self.last_index.row()} called {self.last_index_called} times.")
-            self.last_index = index
-            self.last_index_called = 0
+        # self.data_called += 1
+        # # print(f"Data called {self.data_called} times.")
+        # if self.last_index.row() == index.row():
+        #     self.last_index_called += 1
+        # else:
+        #     # print(f"Index {self.last_index.row()} called {self.last_index_called} times.")
+        #     self.last_index = index
+        #     self.last_index_called = 0
 
         if not self._tracks:
             return None
@@ -109,8 +113,8 @@ class TrackTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(MAIN_PANEL_COLUMN_NAMES)
 
-    def headerData(self, section: int, orientation: QtCore.Qt.Orientation,
-                   role: QtCore.Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
+    def headerData(self, section: int, orientation: Qt.Orientation,
+                   role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 return MAIN_PANEL_COLUMN_NAMES[section]
@@ -257,10 +261,10 @@ class TrackTableHeader(QHeaderView):
             self.moveSection(new_visual_index, old_visual_index)
 
     def text(self, section: int):
-        if isinstance(self.model(), QtCore.QAbstractItemModel):
+        if isinstance(self.model(), QAbstractItemModel):
             return self.section_text[section]
 
-    def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logical_index: int) -> None:
+    def paintSection(self, painter: QPainter, rect: QRect, logical_index: int) -> None:
         elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logical_index),
                                                                 Qt.TextElideMode.ElideRight,
                                                                 self.sectionSize(logical_index) - self.padding)
@@ -368,7 +372,7 @@ class TrackTableView(QTableView):
         self.output_to_triggered.emit(audio_output)
 
     def contextMenuEvent(self, event):
-        self.context_menu.popup(QtGui.QCursor.pos())
+        self.context_menu.popup(QCursor.pos())
 
     def play_now_action_triggered(self, e=None):
         # print("play")
@@ -411,16 +415,16 @@ class TrackTableView(QTableView):
     def set_unpaused(self) -> None:
         self._table_model.set_unpaused()
 
-    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
+    def focusInEvent(self, event: QFocusEvent) -> None:
+        if QApplication.mouseButtons() & Qt.MouseButton.LeftButton:
             self.clearSelection()
         return super().focusInEvent(event)
 
-    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+    def focusOutEvent(self, event: QFocusEvent) -> None:
         return super().focusOutEvent(event)
 
 
-class TestMainWindow(QtWidgets.QMainWindow):
+class TestMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
@@ -449,7 +453,7 @@ class TestMainWindow(QtWidgets.QMainWindow):
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.table_view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.table_view.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
-        self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.table_view.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.table_view.setIconSize(QSize(22, 22))
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
@@ -494,12 +498,39 @@ class TestMainWindow(QtWidgets.QMainWindow):
 
         self.counter = 1
 
+        ########################################
+
+        # with cProfile.Profile() as pr:
+        #     self.test_func()
+        #
+        # stats = pstats.Stats(pr)
+        # stats.sort_stats(pstats.SortKey.TIME)
+        # stats.print_stats()
+
+
+
     def refresh(self):
-        self.table_view.set_tracks(self.tracks[:self.counter * 30])
+        # self.test_func()
+        self.table_view.set_tracks(self.tracks * 1000)
         self.table_view.scrollToTop()
-        self.counter += 1
+        # self.repaint()
+        # self.refresh()
+        # self.table_view.viewport().repaint()
+
+        print("Done")
+        # self.counter += 1
         # print(self.counter)
         # print("Refreshed!")
+
+    def test_func(self):
+
+        with cProfile.Profile() as pr:
+            self.table_view.set_tracks(self.tracks)
+            self.table_view.scrollToTop()
+
+        stats = pstats.Stats(pr)
+        stats.sort_stats(pstats.SortKey.TIME)
+        stats.print_stats()
 
 
 if __name__ == '__main__':

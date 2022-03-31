@@ -1,13 +1,11 @@
-import time
 from typing import List, Any
 
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QIcon, QPen, QBrush, QPainter
-from PyQt6.QtWidgets import QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle, \
-    QStyleOptionViewItem, QApplication
+from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle,
+                             QStyleOptionViewItem, QApplication)
 
-import global_timer
 from constants import *
 from data_models.navigation_group import NavigationGroup
 from repositories.cached_tracks_repository import CachedTracksRepository
