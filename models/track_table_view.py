@@ -34,46 +34,23 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
-        # global_timer.print_elapsed_time()
         self.layoutAboutToBeChanged.emit()
         self._tracks = tracks
         self.layoutChanged.emit()
-        # self.dataChanged.emit(self.createIndex(0, 0),
-        #                       self.createIndex(self.rowCount(),
-        #                                        self.columnCount()))
-        # global_timer.print_elapsed_time()
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
-        # TESTING
-        # print(index.row())
-        self.data_called += 1
-        # print(f"Data called {self.data_called} times.")
-        if self.last_index.row() == index.row():
-            self.last_index_called += 1
-        else:
-            print(f"Index {self.last_index.row()} called {self.last_index_called} times.")
-            self.last_index = index
-            self.last_index_called = 0
-
         if not self._tracks:
             return None
-        # print(role)
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            # print(index.column())
             if not index.column():
                 return Qt.AlignmentFlag.AlignCenter
-            # if index.column() == len(MAIN_PANEL_COLUMN_NAMES) - 1:
-            #     print("Aligned Right")
-            #     return Qt.AlignmentFlag.AlignRight
 
         if role == Qt.ItemDataRole.DecorationRole:
             if not index.column():
-                # return
                 track = self._tracks[index.row()]
                 artwork_pixmap = track.artwork_pixmap
                 if artwork_pixmap is None:
                     new_pixmap = get_artwork_pixmap(track.file_path)
-                    # print("Got artwork pixmap:", index.row())
                     track.artwork_pixmap = new_pixmap if new_pixmap else ""
                     artwork_pixmap = track.artwork_pixmap
                 if not artwork_pixmap:
@@ -82,9 +59,6 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                                              self._table_view.columnWidth(index.column()),
                                              Qt.AspectRatioMode.KeepAspectRatio,
                                              Qt.TransformationMode.SmoothTransformation)
-                # icon = QIcon(artwork_pixmap)
-                # icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
-                # return icon if icon else None
             elif index.column() == 1:
                 if self.playing_track_index is None:
                     return
@@ -133,10 +107,6 @@ class TrackTableModel(QtCore.QAbstractTableModel):
     def set_playing_track_index(self, index: Optional[int]) -> None:
         self.playing_track_index = index
         self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
-        # if index is None:
-        #     self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
-        # else:
-        #     self.dataChanged.emit(self.index(self.playing_track_index, 1), self.index(self.playing_track_index, 1))
 
 
 class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawing speed
@@ -159,14 +129,6 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
             painter.drawRect(option.rect)
             painter.setPen(QPen(QBrush(border_color), 1))
             painter.drawLine(option.rect.topLeft(), option.rect.topRight())
-            # bottom_left = option.rect.bottomLeft() # buggy
-            # bottom_left.setY(bottom_left.y() + 1)
-            # bottom_right = option.rect.bottomRight()
-            # bottom_right.setY(bottom_right.y() + 1)
-            # painter.drawLine(bottom_left, bottom_right)
-            # print(index.row(), len(self._table_view.selectedIndexes()) // len(MAIN_PANEL_COLUMN_NAMES) - 1)
-            # if index.row() == self._table_view.selectedIndexes()[-1].row():  # might be ruining performance
-            #     painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 
@@ -176,8 +138,6 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
             painter.setPen(QPen(Qt.GlobalColor.black))
             text = f"{display_role}"
             if text:
-                # if index.column() == 2:
-                #     print(option.rect.width())
                 elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
                                                                    max(option.rect.width() - self.padding * 2, 18))
 
@@ -198,8 +158,6 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
             rect.setRect(rect.left() + 1, rect.top() + 1,
                          rect.width() - 2, rect.height() - 2)
 
-            # print(index.row(), index.column())
-
             if index.column() == 1:
                 height = rect.height()
                 width = rect.width()
@@ -209,8 +167,6 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
                 pixmap = pixmap.scaled(width, width,
                                        Qt.AspectRatioMode.KeepAspectRatio,
                                        Qt.TransformationMode.SmoothTransformation)
-            # print("Painted pixmap")
-
             painter.drawPixmap(rect, pixmap)
 
 
@@ -273,8 +229,6 @@ class TrackTableHeader(QHeaderView):
         painter.setPen(Qt.GlobalColor.gray)
         painter.drawLine(top, bottom)
 
-        # painter.drawLine(rect.bottomLeft(), rect.bottomRight())
-
         painter.setPen(Qt.GlobalColor.black)
         rect.setLeft(rect.left() + self.padding)
         rect.setRight(rect.right() - self.padding)
@@ -335,7 +289,7 @@ class TrackTableView(QTableView):
         self.output_to_menu = self.play_more_menu.addMenu("Output To")
 
         self.audio_output_actions = []
-        for audio_output in (a.description() for a in QMediaDevices.audioOutputs()):
+        for audio_output in ["Primary Sound Driver", *[a.description() for a in QMediaDevices.audioOutputs()]]:
             action = QAction(audio_output, self)
             action.triggered.connect(lambda _: self.output_to_action_triggered())
             self.output_to_menu.addAction(action)
@@ -371,11 +325,9 @@ class TrackTableView(QTableView):
         self.context_menu.popup(QtGui.QCursor.pos())
 
     def play_now_action_triggered(self, e=None):
-        # print("play")
         if not self._tracks:
             return
 
-        # print(e)
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.play_now_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
@@ -385,7 +337,6 @@ class TrackTableView(QTableView):
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.queue_next_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
-    # @pyqtSlot()
     def queue_last_action_triggered(self, _=None):
         if not self._tracks:
             return
@@ -397,7 +348,6 @@ class TrackTableView(QTableView):
         self._tracks = tracks
         self._table_model.set_tracks(tracks)
         self.new_tracks_set.emit()
-        # global_timer.print_elapsed_time()
 
     @pyqtSlot(int)
     def set_playing_track_index(self, index: Optional[int]) -> None:

@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QPropertyAnimation, QEasingCurve
+from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, pyqtSlot
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
 
 from constants import *
@@ -58,9 +58,13 @@ class AudioPlayer(QMediaPlayer):
         else:
             super().pause()
 
+    @pyqtSlot(str)
     def set_audio_output(self, audio_output_name: str) -> None:
         audio_output_devices = QMediaDevices.audioOutputs()
-        index = [d.description() for d in audio_output_devices].index(audio_output_name)
+        if audio_output_name == "Primary Sound Driver":
+            index = 0
+        else:
+            index = [d.description() for d in audio_output_devices].index(audio_output_name)
         self.audio_output.setDevice(audio_output_devices[index])
         self.setAudioOutput(self.audio_output)
 
