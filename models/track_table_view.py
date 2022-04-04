@@ -42,11 +42,11 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         if not self._tracks:
             return None
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            if not index.column():
+            if index.column() == 0:
                 return Qt.AlignmentFlag.AlignCenter
 
         if role == Qt.ItemDataRole.DecorationRole:
-            if not index.column():
+            if index.column() == 0:
                 track = self._tracks[index.row()]
                 artwork_pixmap = track.artwork_pixmap
                 if artwork_pixmap is None:

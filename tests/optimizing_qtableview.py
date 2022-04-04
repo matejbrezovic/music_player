@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import cProfile
 import json
+import pstats
 import sys
 from dataclasses import dataclass, field
 from random import randint, choice
@@ -12,7 +14,13 @@ from PyQt6.QtCore import Qt, QModelIndex, pyqtSlot, QAbstractTableModel
 from PyQt6.QtGui import QFocusEvent
 from PyQt6.QtWidgets import QApplication, QTableView, QHeaderView, QVBoxLayout, QPushButton, QWidget, QMainWindow
 
-DEFAULT_LOADED_TRACKS_FILE_PATH = "path/to/txt_file/containing/track/data.txt"
+# from PySide6.QtCore import Qt, QModelIndex, Slot, QAbstractTableModel
+# from PySide6.QtGui import QFocusEvent
+# from PySide6.QtWidgets import QApplication, QTableView, QHeaderView, QVBoxLayout, QPushButton, QWidget, QMainWindow
+
+# from constants import ROOT
+#
+DEFAULT_LOADED_TRACKS_FILE_PATH = f"C:/My Files/My Projects/music_player/tracks.txt"
 MAIN_PANEL_COLUMN_NAMES = ("", "", "Artist", "Title", "Album", "Year", "Genre", "Rating", "Time")
 
 
@@ -33,6 +41,9 @@ class Track:
 
 def random_string():
     return ''.join(choice(ascii_letters + " ") for _ in range(randint(10, 40)))
+
+def get_random_color():
+    return choice(["red", "yellow", "blue", "green", "orange", "purple"])
 
 
 def generate_random_track():
@@ -95,7 +106,7 @@ class TrackTableModel(QAbstractTableModel):
     def layout_changed_slot(self):
         print("Layout changed")
 
-    @pyqtSlot(list)
+    # @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         self.layoutAboutToBeChanged.emit()
         self._tracks = tracks
@@ -105,12 +116,12 @@ class TrackTableModel(QAbstractTableModel):
         if not self._tracks:
             return None
         if role == Qt.ItemDataRole.TextAlignmentRole:
-            if not index.column():
+            if index.column():
                 return Qt.AlignmentFlag.AlignCenter
 
 
         if role == Qt.ItemDataRole.DisplayRole and not index.data(Qt.ItemDataRole.DecorationRole):
-            if not index.column():
+            if index.column() == 0:
                 return "-"
 
             value = MAIN_PANEL_COLUMN_NAMES[index.column()].lower()
@@ -137,7 +148,7 @@ class TrackTableView(QTableView):
         self.verticalHeader().setDefaultSectionSize(22)
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
 
-    @pyqtSlot(list)
+    # @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks
         self._table_model.set_tracks(tracks)
@@ -150,6 +161,8 @@ class TrackTableView(QTableView):
     def focusOutEvent(self, event: QFocusEvent) -> None:
         return super().focusOutEvent(event)
 
+
+TRACKS = JsonTracksRepository().get_tracks()
 
 class TestMainWindow(QMainWindow):
     def __init__(self):
@@ -179,16 +192,27 @@ class TestMainWindow(QMainWindow):
         self.table_view.horizontalHeader().setMinimumSectionSize(10)
 
         # self.tracks = JsonTracksRepository().get_tracks()
-        self.random_tracks = [generate_random_track() for _ in range(10000)]
-
+        # self.random_tracks = [generate_random_track() for _ in range(10000)]
+        # self.refresh()
+        # self.refresh_button.setStyleSheet("QPushButton::clicked {background-color: blue;}")
+        # print(TRACKS)
 
     def refresh(self):
-        self.table_view.set_tracks(self.random_tracks) # change random_tracks to tracks to see the difference
+        # self.refresh_button.setStyleSheet(f"background: {get_random_color()};")
+        self.table_view.setStyleSheet(f"background: {get_random_color()};")
+        self.table_view.set_tracks(TRACKS) # change random_tracks to tracks to see the difference
         self.table_view.scrollToTop()
         print("Refreshed!")
 
+
+
+
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+    # with cProfile.Profile() as pr:
     mainWindow = TestMainWindow()
     mainWindow.show()
+    # stats = pstats.Stats(pr)
+    # stats.sort_stats(pstats.SortKey.TIME)
+    # stats.print_stats()
     sys.exit(app.exec())

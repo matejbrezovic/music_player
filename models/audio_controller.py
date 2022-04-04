@@ -9,12 +9,11 @@ from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPus
 
 from constants import *
 from data_models.track import Track
-from marquee_label_test import MarqueeLabel
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
                    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton,
-                   format_seconds)
+                   format_seconds, MarqueeLabel)
 
 
 class AudioController(QFrame):

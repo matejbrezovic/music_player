@@ -39,7 +39,12 @@ class QueueInfoPanel(QFrame):
         self.horizontal_layout.addWidget(self.left_label)
         self.horizontal_layout.addWidget(self.right_label)
 
-        self.setStyleSheet("QueueInfoPanel {border-top: 1px solid rgba(0, 0, 0, 0.2);}")
+        self.setStyleSheet("""
+
+        QueueInfoPanel {border-top: 1px solid rgba(0, 0, 0, 0.2);}
+        QLabel {color: grey;}
+        
+        """)
 
     def left_label_clicked(self):
         if not self.left_label.text():
