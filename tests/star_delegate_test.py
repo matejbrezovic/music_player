@@ -1,69 +1,69 @@
-
 import math
 
-from PyQt5.QtCore import pyqtSignal, QPointF, QSize, Qt
-from PyQt5.QtGui import QPainter, QPolygonF
-from PyQt5.QtWidgets import (QAbstractItemView, QApplication, QStyle,
+from PyQt6.QtCore import pyqtSignal, QPointF, QSize, Qt
+from PyQt6.QtGui import QPainter, QPolygonF, QMoveEvent
+from PyQt6.QtWidgets import (QAbstractItemView, QApplication, QStyle,
                              QStyledItemDelegate, QTableWidget, QTableWidgetItem, QWidget)
+from PyQt6.QtGui import QColor
 
 
-class StarRating(object):
+class StarRating:
     # enum EditMode
-    Editable, ReadOnly = range(2)
-
+    Editable, ReadOnly = False, True
     PaintingScaleFactor = 20
 
-    def __init__(self, starCount=1, maxStarCount=5):
-        self._starCount = starCount
-        self._maxStarCount = maxStarCount
+    def __init__(self, star_count=1, max_star_count=5):
+        self._star_count = star_count
+        self._max_star_count = max_star_count
 
-        self.starPolygon = QPolygonF([QPointF(1.0, 0.5)])
+        self.star_polygon = QPolygonF([QPointF(1.0, 0.5)])
         for i in range(5):
-            self.starPolygon << QPointF(0.5 + 0.5 * math.cos(0.8 * i * math.pi),
+            self.star_polygon << QPointF(0.5 + 0.5 * math.cos(0.8 * i * math.pi),
                                         0.5 + 0.5 * math.sin(0.8 * i * math.pi))
 
-        self.diamondPolygon = QPolygonF()
-        self.diamondPolygon << QPointF(0.4, 0.5) \
-                            << QPointF(0.5, 0.4) \
-                            << QPointF(0.6, 0.5) \
-                            << QPointF(0.5, 0.6) \
-                            << QPointF(0.4, 0.5)
+        self.diamond_polygon = QPolygonF()
+        self.diamond_polygon << QPointF(0.4, 0.5) \
+                             << QPointF(0.5, 0.4) \
+                             << QPointF(0.6, 0.5) \
+                             << QPointF(0.5, 0.6) \
+                             << QPointF(0.4, 0.5)
 
-    def starCount(self):
-        return self._starCount
+    def star_count(self):
+        return self._star_count
 
-    def maxStarCount(self):
-        return self._maxStarCount
+    def max_star_count(self):
+        return self._max_star_count
 
-    def setStarCount(self, starCount):
-        self._starCount = starCount
+    def set_star_count(self, star_count):
+        self._star_count = star_count
 
-    def setMaxStarCount(self, maxStarCount):
-        self._maxStarCount = maxStarCount
+    def set_max_star_count(self, max_star_count):
+        self._max_star_count = max_star_count
 
-    def sizeHint(self):
-        return self.PaintingScaleFactor * QSize(self._maxStarCount, 1)
+    def size_hint(self):
+        return self.PaintingScaleFactor * QSize(self._max_star_count, 1)
 
-    def paint(self, painter, rect, palette, editMode):
+    def paint(self, painter, rect, palette, edit_mode):
         painter.save()
 
-        painter.setRenderHint(QPainter.Antialiasing, True)
-        painter.setPen(Qt.NoPen)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+        painter.setPen(Qt.PenStyle.NoPen)
 
-        if editMode == StarRating.Editable:
+        if edit_mode == StarRating.Editable:
             painter.setBrush(palette.highlight())
         else:
             painter.setBrush(palette.windowText())
 
-        yOffset = (rect.height() - self.PaintingScaleFactor) / 2
-        painter.translate(rect.x(), rect.y() + yOffset)
+        y_offset = (rect.height() - self.PaintingScaleFactor) / 2
+        painter.translate(rect.x(), rect.y() + y_offset)
         painter.scale(self.PaintingScaleFactor, self.PaintingScaleFactor)
 
-        for i in range(self._maxStarCount):
-            if i < self._starCount:
-                painter.drawPolygon(self.starPolygon, Qt.WindingFill)
-            elif editMode == StarRating.Editable:
-                painter.drawPolygon(self.diamondPolygon, Qt.WindingFill)
+        for i in range(self._max_star_count):
+            if i < self._star_count:
+                painter.drawPolygon(self.star_polygon, Qt.FillRule.WindingFill)
+            elif edit_mode == StarRating.Editable:
+                painter.setBrush(QColor("red"))
+                painter.drawPolygon(self.diamond_polygon, Qt.FillRule.WindingFill)
 
             painter.translate(1.0, 0.0)
 
@@ -71,46 +71,45 @@ class StarRating(object):
 
 
 class StarEditor(QWidget):
-
-    editingFinished = pyqtSignal()
+    editing_finished = pyqtSignal()
 
     def __init__(self, parent = None):
-        super(StarEditor, self).__init__(parent)
+        super().__init__(parent)
 
         self._starRating = StarRating()
 
         self.setMouseTracking(True)
         self.setAutoFillBackground(True)
 
-    def setStarRating(self, starRating):
-        self._starRating = starRating
+    def set_star_rating(self, star_rating):
+        self._starRating = star_rating
 
-    def starRating(self):
+    def star_rating(self):
         return self._starRating
 
     def sizeHint(self):
-        return self._starRating.sizeHint()
+        return self._starRating.size_hint()
 
     def paintEvent(self, event):
         painter = QPainter(self)
         self._starRating.paint(painter, self.rect(), self.palette(),
                 StarRating.Editable)
 
-    def mouseMoveEvent(self, event):
-        star = self.starAtPosition(event.x())
+    def mouseMoveEvent(self, event: QMoveEvent):
+        star = self.star_at_position(event.pos().x())
 
-        if star != self._starRating.starCount() and star != -1:
-            self._starRating.setStarCount(star)
+        if star != self._starRating.star_count() and star != -1:
+            self._starRating.set_star_count(star)
             self.update()
 
     def mouseReleaseEvent(self, event):
-        self.editingFinished.emit()
+        self.editing_finished.emit()
 
-    def starAtPosition(self, x):
+    def star_at_position(self, x):
         # Enable a star, if pointer crosses the center horizontally.
-        starwidth = self._starRating.sizeHint().width() // self._starRating.maxStarCount()
-        star = (x + starwidth / 2) // starwidth
-        if 0 <= star <= self._starRating.maxStarCount():
+        star_width = self._starRating.size_hint().width() // self._starRating.max_star_count()
+        star = (x + star_width / 2) // star_width
+        if 0 <= star <= self._starRating.max_star_count():
             return star
 
         return -1
@@ -118,70 +117,70 @@ class StarEditor(QWidget):
 
 class StarDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
-        starRating = index.data()
-        if isinstance(starRating, StarRating):
-            if option.state & QStyle.State_Selected:
+        star_rating = index.data()
+        if isinstance(star_rating, StarRating):
+            if option.state & QStyle.StateFlag.State_Selected:
                 painter.fillRect(option.rect, option.palette.highlight())
 
-            starRating.paint(painter, option.rect, option.palette,
+            star_rating.paint(painter, option.rect, option.palette,
                     StarRating.ReadOnly)
         else:
-            super(StarDelegate, self).paint(painter, option, index)
+            super().paint(painter, option, index)
 
     def sizeHint(self, option, index):
-        starRating = index.data()
-        if isinstance(starRating, StarRating):
-            return starRating.sizeHint()
+        star_rating = index.data()
+        if isinstance(star_rating, StarRating):
+            return star_rating.size_hint()
         else:
-            return super(StarDelegate, self).sizeHint(option, index)
+            return super().sizeHint(option, index)
 
     def createEditor(self, parent, option, index):
-        starRating = index.data()
-        if isinstance(starRating, StarRating):
+        star_rating = index.data()
+        if isinstance(star_rating, StarRating):
             editor = StarEditor(parent)
-            editor.editingFinished.connect(self.commitAndCloseEditor)
+            editor.editing_finished.connect(self.commit_and_close_editor)
             return editor
         else:
-            return super(StarDelegate, self).createEditor(parent, option, index)
+            return super().createEditor(parent, option, index)
 
-    def setEditorData(self, editor, index):
-        starRating = index.data()
-        if isinstance(starRating, StarRating):
-            editor.setStarRating(starRating)
+    def setEditorData(self, editor: StarEditor, index):
+        star_rating = index.data()
+        if isinstance(star_rating, StarRating):
+            editor.set_star_rating(star_rating)
         else:
-            super(StarDelegate, self).setEditorData(editor, index)
+            super().setEditorData(editor, index)
 
-    def setModelData(self, editor, model, index):
-        starRating = index.data()
-        if isinstance(starRating, StarRating):
-            model.setData(index, editor.starRating())
+    def setModelData(self, editor: StarEditor, model, index):
+        star_rating = index.data()
+        if isinstance(star_rating, StarRating):
+            model.setData(index, editor.star_rating())
         else:
-            super(StarDelegate, self).setModelData(editor, model, index)
+            super().setModelData(editor, model, index)
 
-    def commitAndCloseEditor(self):
+    def commit_and_close_editor(self):
         editor = self.sender()
         self.commitData.emit(editor)
         self.closeEditor.emit(editor)
 
 
-def populateTableWidget(tableWidget):
-    staticData = (
+def populate_table_widget(table_widget):
+    static_data = (
         ("Mass in B-Minor", "Baroque", "J.S. Bach", 5),
         ("Three More Foxes", "Jazz", "Maynard Ferguson", 4),
         ("Sex Bomb", "Pop", "Tom Jones", 3),
         ("Barbie Girl", "Pop", "Aqua", 5),
     )
 
-    for row, (title, genre, artist, rating) in enumerate(staticData):
+    for row, (title, genre, artist, rating) in enumerate(static_data):
         item0 = QTableWidgetItem(title)
         item1 = QTableWidgetItem(genre)
         item2 = QTableWidgetItem(artist)
         item3 = QTableWidgetItem()
         item3.setData(0, StarRating(rating))
-        tableWidget.setItem(row, 0, item0)
-        tableWidget.setItem(row, 1, item1)
-        tableWidget.setItem(row, 2, item2)
-        tableWidget.setItem(row, 3, item3)
+        table_widget.setItem(row, 0, item0)
+        table_widget.setItem(row, 1, item1)
+        table_widget.setItem(row, 2, item2)
+        table_widget.setItem(row, 3, item3)
 
 
 if __name__ == '__main__':
@@ -191,17 +190,16 @@ if __name__ == '__main__':
 
     tableWidget = QTableWidget(4, 4)
     tableWidget.setItemDelegate(StarDelegate())
-    tableWidget.setEditTriggers(
-            QAbstractItemView.DoubleClicked | QAbstractItemView.SelectedClicked)
-    tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
+    tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.SelectedClicked)
+    tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
     headerLabels = ("Title", "Genre", "Artist", "Rating")
     tableWidget.setHorizontalHeaderLabels(headerLabels)
 
-    populateTableWidget(tableWidget)
+    populate_table_widget(tableWidget)
 
     tableWidget.resizeColumnsToContents()
     tableWidget.resize(500, 300)
     tableWidget.show()
 
-    sys.exit(app.exec_())
+    sys.exit(app.exec())

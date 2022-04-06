@@ -16,12 +16,15 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
     def get_tracks_by(self, key: str, value: Union[str, int]) -> List[Track]:
         tuple_key = (key.lower(), value)
         if tuple_key not in self.cached_track_groups:
+            print(f"Cached tracks: ({key}, {value})")
             self.cached_track_groups[tuple_key] = super().get_tracks_by(key, value)
 
         return self.cached_track_groups[tuple_key]
 
     def get_track_counts_grouped_by(self, group_key: str) -> List[Tuple[str, int]]:
+        group_key = group_key.lower()
         if group_key not in self.cached_counts:
+            print(f"Cached counts: {group_key}")
             self.cached_counts[group_key] = super().get_track_counts_grouped_by(group_key)
 
         return self.cached_counts[group_key]

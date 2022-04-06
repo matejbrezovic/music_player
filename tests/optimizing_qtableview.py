@@ -1,8 +1,6 @@
 from __future__ import annotations
 
-import cProfile
 import json
-import pstats
 import sys
 from dataclasses import dataclass, field
 from random import randint, choice
@@ -10,7 +8,7 @@ from string import ascii_letters
 from typing import Any, Optional
 from typing import List
 
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSlot, QAbstractTableModel
+from PyQt6.QtCore import Qt, QModelIndex, QAbstractTableModel
 from PyQt6.QtGui import QFocusEvent
 from PyQt6.QtWidgets import QApplication, QTableView, QHeaderView, QVBoxLayout, QPushButton, QWidget, QMainWindow
 

@@ -28,10 +28,6 @@ class TrackTableModel(QtCore.QAbstractTableModel):
 
         self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png")
 
-        self.data_called = 0
-        self.last_index = QModelIndex()
-        self.last_index_called = 0
-
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         self.layoutAboutToBeChanged.emit()
@@ -197,13 +193,13 @@ class TrackTableHeader(QHeaderView):
         """)
 
     @pyqtSlot(int, int, int)
-    def section_resized(self, logical_index: int, old_size: int, new_size: int) -> None:
+    def section_resized(self, logical_index: int, _: int, new_size: int) -> None:
         """Sets minimum size for the last section."""
         if logical_index == self.count() - 1 and new_size < self.minimum_last_section_size:
             self.resizeSection(self.count() - 1, self.minimum_last_section_size)
 
     @pyqtSlot(int, int, int)
-    def section_moved(self, logical_index: int, old_visual_index: int, new_visual_index: int) -> None:
+    def section_moved(self, _: int, old_visual_index: int, new_visual_index: int) -> None:
         """Prevents section 1 from moving."""
         if self.__section_moved_recursions:
             self.__section_moved_recursions = 0
@@ -324,7 +320,7 @@ class TrackTableView(QTableView):
     def contextMenuEvent(self, event):
         self.context_menu.popup(QtGui.QCursor.pos())
 
-    def play_now_action_triggered(self, e=None):
+    def play_now_action_triggered(self, _=None):
         if not self._tracks:
             return
 
@@ -366,8 +362,8 @@ class TrackTableView(QTableView):
             self.clearSelection()
         return super().focusInEvent(event)
 
-    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-        return super().focusOutEvent(event)
+    # def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+    #     return super().focusOutEvent(event)
 
 
 class TestMainWindow(QtWidgets.QMainWindow):
@@ -419,16 +415,7 @@ class TestMainWindow(QtWidgets.QMainWindow):
         self.table_view.horizontalHeader().setSectionResizeMode(1, QHeaderView.ResizeMode.Fixed)
         self.table_view.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
 
-        # self.view = QTableView(self)
-        # self.view.setModel(self.tableModel)
-        # self.table_view.horizontalHeader().setResizeMode(QHeaderView.Interactive)
-        # Added these two lines
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        # self.table_view.horizontalHeader().setStretchLastSection(True)
-
-        # start = time.time()
-        # self.table_view.set_tracks(TracksRepository().get_tracks_by("album", None))
-        # print(f"Test loaded in: {time.time() - start:.6f} s")
 
         self.refresh_button = QPushButton("Refresh")
         self.refresh_button.clicked.connect(self.refresh)

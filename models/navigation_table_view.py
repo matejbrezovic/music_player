@@ -29,9 +29,9 @@ class NavigationTableModel(QtCore.QAbstractTableModel):
             if not index.column():
                 artwork_pixmap = self._groups[index.row()].pixmap
                 # artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
-                icon = QIcon(artwork_pixmap)
-                icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
-                return icon
+                # icon = QIcon(artwork_pixmap)
+                # icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
+                return artwork_pixmap
 
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(self._groups)
@@ -77,16 +77,16 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 
-        if index.data(Qt.ItemDataRole.DecorationRole) and not index.column():
+        decoration_role = index.data(Qt.ItemDataRole.DecorationRole)
+        if decoration_role and not index.column():
 
             rect = option.rect
             rect.setRect(option.rect.left() + 2, option.rect.top() + 2,
                          option.rect.width() - 4, option.rect.height() - 4)
 
-            decoration_value = index.data(Qt.ItemDataRole.DecorationRole).pixmap(rect.width(), rect.height())
-            pixmap = decoration_value.scaled(rect.width(), rect.height(),
-                                             Qt.AspectRatioMode.KeepAspectRatio,
-                                             Qt.TransformationMode.SmoothTransformation)
+            pixmap = decoration_role.scaled(rect.width(), rect.height(),
+                                            Qt.AspectRatioMode.KeepAspectRatio,
+                                            Qt.TransformationMode.SmoothTransformation)
 
             painter.drawPixmap(rect, pixmap)
 
@@ -119,7 +119,6 @@ class NavigationTableView(QTableView):
         self._table_delegate = NavigationTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
-        # self.setStyle(AlwaysVisibleScrollBarProxyStyle())
 
         self.clicked.connect(self.single_click_action)
         self.doubleClicked.connect(self.double_click_action)

@@ -4,10 +4,10 @@ from typing import List
 import mutagen.mp3
 from PyQt6 import QtWidgets
 
+from constants import ROOT
 from data_models.track import Track
 from tag_manager import TagManager
 from utils import *
-from constants import ROOT
 
 DEFAULT_LOADED_TRACKS_FILE_PATH = f"{ROOT}/tracks.txt"
 

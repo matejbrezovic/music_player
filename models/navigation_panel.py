@@ -1,3 +1,4 @@
+import time
 from typing import List
 
 from PyQt6 import QtWidgets
@@ -53,11 +54,10 @@ class NavigationPanel(QFrame):
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:
-            # tracks = CachedTracksRepository().get_tracks_by(group_key, group_title)  # TODO should be optimized
-            pixmap = None  # get_artwork_pixmap(tracks[0].file_path)
+            tracks = CachedTracksRepository().get_tracks_by(group_key, group_title)  # TODO should be optimized
+            artwork_pixmap = get_artwork_pixmap(tracks[0].file_path)
 
-            # group_key = group_key.lower()
-            if not pixmap:
+            if not artwork_pixmap:
                 if group_key in ["artist", "composer"]:
                     return QPixmap("icons/artist.png")
                 elif group_key == "album":
@@ -66,8 +66,8 @@ class NavigationPanel(QFrame):
                     return QPixmap("icons/folder.png")
                 else:
                     return QPixmap("icons/misc.png")
+            return artwork_pixmap
 
-        # start = time.time()
         self.groups: List[NavigationGroup] = []
 
         group_key = GROUP_OPTIONS[key].lower()
@@ -85,7 +85,6 @@ class NavigationPanel(QFrame):
 
         # print("Groups created in:", time.time() - start)
         self.navigation_table_view.set_groups(self.groups)
-        # self.group_combo_box.adjustSize()
         # print("Groups fully displayed in:", time.time() - start)
         # print("Updated Groups")
 
