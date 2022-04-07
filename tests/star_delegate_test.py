@@ -1,18 +1,18 @@
 import math
+from typing import Any
 
-from PyQt6.QtCore import pyqtSignal, QPointF, QSize, Qt
+from PyQt6 import QtGui, QtCore
+from PyQt6.QtCore import pyqtSignal, QPointF, QSize, Qt, QModelIndex
 from PyQt6.QtGui import QColor
 from PyQt6.QtGui import QPainter, QPolygonF, QMoveEvent
 from PyQt6.QtWidgets import (QAbstractItemView, QApplication, QStyle,
-                             QStyledItemDelegate, QTableWidget, QTableWidgetItem, QWidget)
+                             QStyledItemDelegate, QTableWidget, QTableWidgetItem, QWidget, QTableView, QMainWindow,
+                             QHBoxLayout)
 
 
 class StarPolygon(QPolygonF):
     def __init__(self, size: float):
         super().__init__()
-
-        # offset_x = -0
-        # offset_y = 100
 
         for i in range(5):
             x = math.cos(0.8 * i * math.pi - math.pi / 2)
@@ -24,7 +24,6 @@ class HalfStarPolygon(QPolygonF):
     def __init__(self, size: float):
         super().__init__()
 
-        # star_polygon_size = 40
         half_star_polygon_size = size / 2
         star_angle_step = 2 * math.pi / 5
         star_angle_start = - math.pi / 2
@@ -59,18 +58,6 @@ class HalfStarPolygon(QPolygonF):
         self << QPointF(half_star_polygon_size * x, half_star_polygon_size * y)
 
 
-def get_star_polygon():
-    star_polygon = QPolygonF()
-
-    for i in range(5):
-        star_polygon_size = 0.5
-        default_x = math.cos(0.8 * i * math.pi - math.pi / 2)
-        default_y = math.sin(0.8 * i * math.pi - math.pi / 2)
-        star_polygon << QPointF(1 + star_polygon_size * default_x,
-                                1 + star_polygon_size * default_y)
-    return star_polygon
-
-
 class StarRating:
     # enum EditMode
     Editable, ReadOnly = False, True
@@ -81,10 +68,6 @@ class StarRating:
         self._max_star_count = float(max_star_count)
 
         self.star_polygon_size = 10
-        half_star_polygon_size = 0.3
-        star_angle_step = 2 * math.pi / 5
-        star_angle_start = - math.pi / 2
-        half_star_angle_start = star_angle_start + star_angle_step / 2
 
         self.star_polygon = StarPolygon(self.star_polygon_size)
         self.half_star_polygon = HalfStarPolygon(self.star_polygon_size)
@@ -96,7 +79,6 @@ class StarRating:
         return self._max_star_count
 
     def set_star_count(self, star_count: float):
-        # print(star_count)
         self._star_count = star_count
 
     def set_max_star_count(self, max_star_count: float):
@@ -139,9 +121,8 @@ class StarEditor(QWidget):
 
         self.setMouseTracking(True)
         self.setAutoFillBackground(True)
-        # self.setStyleSheet("background-color: red")
 
-    def set_star_rating(self, star_rating: float):
+    def set_star_rating(self, star_rating: StarRating):
         self._star_rating = star_rating
 
     def star_rating(self):
@@ -156,7 +137,7 @@ class StarEditor(QWidget):
                 StarRating.Editable)
 
     def mouseMoveEvent(self, event: QMoveEvent):
-        print(event.pos().x())
+        # print(event.pos().x())
         star = self.star_at_position(event.pos().x())
 
         if star != self._star_rating.star_count() and star != -1:
@@ -167,7 +148,7 @@ class StarEditor(QWidget):
         self.editing_finished.emit()
 
     def star_at_position(self, x):
-        if not x:
+        if x <= 2:
             return 0
 
         # Enable a star, if pointer crosses the center horizontally.
@@ -226,6 +207,67 @@ class StarDelegate(QStyledItemDelegate):
         self.closeEditor.emit(editor)
 
 
+class Model(QtCore.QAbstractTableModel):
+    def __init__(self, parent: QTableView = None):
+        super().__init__(parent)
+        self._table_view: QTableView = parent
+        self.header_sections_text = ("Title", "Genre", "Artist", "Rating")
+
+        self.static_data = (
+            ("Mass in B-Minor", "Baroque", "J.S. Bach", 5),
+            ("Three More Foxes", "Jazz", "Maynard Ferguson", 4),
+            ("Sex Bomb", "Pop", "Tom Jones", 3),
+            ("Barbie Girl", "Pop", "Aqua", 5),
+        )
+
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
+        print(index.row())
+        if role == Qt.ItemDataRole.DisplayRole:
+            if index.column() == 3:
+                return StarRating(index.data(Qt.ItemDataRole.DisplayRole))
+
+            return self.static_data[index.row()][index.column()]
+
+    def rowCount(self, index: QModelIndex = QModelIndex) -> int:
+        return 4
+
+    def columnCount(self, index: QModelIndex = QModelIndex) -> int:
+        return 4
+
+    def headerData(self, section: int, orientation: QtCore.Qt.Orientation,
+                   role: QtCore.Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return self.header_sections_text[section]
+            return f"{section}"
+        return None
+
+
+class MouseTrackingTableView(QTableView):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+
+        self.setModel(Model())
+        self.setItemDelegateForColumn(3, StarDelegate())
+        self.prev_index = QModelIndex()
+
+
+    def mouseMoveEvent(self, e: QtGui.QMouseEvent) -> None:
+        index = self.indexAt(e.pos())
+        if index != self.prev_index:
+            self.itemDelegate().commit_and_close_editor()
+            if index.column() == 3:
+                self.openPersistentEditor(index)
+            self.prev_index = index
+        super().mouseMoveEvent(e)
+
+    def leaveEvent(self, e: QtCore.QEvent) -> None:
+        self.closePersistentEditor(self.prev_index)
+        self.prev_index = QModelIndex()
+        super().leaveEvent(e)
+
+
+
 def populate_table_widget(table_widget):
     static_data = (
         ("Mass in B-Minor", "Baroque", "J.S. Bach", 5),
@@ -238,6 +280,10 @@ def populate_table_widget(table_widget):
         item0 = QTableWidgetItem(title)
         item1 = QTableWidgetItem(genre)
         item2 = QTableWidgetItem(artist)
+        item0.setFlags(item0.flags() & Qt.ItemFlag.ItemIsEditable)
+        item1.setFlags(item1.flags() & Qt.ItemFlag.ItemIsEditable)
+        item2.setFlags(item2.flags() & Qt.ItemFlag.ItemIsEditable)
+
         item3 = QTableWidgetItem()
         item3.setData(0, StarRating(rating))
         table_widget.setItem(row, 0, item0)
@@ -246,23 +292,40 @@ def populate_table_widget(table_widget):
         table_widget.setItem(row, 3, item3)
 
 
+class MainWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.resize(700, 700)
+
+        self.central_widget = QWidget()
+        self.central_widget_layout = QHBoxLayout(self.central_widget)
+
+        self.table_view = MouseTrackingTableView()
+        self.table_view.resize(500, 500)
+
+        self.central_widget_layout.addWidget(self.table_view)
+        self.setCentralWidget(self.central_widget)
+
+
+
 if __name__ == '__main__':
     import sys
 
     app = QApplication(sys.argv)
 
-    tableWidget = QTableWidget(4, 4)
-    tableWidget.setItemDelegate(StarDelegate())
-    tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.SelectedClicked)
-    tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+    # tableWidget = QTableWidget(4, 4)
+    # tableWidget.setItemDelegateForColumn(3, StarDelegate())
+    # tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.SelectedClicked)
+    # tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
-    headerLabels = ("Title", "Genre", "Artist", "Rating")
-    tableWidget.setHorizontalHeaderLabels(headerLabels)
+    # tableWidget = MouseTrackingTableView()
 
-    populate_table_widget(tableWidget)
+    # populate_table_widget(tableWidget)
 
-    tableWidget.resizeColumnsToContents()
-    tableWidget.resize(500, 300)
-    tableWidget.show()
+    # tableWidget.resizeColumnsToContents()
+    # tableWidget.resize(500, 300)
+    # tableWidget.show()
+    main_window = MainWindow()
+    main_window.show()
 
     sys.exit(app.exec())

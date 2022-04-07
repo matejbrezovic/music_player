@@ -39,7 +39,8 @@ class MainWindow(QMainWindow):
                                     offset_y + star_polygon_size * default_y)
         return star_polygon
 
-    def get_x_axis(self):
+    @staticmethod
+    def get_x_axis():
         offset_x = 100
         offset_y = 100
 
@@ -48,7 +49,8 @@ class MainWindow(QMainWindow):
 
         return star_polygon
 
-    def get_y_axis(self):
+    @staticmethod
+    def get_y_axis():
         offset_x = 100
         offset_y = 100
 
