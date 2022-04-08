@@ -8,7 +8,7 @@ from PyQt6.QtGui import QColor
 from PyQt6.QtGui import QPainter, QPolygonF, QMoveEvent
 from PyQt6.QtWidgets import (QAbstractItemView, QApplication, QStyle,
                              QStyledItemDelegate, QTableWidget, QTableWidgetItem, QWidget, QTableView, QMainWindow,
-                             QHBoxLayout)
+                             QHBoxLayout, QStyleOptionViewItem)
 
 
 class StarPolygon(QPolygonF):
@@ -89,6 +89,7 @@ class StarRating:
         return self.star_polygon_size * QSize(self._max_star_count, 1) * 2
 
     def paint(self, painter, rect, palette, edit_mode):
+        print("Star rating repainted!")
         painter.save()
 
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
@@ -140,8 +141,11 @@ class StarEditor(QWidget):
 
     def paintEvent(self, event):
         painter = QPainter(self)
-        self._star_rating.paint(painter, self.rect(), self.palette(),
-                StarRating.Editable)
+        self._star_rating.paint(painter, self.rect(), self.palette(), StarRating.Editable)
+
+    def repaint_on_changed_selection(self) -> None:
+        painter = QPainter(self)
+        self._star_rating.paint(painter, self.rect(), self.palette(), StarRating.Editable)
 
     def mouseMoveEvent(self, event: QMoveEvent):
         # print("Editor mouse move:", event.pos().x())
@@ -153,13 +157,14 @@ class StarEditor(QWidget):
 
     def mouseReleaseEvent(self, event):
         self.set_selected_star_count(self._star_rating.star_count())
-        self.editing_finished.emit()
+        # self.editing_finished.emit()
 
     def leaveEvent(self, e: QtCore.QEvent) -> None:
         print("Editor leave event")
         self._star_rating.set_star_count(self.selected_star_count)
-        self.update()
-        self.editing_finished.emit()
+        # self.update()
+        # self.editing_finished.emit()
+        self.repaint()
         super().leaveEvent(e)
 
     def star_at_position(self, x):
@@ -176,11 +181,24 @@ class StarEditor(QWidget):
 
 
 class StarDelegate(QStyledItemDelegate):
+    def __init__(self, parent: QTableView = None):
+        super().__init__(parent)
+        self.reset_index_color = False
+
+        # parent.reset_index_color.connect(l)
+
+        self.active_editors = []
+
+    def enable_reset_index_color(self):
+        self.reset_index_color = True
+
     def paint(self, painter, option, index):
+        # print(f"DELEGATE PAINT CALLED: {index.row()} {index.column()}")
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
             if option.state & QStyle.StateFlag.State_Selected:
                 painter.fillRect(option.rect, option.palette.highlight())
+                # self.reset_index_color = False
 
             star_rating.paint(painter, option.rect, option.palette, StarRating.ReadOnly)
         else:
@@ -199,10 +217,11 @@ class StarDelegate(QStyledItemDelegate):
         if isinstance(star_rating, StarRating):
             editor = StarEditor(parent)
             editor.set_selected_star_count(star_rating.star_count())
-            editor.editing_finished.connect(self.commit_and_close_editor)
-            return editor
+            # editor.editing_finished.connect(self.commit_and_close_editor)
         else:
-            return super().createEditor(parent, option, index)
+            editor = super().createEditor(parent, option, index)
+        self.active_editors.append(editor)
+        return editor
 
     def setEditorData(self, editor: StarEditor, index):
         star_rating = index.data()
@@ -220,13 +239,25 @@ class StarDelegate(QStyledItemDelegate):
         else:
             super().setModelData(editor, model, index)
 
-    def commit_and_close_editor(self):
+    def commit_and_close_editors(self):
         print("Commit and close editor")
-        editor: StarEditor = self.sender()
-        # editor.repaint()
-        self.commitData.emit(editor)
-        self.closeEditor.emit(editor)
+        # editor: StarEditor = self.sender()
+        # editor.update()
+        for editor in self.active_editors:
+            self.commitData.emit(editor)
+            self.closeEditor.emit(editor)
+            editor.deleteLater()
+        self.active_editors = []
 
+        # if editor: # very important!
+        #     editor.repaint()
+        # self.commitData.emit(editor)
+        # self.closeEditor.emit(editor)
+
+    # def editorEvent(self, event: QtCore.QEvent, model: QtCore.QAbstractItemModel, option: QStyleOptionViewItem, index: QtCore.QModelIndex) -> bool:
+    #     print("editor event!")
+    #
+    #     return super().editorEvent(event, model, option, index)
 
 class Model(QtCore.QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
@@ -268,33 +299,43 @@ class Model(QtCore.QAbstractTableModel):
         return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable
 
     def setData(self, index, value, role = Qt.ItemDataRole.EditRole):
+        # print("Set item data:", index.row(), index.column(), value)
         if isinstance(value, StarRating):
             self.static_data[index.row()][3] = value.star_count()
-        super().setData(index, value, role)
 
-        print("Set item data:", index.row(), index.column(), value)
+        return super().setData(index, value, role)
 
 
 class MouseTrackingTableView(QTableView):
+    reset_index_color = pyqtSignal(bool)
+
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.setModel(Model())
-        self.setItemDelegate(StarDelegate())
+        self.setItemDelegateForColumn(3, StarDelegate())
         self.prev_index = QModelIndex()
 
-        # self.setEditTriggers(QAbstractItemView.EditTrigger.SelectedClicked)
+        self.setEditTriggers(QAbstractItemView.EditTrigger.CurrentChanged)
 
         # self.setIndexWidget(self.model().index(0, 3), StarEditor())
         self.setMouseTracking(True)
+        # self.selectionChanged.connect(self._selection_changed)
+
+    def selectionChanged(self, selected, deselected) -> None:
+        for index in deselected.indexes():
+            if index.column() == 3:
+                print(f"Re-edited deselected index: {index.row(), index.column()}")
+                self.itemDelegateForColumn(3).enable_reset_index_color()
+                self.edit(index, QAbstractItemView.EditTrigger.CurrentChanged)
 
 
     def mouseMoveEvent(self, e: QtGui.QMouseEvent) -> None:
         index = self.indexAt(e.pos())
         if index != self.prev_index:
-            self.itemDelegate().commit_and_close_editor()
+            self.itemDelegateForColumn(3).commit_and_close_editors()
             if index.column() == 3 and index in self.selectedIndexes():
-                print("Opened editor")
+                # print("Opened editor")
                 self.openPersistentEditor(index)
             self.prev_index = index
         super().mouseMoveEvent(e)
@@ -307,7 +348,8 @@ class MouseTrackingTableView(QTableView):
     def edit(self, index: QModelIndex, trigger=QAbstractItemView.EditTrigger.NoEditTriggers, event: QEvent = QEvent(0)):
         if trigger == QAbstractItemView.EditTrigger.NoEditTriggers:
             return False
-        print(f"Item editing: ({index.row()}, {index.column()})")
+        # print(index.row(), index.column())
+        # print(f"Item editing: ({index.row()}, {index.column()})")
 
         return super().edit(index, trigger, event)
 
