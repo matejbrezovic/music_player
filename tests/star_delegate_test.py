@@ -88,15 +88,18 @@ class StarRating:
     def size_hint(self):
         return self.star_polygon_size * QSize(self._max_star_count, 1) * 2
 
-    def paint(self, painter, rect, palette, edit_mode):
+    def paint(self, painter, rect, palette, edit_mode, color = None):
         print("Star rating repainted!")
         painter.save()
 
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setPen(Qt.PenStyle.NoPen)
 
-        if edit_mode == StarRating.Editable:
-            painter.setBrush(palette.highlight())
+        if color:
+            painter.setBrush(color)
+
+        elif edit_mode == StarRating.Editable:
+            painter.setBrush(Qt.GlobalColor.red)
         else:
             painter.setBrush(palette.windowText())
 
@@ -145,7 +148,7 @@ class StarEditor(QWidget):
 
     def repaint_on_changed_selection(self) -> None:
         painter = QPainter(self)
-        self._star_rating.paint(painter, self.rect(), self.palette(), StarRating.Editable)
+        self._star_rating.paint(painter, self.rect(), self.palette(), False)
 
     def mouseMoveEvent(self, event: QMoveEvent):
         # print("Editor mouse move:", event.pos().x())
@@ -187,7 +190,7 @@ class StarDelegate(QStyledItemDelegate):
 
         # parent.reset_index_color.connect(l)
 
-        self.active_editors = []
+        self.active_editors = {}
 
     def enable_reset_index_color(self):
         self.reset_index_color = True
@@ -198,9 +201,10 @@ class StarDelegate(QStyledItemDelegate):
         if isinstance(star_rating, StarRating):
             if option.state & QStyle.StateFlag.State_Selected:
                 painter.fillRect(option.rect, option.palette.highlight())
+                star_rating.paint(painter, option.rect, option.palette, StarRating, Qt.GlobalColor.red)
                 # self.reset_index_color = False
-
-            star_rating.paint(painter, option.rect, option.palette, StarRating.ReadOnly)
+            else:
+                star_rating.paint(painter, option.rect, option.palette, StarRating)
         else:
             super().paint(painter, option, index)
 
@@ -220,7 +224,7 @@ class StarDelegate(QStyledItemDelegate):
             # editor.editing_finished.connect(self.commit_and_close_editor)
         else:
             editor = super().createEditor(parent, option, index)
-        self.active_editors.append(editor)
+        self.active_editors[index.row()] = editor
         return editor
 
     def setEditorData(self, editor: StarEditor, index):
@@ -243,11 +247,11 @@ class StarDelegate(QStyledItemDelegate):
         print("Commit and close editor")
         # editor: StarEditor = self.sender()
         # editor.update()
-        for editor in self.active_editors:
+        for editor in self.active_editors.values():
             self.commitData.emit(editor)
             self.closeEditor.emit(editor)
             editor.deleteLater()
-        self.active_editors = []
+        self.active_editors = {}
 
         # if editor: # very important!
         #     editor.repaint()
