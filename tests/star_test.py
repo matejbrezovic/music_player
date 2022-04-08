@@ -83,12 +83,12 @@ class MainWindow(QMainWindow):
         x = math.cos(star_angle_start)
         y = math.sin(star_angle_start)
         self.star_polygon << QPointF(offset_x + star_polygon_size * x, offset_y + star_polygon_size * y)
-        #
+
         half_star_angle_start -= star_angle_step
         x = math.cos(half_star_angle_start)
         y = math.sin(half_star_angle_start)
         self.star_polygon << QPointF(offset_x + half_star_polygon_size * x, offset_y + half_star_polygon_size * y)
-        #
+
         star_angle_start -= star_angle_step
         x = math.cos(star_angle_start)
         y = math.sin(star_angle_start)

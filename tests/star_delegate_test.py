@@ -1,8 +1,9 @@
 import math
-from typing import Any
+import typing
+from typing import Any, Dict, List, Union
 
 from PyQt6 import QtGui, QtCore
-from PyQt6.QtCore import pyqtSignal, QPointF, QSize, Qt, QModelIndex
+from PyQt6.QtCore import pyqtSignal, QPointF, QSize, Qt, QModelIndex, QEvent
 from PyQt6.QtGui import QColor
 from PyQt6.QtGui import QPainter, QPolygonF, QMoveEvent
 from PyQt6.QtWidgets import (QAbstractItemView, QApplication, QStyle,
@@ -119,11 +120,17 @@ class StarEditor(QWidget):
 
         self._star_rating = StarRating()
 
+        self.selected_star_count = self._star_rating.star_count()
+
         self.setMouseTracking(True)
         self.setAutoFillBackground(True)
+        # self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
     def set_star_rating(self, star_rating: StarRating):
         self._star_rating = star_rating
+
+    def set_selected_star_count(self, star_count: float) -> None:
+        self.selected_star_count = star_count
 
     def star_rating(self):
         return self._star_rating
@@ -137,7 +144,7 @@ class StarEditor(QWidget):
                 StarRating.Editable)
 
     def mouseMoveEvent(self, event: QMoveEvent):
-        # print(event.pos().x())
+        # print("Editor mouse move:", event.pos().x())
         star = self.star_at_position(event.pos().x())
 
         if star != self._star_rating.star_count() and star != -1:
@@ -145,7 +152,15 @@ class StarEditor(QWidget):
             self.update()
 
     def mouseReleaseEvent(self, event):
+        self.set_selected_star_count(self._star_rating.star_count())
         self.editing_finished.emit()
+
+    def leaveEvent(self, e: QtCore.QEvent) -> None:
+        print("Editor leave event")
+        self._star_rating.set_star_count(self.selected_star_count)
+        self.update()
+        self.editing_finished.emit()
+        super().leaveEvent(e)
 
     def star_at_position(self, x):
         if x <= 2:
@@ -179,9 +194,11 @@ class StarDelegate(QStyledItemDelegate):
             return super().sizeHint(option, index)
 
     def createEditor(self, parent, option, index):
+        print("Created editor:", index.row(), index.column())
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
             editor = StarEditor(parent)
+            editor.set_selected_star_count(star_rating.star_count())
             editor.editing_finished.connect(self.commit_and_close_editor)
             return editor
         else:
@@ -190,6 +207,7 @@ class StarDelegate(QStyledItemDelegate):
     def setEditorData(self, editor: StarEditor, index):
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
+            editor.set_selected_star_count(star_rating.star_count())
             editor.set_star_rating(star_rating)
         else:
             super().setEditorData(editor, index)
@@ -197,12 +215,15 @@ class StarDelegate(QStyledItemDelegate):
     def setModelData(self, editor: StarEditor, model, index):
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
+            print(f"Set model data: {index.row(), index.column()}, rating: {editor.star_rating().star_count()}")
             model.setData(index, editor.star_rating())
         else:
             super().setModelData(editor, model, index)
 
     def commit_and_close_editor(self):
-        editor = self.sender()
+        print("Commit and close editor")
+        editor: StarEditor = self.sender()
+        # editor.repaint()
         self.commitData.emit(editor)
         self.closeEditor.emit(editor)
 
@@ -213,18 +234,19 @@ class Model(QtCore.QAbstractTableModel):
         self._table_view: QTableView = parent
         self.header_sections_text = ("Title", "Genre", "Artist", "Rating")
 
-        self.static_data = (
-            ("Mass in B-Minor", "Baroque", "J.S. Bach", 5),
-            ("Three More Foxes", "Jazz", "Maynard Ferguson", 4),
-            ("Sex Bomb", "Pop", "Tom Jones", 3),
-            ("Barbie Girl", "Pop", "Aqua", 5),
-        )
+        self.static_data: List[List[Union[str, int]]] = [
+            ["Mass in B-Minor", "Baroque", "J.S. Bach", 5],
+            ["Three More Foxes", "Jazz", "Maynard Ferguson", 4],
+            ["Sex Bomb", "Pop", "Tom Jones", 3],
+            ["Barbie Girl", "Pop", "Aqua", 5],
+        ]
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
-        print(index.row())
+        # print(index.row())
         if role == Qt.ItemDataRole.DisplayRole:
             if index.column() == 3:
-                return StarRating(index.data(Qt.ItemDataRole.DisplayRole))
+                # return
+                return StarRating(self.static_data[index.row()][index.column()])
 
             return self.static_data[index.row()][index.column()]
 
@@ -242,29 +264,54 @@ class Model(QtCore.QAbstractTableModel):
             return f"{section}"
         return None
 
+    def flags(self, index):
+        return Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable | Qt.ItemFlag.ItemIsEditable
+
+    def setData(self, index, value, role = Qt.ItemDataRole.EditRole):
+        if isinstance(value, StarRating):
+            self.static_data[index.row()][3] = value.star_count()
+        super().setData(index, value, role)
+
+        print("Set item data:", index.row(), index.column(), value)
+
 
 class MouseTrackingTableView(QTableView):
     def __init__(self, parent=None):
         super().__init__(parent)
 
         self.setModel(Model())
-        self.setItemDelegateForColumn(3, StarDelegate())
+        self.setItemDelegate(StarDelegate())
         self.prev_index = QModelIndex()
+
+        # self.setEditTriggers(QAbstractItemView.EditTrigger.SelectedClicked)
+
+        # self.setIndexWidget(self.model().index(0, 3), StarEditor())
+        self.setMouseTracking(True)
 
 
     def mouseMoveEvent(self, e: QtGui.QMouseEvent) -> None:
         index = self.indexAt(e.pos())
         if index != self.prev_index:
             self.itemDelegate().commit_and_close_editor()
-            if index.column() == 3:
+            if index.column() == 3 and index in self.selectedIndexes():
+                print("Opened editor")
                 self.openPersistentEditor(index)
             self.prev_index = index
         super().mouseMoveEvent(e)
 
-    def leaveEvent(self, e: QtCore.QEvent) -> None:
-        self.closePersistentEditor(self.prev_index)
-        self.prev_index = QModelIndex()
-        super().leaveEvent(e)
+    # def leaveEvent(self, e: QtCore.QEvent) -> None:
+    #     self.closePersistentEditor(self.prev_index)
+    #     self.prev_index = QModelIndex()
+    #     super().leaveEvent(e)
+
+    def edit(self, index: QModelIndex, trigger=QAbstractItemView.EditTrigger.NoEditTriggers, event: QEvent = QEvent(0)):
+        if trigger == QAbstractItemView.EditTrigger.NoEditTriggers:
+            return False
+        print(f"Item editing: ({index.row()}, {index.column()})")
+
+        return super().edit(index, trigger, event)
+
+
 
 
 
@@ -301,6 +348,7 @@ class MainWindow(QMainWindow):
         self.central_widget_layout = QHBoxLayout(self.central_widget)
 
         self.table_view = MouseTrackingTableView()
+        self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.resize(500, 500)
 
         self.central_widget_layout.addWidget(self.table_view)
@@ -313,18 +361,17 @@ if __name__ == '__main__':
 
     app = QApplication(sys.argv)
 
-    # tableWidget = QTableWidget(4, 4)
-    # tableWidget.setItemDelegateForColumn(3, StarDelegate())
-    # tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.SelectedClicked)
-    # tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+    tableWidget = QTableWidget(4, 4)
+    tableWidget.setItemDelegateForColumn(3, StarDelegate())
+    tableWidget.setEditTriggers(QAbstractItemView.EditTrigger.DoubleClicked | QAbstractItemView.EditTrigger.SelectedClicked)
+    tableWidget.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
 
-    # tableWidget = MouseTrackingTableView()
+    populate_table_widget(tableWidget)
 
-    # populate_table_widget(tableWidget)
-
-    # tableWidget.resizeColumnsToContents()
-    # tableWidget.resize(500, 300)
+    tableWidget.resizeColumnsToContents()
+    tableWidget.resize(500, 300)
     # tableWidget.show()
+
     main_window = MainWindow()
     main_window.show()
 
