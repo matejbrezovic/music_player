@@ -1,10 +1,11 @@
 from __future__ import annotations
 
 import sys
+import typing
 from typing import List, Optional, Any
 
 from PyQt6 import QtCore, QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot, QSize
+from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot, QSize, QEvent
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
@@ -12,6 +13,8 @@ from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeade
 
 from constants import *
 from data_models.track import Track
+from models.star_delegate import StarDelegate
+from models.star_rating import StarRating
 from repositories.tracks_repository import TracksRepository
 from utils import get_artwork_pixmap, get_formatted_time_in_mins
 
@@ -25,8 +28,9 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         self.playing_track_index: Optional[int] = None
 
         self.playing_speaker_pixmap = QPixmap("icons/speaker_playing.png")
-
         self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png")
+
+        self.general_flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
@@ -71,6 +75,9 @@ class TrackTableModel(QtCore.QAbstractTableModel):
             value = MAIN_PANEL_COLUMN_NAMES[index.column()].lower()
             if value == "time":
                 return get_formatted_time_in_mins(self._tracks[index.row()].length)
+            elif value == "rating":
+                return StarRating(self._tracks[index.row()].rating)
+
             return getattr(self._tracks[index.row()], value) if value else None
 
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
@@ -86,6 +93,17 @@ class TrackTableModel(QtCore.QAbstractTableModel):
                 return MAIN_PANEL_COLUMN_NAMES[section]
             return f"{section}"
         return None
+
+    def flags(self, index: QModelIndex):
+        if index.column() == 3:
+            return self.general_flags | Qt.ItemFlag.ItemIsEditable
+        return self.general_flags
+
+    def setData(self, index: QModelIndex, value: Any, role: Qt.ItemDataRole = Qt.ItemDataRole.EditRole) -> bool:
+        if isinstance(value, StarRating):
+            self._tracks[index.row()].rating = value.star_count()
+
+        return super().setData(index, value, role)
 
     @pyqtSlot()
     def set_paused(self) -> None:
@@ -124,14 +142,17 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
             painter.setPen(QPen(QBrush(border_color), 1))
-            painter.drawLine(option.rect.topLeft(), option.rect.topRight())
+            # painter.drawLine(option.rect.topLeft(), option.rect.topRight())
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 
         display_role = index.data(Qt.ItemDataRole.DisplayRole)
         decoration_role = index.data(Qt.ItemDataRole.DecorationRole)
         if display_role:
-            painter.setPen(QPen(Qt.GlobalColor.black))
+            if option.state & QStyle.StateFlag.State_Selected:
+                painter.setPen(QColor(option.palette.highlightedText()))
+            else:
+                painter.setPen(QColor(option.palette.text()))
             text = f"{display_role}"
             if text:
                 elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
@@ -247,14 +268,18 @@ class TrackTableView(QTableView):
         self._tracks: List[Track] = []
 
         self.padding = 4
+        self.rating_column = 7
+        self.prev_index = QModelIndex()
 
         self._table_model = TrackTableModel(self)
         self._table_delegate = TrackTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
+        self.setItemDelegateForColumn(7, StarDelegate())
         self._table_header = TrackTableHeader(Qt.Orientation.Horizontal, self)
         self.setHorizontalHeader(self._table_header)
         self.setTextElideMode(Qt.TextElideMode.ElideRight)
+        self.setMouseTracking(True)
 
         self.verticalHeader().setDefaultSectionSize(22)
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
@@ -312,6 +337,41 @@ class TrackTableView(QTableView):
         self.queue_last_shortcut_return.activated.connect(self.queue_last_action_triggered)
         self.queue_last_shortcut_return.setContext(Qt.ShortcutContext.WidgetShortcut)
 
+    def selectionChanged(self, selected, deselected) -> None:
+        for index in deselected.indexes():
+            if index.column() == self.rating_column:
+                typing.cast(StarDelegate, self.itemDelegateForColumn(self.rating_column)).commit_and_close_editors()
+                # self.repaint()
+                self.edit(index, QAbstractItemView.EditTrigger.CurrentChanged)
+        super().selectionChanged(selected, deselected)
+
+    def mouseMoveEvent(self, e: QtGui.QMouseEvent) -> None:
+        index = self.indexAt(e.pos())
+        if index != self.prev_index:
+            if index.column() == self.rating_column and index in self.selectedIndexes():
+                self.openPersistentEditor(index)
+            self.prev_index = index
+        super().mouseMoveEvent(e)
+
+    def currentChanged(self, current: QtCore.QModelIndex, previous: QtCore.QModelIndex) -> None:
+        if current.column() == self.rating_column and current not in self.selectedIndexes():
+            self.openPersistentEditor(current)
+            self.edit(current, QAbstractItemView.EditTrigger.CurrentChanged)
+
+        super().currentChanged(current, previous)
+
+    def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
+        index = self.indexAt(e.pos())
+        if index.column() == self.rating_column and index not in self.selectedIndexes():
+            self.openPersistentEditor(index)
+        self.prev_index = index
+        super().mousePressEvent(e)
+
+    def edit(self, index: QModelIndex, trigger=QAbstractItemView.EditTrigger.NoEditTriggers, event: QEvent = QEvent(0)):
+        if trigger == QAbstractItemView.EditTrigger.NoEditTriggers:
+            return False
+        return super().edit(index, trigger, event)
+
     @pyqtSlot()
     def output_to_action_triggered(self) -> None:
         audio_output = self.sender().text()
@@ -361,9 +421,6 @@ class TrackTableView(QTableView):
         if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
             self.clearSelection()
         return super().focusInEvent(event)
-
-    # def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-    #     return super().focusOutEvent(event)
 
 
 class TestMainWindow(QtWidgets.QMainWindow):

@@ -70,16 +70,14 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
             painter.setPen(QPen(QBrush(border_color), 1))
-            painter.drawLine(option.rect.topLeft(), option.rect.topRight())
+            # painter.drawLine(option.rect.topLeft(), option.rect.topRight())
             # if index.row() == self._table_view.selectedIndexes()[-1].row():  # might be ruining performance
             #     painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
-
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 
         decoration_role = index.data(Qt.ItemDataRole.DecorationRole)
         if decoration_role and not index.column():
-
             rect = option.rect
             rect.setRect(option.rect.left() + 2, option.rect.top() + 2,
                          option.rect.width() - 4, option.rect.height() - 4)
@@ -98,6 +96,11 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
 
             painter.save()
             painter.translate(option.rect.x(), option.rect.y())
+            if option.state & QStyle.StateFlag.State_Selected:
+                painter.setPen(QColor(option.palette.highlightedText()))
+            else:
+                painter.setPen(QColor(option.palette.text()))
+
             navigation_group_widget.render(painter)
             painter.restore()
 

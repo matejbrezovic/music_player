@@ -1,7 +1,7 @@
 import datetime
 import io
 from os import path
-from typing import Optional
+from typing import Optional, Union
 
 import mutagen
 from PIL import Image, ImageFilter
@@ -575,6 +575,16 @@ def get_hover_icon(icon: QIcon, is_in_dark_mode: bool) -> QIcon:
     pixmap.setMask(mask)
     icon = QIcon(pixmap)
     return icon
+
+
+def combine_colors(color_a: Union[QColor, Qt.GlobalColor], color_b: Union[QColor, Qt.GlobalColor],
+                   part_a: float) -> QColor:
+    if part_a > 1 or part_a < 0:
+        raise BaseException
+    rgb_a = part_a * QColor(color_a).rgb()
+    rgb_b = (1 - part_a) * QColor(color_b).rgb()
+
+    return QColor(int(rgb_a + rgb_b))
 
 
 def get_formatted_time(track_duration: int) -> str:

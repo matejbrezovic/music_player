@@ -1,6 +1,7 @@
 import os
 
-from PyQt6.QtGui import QColor
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor, QPalette
 
 import utils
 
@@ -31,7 +32,7 @@ DEFAULT_AUDIO_PATH = "/home/matey/Music"
 
 # Table views constants
 
-SELECTION_QCOLOR = QColor(189, 232, 255)  # QColor(166, 223, 231)
+SELECTION_QCOLOR = QColor(0, 120, 215, 255)  # QColor(189, 232, 255)  # QColor(166, 223, 231)
 SELECTION_QCOLOR_BORDER = QColor(110, 189, 232)  # QColor(100, 140, 200)
 LOST_FOCUS_QCOLOR = QColor(210, 210, 210)
 LOST_FOCUS_QCOLOR_BORDER = QColor(180, 180, 180)

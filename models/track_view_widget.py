@@ -84,7 +84,7 @@ class TrackViewWidget(QWidget):
 
         first_col_width = 26
         second_col_width = 20
-        rating_col_width = 50
+        rating_col_width = 82
 
         # self.header_splitter.setCollapsible(0, False)
         # self.header_splitter.setCollapsible(1, False)

@@ -310,9 +310,9 @@ class MouseTrackingTableView(QTableView):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-        palette = self.palette()
-        palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.Highlight, Qt.GlobalColor.darkBlue)
-        self.setPalette(palette)
+        # palette = self.palette()
+        # palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.Highlight, Qt.GlobalColor.darkBlue)
+        # self.setPalette(palette)
 
         self.setModel(Model())
         self.setItemDelegate(DefaultItemDelegate())

@@ -135,6 +135,11 @@ class InformationTableItemDelegate(QStyledItemDelegate):
 
             painter.save()
             painter.translate(main_part_rect.x(), main_part_rect.y())
+            if option.state & QStyle.StateFlag.State_Selected:
+                painter.setPen(QColor(option.palette.highlightedText()))
+            else:
+                painter.setPen(QColor(option.palette.text()))
+
             track_info_widget.render(painter)
             painter.restore()
 
