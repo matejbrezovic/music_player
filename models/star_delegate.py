@@ -58,7 +58,7 @@ class StarDelegate(QStyledItemDelegate):
             return super().sizeHint(option, index)
 
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> StarEditor:
-        print("Created editor:", index.row(), index.column())
+        # print("Created editor:", index.row(), index.column())
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
             editor = StarEditor(parent, option.palette)
@@ -79,7 +79,7 @@ class StarDelegate(QStyledItemDelegate):
     def setModelData(self, editor: StarEditor, model: QAbstractTableModel, index: QModelIndex) -> None:
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
-            print(f"Set model data: {index.row(), index.column()}, rating: {editor.star_rating().star_count()}")
+            # print(f"Set model data: {index.row(), index.column()}, rating: {editor.star_rating().star_count()}")
             model.setData(index, editor.star_rating())
         else:
             super().setModelData(editor, model, index)
@@ -88,7 +88,7 @@ class StarDelegate(QStyledItemDelegate):
         """Closes all editors except the last one (if there's more than one editor), otherwise it closes all of them
         (no new editor was opened)"""
 
-        print("Commit and close editors:", self.active_editors)
+        # print("Commit and close editors:", self.active_editors)
 
         editors_to_close = list(self.active_editors.values())[:-1] \
             if len(self.active_editors) > 1 else list(self.active_editors.values())
@@ -114,7 +114,7 @@ class StarDelegate(QStyledItemDelegate):
             return
 
         editor = self.active_editors[index_pos(index)]
-        print(f"Commit and close editor: {index.row(), index.column(), editor}")
+        # print(f"Commit and close editor: {index.row(), index.column(), editor}")
         self.commitData.emit(editor)
         self.closeEditor.emit(editor)
         editor.deleteLater()

@@ -135,10 +135,10 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():
                 fill_color = SELECTION_QCOLOR
-                border_color = SELECTION_QCOLOR_BORDER
+                # border_color = SELECTION_QCOLOR_BORDER
             else:
                 fill_color = LOST_FOCUS_QCOLOR
-                border_color = LOST_FOCUS_QCOLOR_BORDER
+                # border_color = LOST_FOCUS_QCOLOR_BORDER
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
             # painter.setPen(QPen(QBrush(border_color), 1))
@@ -444,6 +444,10 @@ class TrackTableView(QTableView):
         self._table_model.set_unpaused()
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+        for index in self.selectedIndexes():
+            if index.column() == self.rating_column:
+                self.openPersistentEditor(index)
+
         if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
             self.clearSelection()
         return super().focusInEvent(event)
