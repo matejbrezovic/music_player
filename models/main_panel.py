@@ -2,7 +2,7 @@ import time
 from typing import List
 
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import Qt, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import QVBoxLayout
 
 from constants import *

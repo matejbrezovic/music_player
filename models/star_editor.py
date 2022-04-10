@@ -3,9 +3,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPainter, QMoveEvent, QPalette
 from PyQt6.QtWidgets import QWidget
 
-from constants import SELECTION_QCOLOR
 from models.star_rating import StarRating
-from utils import combine_colors
 
 
 class StarEditor(QWidget):

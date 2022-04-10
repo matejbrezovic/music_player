@@ -2,7 +2,7 @@ import time
 from typing import List
 
 from PyQt6 import QtGui
-from PyQt6.QtCore import Qt, QUrl, pyqtSignal, pyqtSlot, QEvent, QSize
+from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QEvent, QSize
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon
 from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton,
                              QFrame, QToolTip, QSpacerItem)

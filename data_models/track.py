@@ -29,3 +29,7 @@ class Track:
     def size(self):
         return os.path.getsize(self.file_path)
 
+    @property
+    def format(self):
+        return os.path.splitext(self.file_path)[-1]
+

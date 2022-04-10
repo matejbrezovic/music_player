@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from typing import Union, List, Tuple
+from typing import List, Tuple
 
 from PyQt6.QtWidgets import (QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout,
                              QVBoxLayout)

@@ -1,4 +1,3 @@
-import time
 from typing import List
 
 from PyQt6 import QtWidgets

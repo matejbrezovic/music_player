@@ -1,7 +1,8 @@
-from PySide2 import QtCore, QtWidgets
-from equalizer_bar import EqualizerBar
-
 import random
+
+from PySide2 import QtCore, QtWidgets
+
+from equalizer_bar import EqualizerBar
 
 
 class Window(QtWidgets.QMainWindow):

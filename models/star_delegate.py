@@ -1,15 +1,14 @@
 from __future__ import annotations
 
+from typing import TYPE_CHECKING, Dict, Tuple
+
 from PyQt6.QtCore import Qt, QModelIndex, QAbstractTableModel, QSize
 from PyQt6.QtGui import QPen, QColor, QPainter
-from PyQt6.QtWidgets import QStyle, QStyledItemDelegate, QTableView, QWidget, QStyleOptionViewItem
+from PyQt6.QtWidgets import QStyle, QStyledItemDelegate, QWidget, QStyleOptionViewItem
 
 from constants import SELECTION_QCOLOR, LOST_FOCUS_QCOLOR
 from models.star_editor import StarEditor
 from models.star_rating import StarRating
-
-from typing import TYPE_CHECKING, Dict, Tuple
-
 from utils import combine_colors, index_pos
 
 if TYPE_CHECKING:

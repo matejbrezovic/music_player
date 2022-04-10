@@ -5,7 +5,7 @@ import typing
 from typing import List, Optional, Any
 
 from PyQt6 import QtCore, QtWidgets, QtGui
-from PyQt6.QtCore import Qt, QModelIndex, pyqtSignal, pyqtSlot, QSize, QEvent
+from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize, QEvent
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
@@ -20,9 +20,9 @@ from utils import get_artwork_pixmap, get_formatted_time_in_mins
 
 
 class TrackTableModel(QtCore.QAbstractTableModel):
-    def __init__(self, parent: QTableView = None):
+    def __init__(self, parent: TrackTableView = None):
         super().__init__(parent)
-        self._table_view: QTableView = parent
+        self._table_view: TrackTableView = parent
         self._tracks: List[Track] = []
         self.is_playing = False
         self.playing_track_index: Optional[int] = None
@@ -95,7 +95,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         return None
 
     def flags(self, index: QModelIndex):
-        if index.column() == 3:
+        if index.column() == self._table_view.rating_column:
             return self.general_flags | Qt.ItemFlag.ItemIsEditable
         return self.general_flags
 

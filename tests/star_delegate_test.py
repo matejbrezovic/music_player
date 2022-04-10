@@ -4,9 +4,9 @@ from typing import Any, List, Union
 
 from PyQt6 import QtGui, QtCore
 from PyQt6.QtCore import QPointF, QSize, Qt, QModelIndex, QEvent, pyqtSlot
-from PyQt6.QtGui import QPainter, QPolygonF, QMoveEvent, QPalette, QColor, QBrush, QFontMetrics
+from PyQt6.QtGui import QPainter, QPolygonF, QMoveEvent, QPalette, QColor, QBrush
 from PyQt6.QtWidgets import (QAbstractItemView, QApplication, QStyle, QStyledItemDelegate, QWidget, QTableView,
-                             QMainWindow, QHBoxLayout, QVBoxLayout, QPushButton)
+                             QMainWindow, QVBoxLayout, QPushButton)
 
 
 class StarPolygon(QPolygonF):
