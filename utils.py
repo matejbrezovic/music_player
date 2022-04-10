@@ -7,7 +7,7 @@ import mutagen
 from PIL import Image, ImageFilter
 from PIL.ImageQt import ImageQt
 from PyQt6 import QtGui, QtCore
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QPointF, QTimer
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QPointF, QTimer, QModelIndex
 from PyQt6.QtGui import (QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent, qRgba, QImage, QLinearGradient,
                          QTransform, QStaticText)
 from PyQt6.QtWidgets import *
@@ -585,6 +585,10 @@ def combine_colors(color_a: Union[QColor, Qt.GlobalColor], color_b: Union[QColor
     rgb_b = (1 - part_a) * QColor(color_b).rgb()
 
     return QColor(int(rgb_a + rgb_b))
+
+
+def index_pos(index: QModelIndex):
+    return index.row(), index.column()
 
 
 def get_formatted_time(track_duration: int) -> str:

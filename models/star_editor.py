@@ -41,7 +41,7 @@ class StarEditor(QWidget):
         # painter.drawRect(self.rect())
         # background_stars_color = combine_colors(SELECTION_QCOLOR, self.palette().base(), 0.8)
         # StarRating(5).paint(painter, self.rect(), self.palette(), StarRating.ReadOnly, background_stars_color)
-        self._star_rating.paint(painter, self.rect(), self.palette(), StarRating.Editable, Qt.GlobalColor.red)
+        self._star_rating.paint(painter, self.rect(), self.palette(), StarRating.Editable, self.palette().base())
 
     def mouseMoveEvent(self, event: QMoveEvent):
         star = self.star_at_position(event.pos().x())

@@ -141,7 +141,7 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
                 border_color = LOST_FOCUS_QCOLOR_BORDER
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
-            painter.setPen(QPen(QBrush(border_color), 1))
+            # painter.setPen(QPen(QBrush(border_color), 1))
             # painter.drawLine(option.rect.topLeft(), option.rect.topRight())
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
@@ -149,7 +149,7 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
         display_role = index.data(Qt.ItemDataRole.DisplayRole)
         decoration_role = index.data(Qt.ItemDataRole.DecorationRole)
         if display_role:
-            if option.state & QStyle.StateFlag.State_Selected:
+            if option.state & QStyle.StateFlag.State_Selected and self._table_view.hasFocus():
                 painter.setPen(QColor(option.palette.highlightedText()))
             else:
                 painter.setPen(QColor(option.palette.text()))
@@ -202,7 +202,7 @@ class TrackTableHeader(QHeaderView):
 
         self.section_text = MAIN_PANEL_COLUMN_NAMES
 
-        self.minimum_last_section_size = self.padding * 2 + self.fontMetrics().horizontalAdvance("Time")
+        self.minimum_last_section_size = self.padding * 2 + self.fontMetrics().horizontalAdvance(self.section_text[-1])
 
         self.setStyleSheet("""
         QHeaderView {
@@ -341,14 +341,19 @@ class TrackTableView(QTableView):
         self.queue_last_shortcut_return.setContext(Qt.ShortcutContext.WidgetShortcut)
 
     def selectionChanged(self, selected, deselected) -> None:
+        # print("SELECTED INDEXES:", set([index.row() for index in self.selectedIndexes()]))
+        # print("Deselected:", set([index.row() for index in deselected.indexes()]))
+
         for index in deselected.indexes():
             if index.column() == self.rating_column:
-                typing.cast(StarDelegate, self.itemDelegateForColumn(self.rating_column)).commit_and_close_editors()
+                typing.cast(StarDelegate, self.itemDelegateForColumn(self.rating_column)).commit_and_close_editor(index)
                 # self.repaint()
                 self.edit(index, QAbstractItemView.EditTrigger.CurrentChanged)
         for index in selected.indexes():
             if index.column() == self.rating_column:
                 self.openPersistentEditor(index)
+
+        # print("Selected:", set([index.row() for index in selected.indexes()]))
 
         super().selectionChanged(selected, deselected)
 
@@ -369,11 +374,11 @@ class TrackTableView(QTableView):
         super().currentChanged(current, previous)
 
     def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
+        super().mousePressEvent(e)
         index = self.indexAt(e.pos())
         if index.column() == self.rating_column and index not in self.selectedIndexes():
             self.openPersistentEditor(index)
         self.prev_index = index
-        super().mousePressEvent(e)
 
     def edit(self, index: QModelIndex, trigger=QAbstractItemView.EditTrigger.NoEditTriggers, event: QEvent = QEvent(0)):
         if trigger == QAbstractItemView.EditTrigger.NoEditTriggers:
@@ -417,10 +422,12 @@ class TrackTableView(QTableView):
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
-        self._tracks = tracks
-        self._star_delegate.commit_and_close_editors()
-        self._star_delegate.commit_and_close_editors()
+        for index in self.selectedIndexes():
+            if index.column() == self.rating_column:
+                self._star_delegate.commit_and_close_editor(index)
+        # self._star_delegate.commit_and_close_editors()
         self.clearSelection()
+        self._tracks = tracks
         self._table_model.set_tracks(tracks)
         self.new_tracks_set.emit()
 
@@ -440,6 +447,12 @@ class TrackTableView(QTableView):
         if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
             self.clearSelection()
         return super().focusInEvent(event)
+
+    def focusOutEvent(self, e: QtGui.QFocusEvent) -> None:
+        for index in self.selectedIndexes():
+            if index.column() == self.rating_column:
+                typing.cast(StarDelegate, self.itemDelegateForColumn(self.rating_column)).commit_and_close_editor(index)
+        super().focusOutEvent(e)
 
 
 class TestMainWindow(QtWidgets.QMainWindow):
