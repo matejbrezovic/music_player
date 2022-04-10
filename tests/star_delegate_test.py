@@ -3,10 +3,10 @@ import typing
 from typing import Any, List, Union
 
 from PyQt6 import QtGui, QtCore
-from PyQt6.QtCore import QPointF, QSize, Qt, QModelIndex, QEvent
-from PyQt6.QtGui import QPainter, QPolygonF, QMoveEvent, QPalette, QColor
+from PyQt6.QtCore import QPointF, QSize, Qt, QModelIndex, QEvent, pyqtSlot
+from PyQt6.QtGui import QPainter, QPolygonF, QMoveEvent, QPalette, QColor, QBrush, QFontMetrics
 from PyQt6.QtWidgets import (QAbstractItemView, QApplication, QStyle, QStyledItemDelegate, QWidget, QTableView,
-                             QMainWindow, QHBoxLayout)
+                             QMainWindow, QHBoxLayout, QVBoxLayout, QPushButton)
 
 
 class StarPolygon(QPolygonF):
@@ -129,7 +129,7 @@ class StarEditor(QWidget):
         self.selected_star_count = self._star_rating.star_count()
 
         self.setMouseTracking(True)
-        self.setAutoFillBackground(True)
+        # self.setAutoFillBackground(True)
 
     def __repr__(self):
         return f"Editor {self._star_rating.star_count()}"
@@ -195,8 +195,9 @@ class StarDelegate(QStyledItemDelegate):
     def paint(self, painter, option, index):
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
+            print("STAR DELEGATE STAR PAINT")
             if option.state & QStyle.StateFlag.State_Selected:
-                painter.fillRect(option.rect, option.palette.highlight())
+                painter.fillRect(option.rect, Qt.GlobalColor.red)
                 star_rating.paint(painter, option.rect, option.palette, StarRating, option.palette.base())
             else:
                 star_rating.paint(painter, option.rect, option.palette, StarRating)
@@ -214,6 +215,12 @@ class StarDelegate(QStyledItemDelegate):
         print("Created editor:", index.row(), index.column())
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
+            # if option.state & QStyle.StateFlag.State_Selected:
+            #     QPainter().fillRect(option.rect, option.palette.highlight())
+            # else:
+            #     QPainter().fillRect(option.rect, option.palette.base())
+
+
             editor = StarEditor(parent, option.palette)
             editor.set_selected_star_count(star_rating.star_count())
         else:
@@ -297,6 +304,11 @@ class Model(QtCore.QAbstractTableModel):
 
         return super().setData(index, value, role)
 
+    def set_new_data(self, data: List[List[Union[str, int]]]) -> None:
+        self.layoutAboutToBeChanged.emit()
+        self.static_data = data
+        self.layoutChanged.emit()
+
 
 class DefaultItemDelegate(QStyledItemDelegate):
     def __init__(self, parent=None):
@@ -304,6 +316,23 @@ class DefaultItemDelegate(QStyledItemDelegate):
 
     def paint(self, painter, option, index):
         super().paint(painter, option, index)
+
+        if option.state & QStyle.StateFlag.State_Selected:
+            painter.setBrush(Qt.GlobalColor.red)
+            painter.drawRect(option.rect)
+            # painter.setPen(QPen(QBrush(border_color), 1))
+            # painter.drawLine(option.rect.topLeft(), option.rect.topRight())
+        else:
+            painter.setBrush(QBrush(Qt.GlobalColor.white))
+
+        display_role = index.data(Qt.ItemDataRole.DisplayRole)
+        if display_role:
+            if option.state & QStyle.StateFlag.State_Selected:
+                painter.setPen(QColor(option.palette.highlightedText()))
+            else:
+                painter.setPen(QColor(option.palette.text()))
+            text = f"{display_role}"
+            painter.drawText(option.rect, Qt.AlignmentFlag.AlignLeft, text)
 
 
 class MouseTrackingTableView(QTableView):
@@ -313,20 +342,20 @@ class MouseTrackingTableView(QTableView):
         # palette = self.palette()
         # palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.Highlight, Qt.GlobalColor.darkBlue)
         # self.setPalette(palette)
-
-        self.setModel(Model())
-        self.setItemDelegate(DefaultItemDelegate())
-        self.setItemDelegateForColumn(3, StarDelegate())
         self.prev_index = QModelIndex()
-        self.setShowGrid(False)
-        self.setMouseTracking(True)
 
     def selectionChanged(self, selected, deselected) -> None:
         for index in deselected.indexes():
             if index.column() == 3:
                 typing.cast(StarDelegate, self.itemDelegateForColumn(3)).commit_and_close_editors()
                 # self.repaint()
-                self.edit(index, QAbstractItemView.EditTrigger.CurrentChanged)
+                # self.edit(index, QAbstractItemView.EditTrigger.CurrentChanged)
+        for index in selected.indexes():
+            if index.column() == 3:
+                self.openPersistentEditor(index)
+
+        # print("Selected:", [(index.row(), index.column()) for index in selected.indexes()])
+
         super().selectionChanged(selected, deselected)
 
 
@@ -365,14 +394,47 @@ class MainWindow(QMainWindow):
         self.resize(700, 700)
 
         self.central_widget = QWidget()
-        self.central_widget_layout = QHBoxLayout(self.central_widget)
+        self.central_widget_layout = QVBoxLayout(self.central_widget)
 
         self.table_view = MouseTrackingTableView()
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.resize(500, 500)
 
+        self.table_view_model = Model()
+        self.table_view.setModel(self.table_view_model)
+        self.table_view.setItemDelegate(DefaultItemDelegate())
+        self.table_view.setItemDelegateForColumn(3, StarDelegate())
+
+        self.table_view.setShowGrid(False)
+        self.table_view.setMouseTracking(True)
+
+
+
+        self.repopulate_button = QPushButton("Refresh")
+        self.repopulate_button.clicked.connect(self.repopulate_table_view)
+
+
         self.central_widget_layout.addWidget(self.table_view)
+        self.central_widget_layout.addWidget(self.repopulate_button)
         self.setCentralWidget(self.central_widget)
+
+    @pyqtSlot()
+    def repopulate_table_view(self):
+        new_data: List[List[Union[str, int]]] = [
+            ["Massasdsda in B-Minor", "Baroque", "J.S. Bach", 4],
+            ["Three More Foxes", "dsasdasa", "Maynard Fergudasdsadason", 2],
+            ["Sex Bomb", "Possp", "Tom Jonssses", 5],
+            ["Barbidasde Girl", "Popaj", "Aqua", 1],
+        ]
+
+
+        self.table_view.itemDelegateForColumn(3).commit_and_close_editors()
+        self.table_view.itemDelegateForColumn(3).commit_and_close_editors()
+        # self.table_view.repaint()
+        self.table_view.clearSelection()
+        self.table_view_model.set_new_data(new_data)
+        print("Table view repopulated!")
+
 
 
 

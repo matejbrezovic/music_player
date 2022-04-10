@@ -17,7 +17,7 @@ class StarEditor(QWidget):
         self.selected_star_count = self._star_rating.star_count()
 
         self.setMouseTracking(True)
-        self.setAutoFillBackground(True)
+        # self.setAutoFillBackground(True)
 
     def __repr__(self):
         return f"Editor {self._star_rating.star_count()}"
@@ -37,11 +37,11 @@ class StarEditor(QWidget):
     def paintEvent(self, event):
         painter = QPainter(self)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.setBrush(SELECTION_QCOLOR)
-        painter.drawRect(self.rect())
-        background_stars_color = combine_colors(SELECTION_QCOLOR, self.palette().base(), 0.8)
-        StarRating(5).paint(QPainter(self), self.rect(), self.palette(), StarRating.ReadOnly, background_stars_color)
-        self._star_rating.paint(QPainter(self), self.rect(), self.palette(), StarRating.Editable, self.palette().base())
+        # painter.setBrush(Qt.GlobalColor.green)
+        # painter.drawRect(self.rect())
+        # background_stars_color = combine_colors(SELECTION_QCOLOR, self.palette().base(), 0.8)
+        # StarRating(5).paint(painter, self.rect(), self.palette(), StarRating.ReadOnly, background_stars_color)
+        self._star_rating.paint(painter, self.rect(), self.palette(), StarRating.Editable, Qt.GlobalColor.red)
 
     def mouseMoveEvent(self, event: QMoveEvent):
         star = self.star_at_position(event.pos().x())

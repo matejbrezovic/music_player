@@ -273,10 +273,13 @@ class TrackTableView(QTableView):
 
         self._table_model = TrackTableModel(self)
         self._table_delegate = TrackTableItemDelegate(self)
+        self._star_delegate = StarDelegate(self)
+        self._table_header = TrackTableHeader(Qt.Orientation.Horizontal, self)
+        # self._table_header.sectionHandleDoubleClicked.disconnect()
+        # self._table_header.sectionHandleDoubleClicked.connect(self.resizeColumnToContents)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
-        self.setItemDelegateForColumn(7, StarDelegate())
-        self._table_header = TrackTableHeader(Qt.Orientation.Horizontal, self)
+        self.setItemDelegateForColumn(7, self._star_delegate)
         self.setHorizontalHeader(self._table_header)
         self.setTextElideMode(Qt.TextElideMode.ElideRight)
         self.setMouseTracking(True)
@@ -343,14 +346,19 @@ class TrackTableView(QTableView):
                 typing.cast(StarDelegate, self.itemDelegateForColumn(self.rating_column)).commit_and_close_editors()
                 # self.repaint()
                 self.edit(index, QAbstractItemView.EditTrigger.CurrentChanged)
+        for index in selected.indexes():
+            if index.column() == self.rating_column:
+                self.openPersistentEditor(index)
+
         super().selectionChanged(selected, deselected)
 
     def mouseMoveEvent(self, e: QtGui.QMouseEvent) -> None:
-        index = self.indexAt(e.pos())
-        if index != self.prev_index:
-            if index.column() == self.rating_column and index in self.selectedIndexes():
-                self.openPersistentEditor(index)
-            self.prev_index = index
+        if self.hasFocus():
+            index = self.indexAt(e.pos())
+            if index != self.prev_index:
+                if index.column() == self.rating_column and index in self.selectedIndexes():
+                    self.openPersistentEditor(index)
+                self.prev_index = index
         super().mouseMoveEvent(e)
 
     def currentChanged(self, current: QtCore.QModelIndex, previous: QtCore.QModelIndex) -> None:
@@ -371,6 +379,14 @@ class TrackTableView(QTableView):
         if trigger == QAbstractItemView.EditTrigger.NoEditTriggers:
             return False
         return super().edit(index, trigger, event)
+
+    # def resizeColumnToContents(self, column: int) -> None:
+    #     content = self.sizeHintForColumn(column) + self.padding * 2
+    #     header = self._table_header.sectionSizeHint(column)
+    #     self._table_header.resizeSection(column, 300)
+    #
+    #     print("RESIZED COLUMN TO CONTENTS:", column)
+        # super().resizeColumnToContents(column)
 
     @pyqtSlot()
     def output_to_action_triggered(self) -> None:
@@ -402,6 +418,9 @@ class TrackTableView(QTableView):
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks
+        self._star_delegate.commit_and_close_editors()
+        self._star_delegate.commit_and_close_editors()
+        self.clearSelection()
         self._table_model.set_tracks(tracks)
         self.new_tracks_set.emit()
 
