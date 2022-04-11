@@ -343,35 +343,36 @@ class TrackTableView(QTableView):
     def selectionChanged(self, selected, deselected) -> None:
         # print("SELECTED INDEXES:", set([index.row() for index in self.selectedIndexes()]))
         # print("Deselected:", set([index.row() for index in deselected.indexes()]))
-
+        # print("SELECTION CHANGED")
         for index in deselected.indexes():
             if index.column() == self.rating_column:
                 typing.cast(StarDelegate, self.itemDelegateForColumn(self.rating_column)).commit_and_close_editor(index)
                 # self.repaint()
-                self.edit(index, QAbstractItemView.EditTrigger.CurrentChanged)
+                # self.edit(index, QAbstractItemView.EditTrigger.CurrentChanged)
         for index in selected.indexes():
             if index.column() == self.rating_column:
+                print("OPENED EDITOR", index.row())
                 self.openPersistentEditor(index)
 
-        # print("Selected:", set([index.row() for index in selected.indexes()]))
+        print("Selected:", set([index.row() for index in selected.indexes()]))
 
         super().selectionChanged(selected, deselected)
 
-    def mouseMoveEvent(self, e: QtGui.QMouseEvent) -> None:
-        if self.hasFocus():
-            index = self.indexAt(e.pos())
-            if index != self.prev_index:
-                if index.column() == self.rating_column and index in self.selectedIndexes():
-                    self.openPersistentEditor(index)
-                self.prev_index = index
-        super().mouseMoveEvent(e)
+    # def mouseMoveEvent(self, e: QtGui.QMouseEvent) -> None:
+    #     if self.hasFocus():
+    #         index = self.indexAt(e.pos())
+    #         if index != self.prev_index:
+    #             if index.column() == self.rating_column and index in self.selectedIndexes():
+    #                 self.openPersistentEditor(index)
+    #             self.prev_index = index
+    #     super().mouseMoveEvent(e)
 
-    def currentChanged(self, current: QtCore.QModelIndex, previous: QtCore.QModelIndex) -> None:
-        if current.column() == self.rating_column and current not in self.selectedIndexes():
-            self.openPersistentEditor(current)
-            self.edit(current, QAbstractItemView.EditTrigger.CurrentChanged)
-
-        super().currentChanged(current, previous)
+    # def currentChanged(self, current: QtCore.QModelIndex, previous: QtCore.QModelIndex) -> None:
+    #     if current.column() == self.rating_column and current not in self.selectedIndexes():
+    #         self.openPersistentEditor(current)
+    #         self.edit(current, QAbstractItemView.EditTrigger.CurrentChanged)
+    #
+    #     super().currentChanged(current, previous)
 
     def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
         super().mousePressEvent(e)
@@ -380,10 +381,10 @@ class TrackTableView(QTableView):
             self.openPersistentEditor(index)
         self.prev_index = index
 
-    def edit(self, index: QModelIndex, trigger=QAbstractItemView.EditTrigger.NoEditTriggers, event: QEvent = QEvent(0)):
-        if trigger == QAbstractItemView.EditTrigger.NoEditTriggers:
-            return False
-        return super().edit(index, trigger, event)
+    # def edit(self, index: QModelIndex, trigger=QAbstractItemView.EditTrigger.NoEditTriggers, event: QEvent = QEvent(0)):
+    #     if trigger == QAbstractItemView.EditTrigger.NoEditTriggers:
+    #         return False
+    #     return super().edit(index, trigger, event)
 
     # def resizeColumnToContents(self, column: int) -> None:
     #     content = self.sizeHintForColumn(column) + self.padding * 2
@@ -444,12 +445,13 @@ class TrackTableView(QTableView):
         self._table_model.set_unpaused()
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+        # It's important to clear selection for better visuals, but to do it before opening new editor
+        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
+            self.clearSelection()
         for index in self.selectedIndexes():
             if index.column() == self.rating_column:
                 self.openPersistentEditor(index)
 
-        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
-            self.clearSelection()
         return super().focusInEvent(event)
 
     def focusOutEvent(self, e: QtGui.QFocusEvent) -> None:

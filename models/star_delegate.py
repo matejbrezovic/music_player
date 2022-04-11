@@ -57,7 +57,7 @@ class StarDelegate(QStyledItemDelegate):
             return super().sizeHint(option, index)
 
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> StarEditor:
-        # print("Created editor:", index.row(), index.column())
+        print("Created editor:", index.row(), index.column())
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
             editor = StarEditor(parent, option.palette)
@@ -113,7 +113,7 @@ class StarDelegate(QStyledItemDelegate):
             return
 
         editor = self.active_editors[index_pos(index)]
-        # print(f"Commit and close editor: {index.row(), index.column(), editor}")
+        print(f"Commit and close editor: {index.row(), index.column(), editor}")
         self.commitData.emit(editor)
         self.closeEditor.emit(editor)
         editor.deleteLater()

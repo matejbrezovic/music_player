@@ -25,13 +25,13 @@ class QueueInfoPanel(QFrame):
         # self.setStyleSheet("background-color: red")
 
         self.left_label = ClickableLabel(self)
-        self.left_label.clicked.connect(self.left_label_clicked)
+        self.left_label.clicked.connect(self._left_label_clicked)
         self.left_label.setFixedWidth(220)
         self.left_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.is_left_label_in_detail_mode = True
 
         self.right_label = ClickableLabel(self)
-        # self.right_label.clicked.connect(self.right_label_clicked)
+        # self.right_label.clicked.connect(self._right_label_clicked)
         self.right_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.right_label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.is_right_label_in_countdown_mode = False  # TODO deprecated for now
@@ -46,7 +46,10 @@ class QueueInfoPanel(QFrame):
         
         """)
 
-    def left_label_clicked(self):
+    def queue_next(self, tracks: List[Track]) -> None:
+        ...
+
+    def _left_label_clicked(self):
         if not self.left_label.text():
             return
 
@@ -57,7 +60,7 @@ class QueueInfoPanel(QFrame):
             length_text = self.get_length_text(self.queue_length)
         self.left_label.setText(self.left_label.text().rsplit(",", 1)[0] + f", {length_text}" + "/")
 
-    def right_label_clicked(self):
+    def _right_label_clicked(self):
         if not self.right_label.text():
             return
         if not self.is_right_label_in_countdown_mode:
