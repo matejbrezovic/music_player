@@ -2,19 +2,19 @@ import time
 from typing import List
 
 from PyQt6 import QtGui
-from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QEvent, QSize
-from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QPaintEvent, QMouseEvent
-from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton,
-                             QFrame, QToolTip, QSpacerItem, QStyleOptionSlider, QStyle, QSlider)
+from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize
+from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton, QFrame, QSpacerItem, QWidget
 
 from constants import *
 from data_models.track import Track
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
+from models.seek_slider import SeekSlider
 from models.star_widget import StarWidget
+from models.volume_slider import VolumeSlider
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
-                   ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton,
-                   format_seconds, MarqueeLabel)
+                   get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, MarqueeLabel)
 
 
 class AudioController(QFrame):
@@ -26,7 +26,7 @@ class AudioController(QFrame):
 
     default_stylesheet = "QFrame#audio_controller {background-color: rgba(0, 0, 0, 0.2)}"
 
-    def __init__(self, parent=None):
+    def __init__(self, parent: QWidget = None):
         super().__init__(parent)
         self.setObjectName("audio_controller")
         self.setStyleSheet(self.default_stylesheet)
@@ -126,6 +126,8 @@ class AudioController(QFrame):
         self.name_time_label_container_layout.addWidget(self.seek_slider_time_label)
         self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
                                                                  QSizePolicy.Policy.Expanding))
+        # self.name_time_label_container.setStyleSheet("background-color: blue;")
+        self.name_time_label_container.setFixedHeight(self.audio_file_name_label.sizeHint().height())
 
         self.audio_order_button_modes = ("O", "S", "R")  # order, shuffle, repeat single
         self.audio_order_button_mode_index = 0
@@ -396,172 +398,3 @@ class AudioController(QFrame):
     @pyqtSlot(str)
     def set_audio_output(self, audio_output: str) -> None:
         self.player.set_audio_output(audio_output)
-
-
-class VolumeSlider(ImprovedSlider):
-    light_stylesheet = f"""
-    QSlider::handle {{
-        height: 4px;
-        background: {LIGHT_AUDIO_CONTROLLER_HOVER_COLOR};
-    }}
-
-    QSlider::add-page {{
-        background: {LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_BACKGROUND};
-    }}
-
-    QSlider::sub-page {{
-        background: {LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_PASSED_BACKGROUND};
-    }}
-    """
-
-    dark_stylesheet = f"""
-    QSlider::handle {{
-        height: 4px;
-        background: {DARK_AUDIO_CONTROLLER_HOVER_COLOR};
-    }}
-
-    QSlider::add-page {{
-        background: {DARK_AUDIO_CONTROLLER_SEEK_SLIDER_BACKGROUND};
-    }}
-
-    QSlider::sub-page {{
-        background: {DARK_AUDIO_CONTROLLER_SEEK_SLIDER_PASSED_BACKGROUND};
-    }}
-    """
-
-    def __init__(self, *args):
-        super().__init__(*args)
-
-        self.value_changed.connect(self.slider_moved)
-
-    def slider_moved(self, value: int) -> None:
-        self.setToolTip(f"{value}%")
-
-    def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
-        if dark_mode_enabled:
-            self.setStyleSheet(self.dark_stylesheet)
-        else:
-            self.setStyleSheet(self.light_stylesheet)
-
-
-class SeekSlider(ImprovedSlider):  # TODO add transparent background
-    light_stylesheet = f"""
-    QSplitter::groove {{
-        height: 2px;
-    
-    }}
-    
-    QSlider::handle {{
-        height: 2px;
-        background: {LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_HANDLE_BACKGROUND.name()};
-    }}
-    
-    QSlider::add-page {{
-        background: {LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_BACKGROUND.name()};
-    }}
-    
-    QSlider::sub-page {{
-        background: {LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_PASSED_BACKGROUND.name()};
-    }}
-    """
-
-    dark_stylesheet = f"""
-    QSplitter::groove {{
-        height: 2px;
-        width: 2px;
-    
-    }}
-     
-    QSlider::handle {{
-        height: 2px;
-        width: 2px;
-        background: {DARK_AUDIO_CONTROLLER_SEEK_SLIDER_HANDLE_BACKGROUND.name()};
-    }}
-    
-    QSlider::add-page {{
-        background: {DARK_AUDIO_CONTROLLER_SEEK_SLIDER_BACKGROUND.name()};
-    }}
-    
-    QSlider::sub-page {{
-        background: {DARK_AUDIO_CONTROLLER_SEEK_SLIDER_PASSED_BACKGROUND.name()};
-    }}
-    """
-
-    def __init__(self, audio_controller: AudioController, *args):
-        super().__init__(*args)
-        self.audio_controller = audio_controller  # TODO remove self.parent
-        self.backup_volume = self.audio_controller.player.audio_output.volume()
-        self.backup_action = -1
-        self.setFixedHeight(3)
-        # self.setContentsMargins(0, 0, 0, 10)
-        self.setStyleSheet(self.dark_stylesheet)
-        self.length_in_seconds = format_player_position_to_seconds(self.audio_controller.player.duration())
-        self.formatted_length_in_seconds = format_seconds(self.length_in_seconds)
-
-    def paintEvent(self, ev: QPaintEvent) -> None:
-        # print("Paint called")
-
-        new_rect = ev.rect()
-        new_rect.setHeight(2)
-
-        paint_event = QPaintEvent(new_rect)
-        # print(paint_event.rect().height())
-
-        super().paintEvent(paint_event)
-
-    def mousePressEvent(self, event: QMouseEvent) -> None:
-        if not self.length_in_seconds:
-            return
-        super().mousePressEvent(event)
-        # print("press")
-        self.backup_action = self.audio_controller.user_action
-        self.audio_controller.player.setPosition(self.pixel_pos_to_range_value(event.pos()))
-        # self.backup_volume = self.audio_controller.volume_slider.value() / 100
-        # print(self.backup_volume)
-        self.audio_controller.pause(fade=False)
-        self.audio_controller.player.current_volume = self.audio_controller.volume_slider.value() / 100
-
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        if not self.length_in_seconds:
-            return
-        super().mouseMoveEvent(event)
-
-    def event(self, event):
-        if event.type() == QEvent.Type.HoverMove:
-            if not self.length_in_seconds:
-                return True
-            # event = typing.cast(event, QHoverEvent)
-            seconds = int((event.oldPos().x() / self.width()) * self.length_in_seconds)
-            seconds = max(0, min(seconds, self.length_in_seconds))
-            formatted_seconds = format_seconds(seconds)
-            tool_tip_str = f"{formatted_seconds}/{self.formatted_length_in_seconds}"
-            QToolTip.showText(self.mapToGlobal(event.globalPosition().toPoint()), tool_tip_str, self)
-
-            return True
-        return super().event(event)
-
-    def mouseReleaseEvent(self, ev: QtGui.QMouseEvent) -> None:
-        if not self.length_in_seconds:
-            return
-        # print("release")
-        # handles unmuting audio and updating player
-
-        self.audio_controller.set_player_position(self.sliderPosition())
-
-        if self.backup_action == 1:
-            # self.audio_controller.player.audio_output.current_volume = self.backup_volume
-            self.audio_controller.unpause(fade=False)
-
-        # print(self.backup_volume)
-
-    def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
-        if dark_mode_enabled:
-            self.setStyleSheet(self.dark_stylesheet)
-        else:
-            self.setStyleSheet(self.light_stylesheet)
-        # print(self.styleSheet())
-
-    def set_length_in_seconds(self, length_in_seconds: int) -> None:
-        self.length_in_seconds = length_in_seconds
-        self.formatted_length_in_seconds = format_seconds(length_in_seconds)
-
