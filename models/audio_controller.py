@@ -3,14 +3,15 @@ from typing import List
 
 from PyQt6 import QtGui
 from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QEvent, QSize
-from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon
+from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QPaintEvent, QMouseEvent
 from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton,
-                             QFrame, QToolTip, QSpacerItem)
+                             QFrame, QToolTip, QSpacerItem, QStyleOptionSlider, QStyle, QSlider)
 
 from constants import *
 from data_models.track import Track
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
+from models.star_widget import StarWidget
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
                    ImprovedSlider, get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton,
                    format_seconds, MarqueeLabel)
@@ -97,21 +98,30 @@ class AudioController(QFrame):
         self.seek_slider.setTracking(False)
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
+        self.star_widget = StarWidget()
+        self.star_widget.setMaximumWidth(100)
+        # self.star_widget.setStyleSheet("background-color: green;")
+
         self.seek_slider_time_label = QLabel("0:00/0:00")
         self.seek_slider_time_label.setMaximumWidth(100)
-        self.offset_label = QLabel(self.seek_slider_time_label.text())
-        self.offset_label.setMaximumWidth(100)
-        self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
+        # self.offset_label = QLabel(self.seek_slider_time_label.text())
+        # self.offset_label.setMaximumWidth(100)
+        # self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
         self.audio_file_name_label = MarqueeLabel(self)
+        # self.audio_file_name_label.setStyleSheet("background-color: blue;")
         self.audio_file_name_label.setText("---")
+        # self.audio_file_name_label.setStyleSheet("background-color: blue;")
         self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # self.offset_label.setStyleSheet("background-color: red;")
 
         self.name_time_label_container = QFrame(self)
         self.name_time_label_container.setContentsMargins(0, 0, 0, 0)
         self.name_time_label_container_layout = QHBoxLayout(self.name_time_label_container)
+        self.name_time_label_container_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         self.name_time_label_container_layout.setContentsMargins(0, 0, 0, 0)
-        self.name_time_label_container_layout.addWidget(self.offset_label)
+        self.name_time_label_container_layout.addWidget(self.star_widget)
         self.name_time_label_container_layout.addWidget(self.audio_file_name_label)
         self.name_time_label_container_layout.addWidget(self.seek_slider_time_label)
         self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
@@ -127,6 +137,7 @@ class AudioController(QFrame):
         self.left_part = QFrame(self)
         # self.left_part.setStyleSheet("background: green;")
         self.middle_part = QFrame(self)
+        # self.middle_part.setStyleSheet("background-color: green;")
         self.right_part = QFrame(self)
 
         self.left_layout = QHBoxLayout(self.left_part)
@@ -210,6 +221,10 @@ class AudioController(QFrame):
         self.prev_button.is_in_dark_mode = dark_mode_enabled
         self.next_button.is_in_dark_mode = dark_mode_enabled
 
+        palette = self.palette()
+        palette.setColor(QPalette.ColorGroup.Normal, QPalette.ColorRole.HighlightedText, color)
+        self.star_widget.setPalette(palette)
+
     def update_background_pixmap(self, track: Track) -> None:
         start = time.time()
         pixmap = get_artwork_pixmap(track.file_path)
@@ -290,20 +305,21 @@ class AudioController(QFrame):
         self.seek_slider_time_label.setText(get_formatted_time(self.player.duration()))
         self.seek_slider.set_length_in_seconds(format_player_position_to_seconds(self.player.duration()))
 
-    def player_position_changed(self, position: int, sender_type=False) -> None:  # TODO why sender_type?
-        if not sender_type:
-            if self.player.duration():
-                if position > self.player.duration() - 120:
-                    self.next_button_clicked()
-                else:
-                    self.seek_slider.setSliderPosition(position)
-                    old_text = self.seek_slider_time_label.text()
-                    self.seek_slider_time_label.setText(get_formatted_time(self.player.position()) + "/" +
-                                                        get_formatted_time(self.player.duration()))
-                    if old_text != self.seek_slider_time_label.text():
-                        # self.remaining_queue_time -= format_player_position_to_seconds(self.player.position())
-                        self.remaining_queue_time_changed.emit(self.remaining_queue_time -
-                                                               format_player_position_to_seconds(self.player.position()))
+    def player_position_changed(self, position: int) -> None:
+        if not self.player.duration():
+            return
+
+        if position > self.player.duration() - 120:
+            self.next_button_clicked()
+        else:
+            self.seek_slider.setSliderPosition(position)
+            old_text = self.seek_slider_time_label.text()
+            self.seek_slider_time_label.setText(get_formatted_time(self.player.position()) + "/" +
+                                                get_formatted_time(self.player.duration()))
+            if old_text != self.seek_slider_time_label.text():
+                # self.remaining_queue_time -= format_player_position_to_seconds(self.player.position())
+                self.remaining_queue_time_changed.emit(self.remaining_queue_time -
+                                                       format_player_position_to_seconds(self.player.position()))
 
     def get_remaining_time_in_secs(self) -> int:
         return self._rounded_remaining_queue_time - format_player_position_to_seconds(self.player.position())
@@ -476,27 +492,24 @@ class SeekSlider(ImprovedSlider):  # TODO add transparent background
         self.audio_controller = audio_controller  # TODO remove self.parent
         self.backup_volume = self.audio_controller.player.audio_output.volume()
         self.backup_action = -1
-        self.setFixedHeight(6)
+        self.setFixedHeight(3)
         # self.setContentsMargins(0, 0, 0, 10)
         self.setStyleSheet(self.dark_stylesheet)
         self.length_in_seconds = format_player_position_to_seconds(self.audio_controller.player.duration())
         self.formatted_length_in_seconds = format_seconds(self.length_in_seconds)
-    #
-    # def paintEvent(self, ev: QtGui.QPaintEvent) -> None:
-    #     painter = QPainter(self)
-    #     option = QStyleOptionSlider()
-    #     self.initStyleOption(option)
-    #     option.rect.setTop(option.rect.top() + 4)
-    #
-    #     option.subControls = QStyle.SubControl.SC_SliderGroove | QStyle.SubControl.SC_SliderHandle
-    #     if self.tickPosition() != QSlider.TickPosition.NoTicks:
-    #         option.subControls |= QStyle.SubControl.SC_SliderTickmarks
-    #
-    #     super().paintEvent(ev)
-    #
-    #     self.style().drawComplexControl(QStyle.ComplexControl.CC_Slider, option, painter, self)
 
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+    def paintEvent(self, ev: QPaintEvent) -> None:
+        # print("Paint called")
+
+        new_rect = ev.rect()
+        new_rect.setHeight(2)
+
+        paint_event = QPaintEvent(new_rect)
+        # print(paint_event.rect().height())
+
+        super().paintEvent(paint_event)
+
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         if not self.length_in_seconds:
             return
         super().mousePressEvent(event)

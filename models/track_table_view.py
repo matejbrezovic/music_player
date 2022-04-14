@@ -4,12 +4,13 @@ import sys
 import typing
 from typing import List, Optional, Any
 
-from PyQt6 import QtCore, QtWidgets, QtGui
+from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize, QEvent
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
-                             QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame)
+                             QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame, QMainWindow,
+                             QAbstractScrollArea)
 
 from constants import *
 from data_models.track import Track
@@ -282,7 +283,7 @@ class TrackTableView(QTableView):
         self.setItemDelegateForColumn(7, self._star_delegate)
         self.setHorizontalHeader(self._table_header)
         self.setTextElideMode(Qt.TextElideMode.ElideRight)
-        self.setMouseTracking(True)
+        # self.setMouseTracking(True)
 
         self.verticalHeader().setDefaultSectionSize(22)
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
@@ -423,7 +424,7 @@ class TrackTableView(QTableView):
         super().focusOutEvent(e)
 
 
-class TestMainWindow(QtWidgets.QMainWindow):
+class TestMainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
 
@@ -452,7 +453,7 @@ class TestMainWindow(QtWidgets.QMainWindow):
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.table_view.setHorizontalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
         self.table_view.setVerticalScrollMode(QAbstractItemView.ScrollMode.ScrollPerPixel)
-        self.table_view.setSizeAdjustPolicy(QtWidgets.QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
+        self.table_view.setSizeAdjustPolicy(QAbstractScrollArea.SizeAdjustPolicy.AdjustToContents)
         self.table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.table_view.setIconSize(QSize(22, 22))
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)

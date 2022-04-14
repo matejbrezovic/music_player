@@ -54,7 +54,6 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         cursor = conn.cursor()
 
         if group_key.lower() == "folder":
-            # print("ddd")
             conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
             track_counts = cursor.execute(f"SELECT get_folder_path(file_path), COUNT (*) "
                                           f"FROM tracks "
@@ -109,49 +108,11 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
             tracks.append(track)
         return tracks
 
-        #     # if QtWidgets.QApplication.instance() is not None:
-        #     #     for track in tracks:
-        #     #         track.artwork_pixmap = get_artwork_pixmap(track.file_path)
-        # # print(key, value)
-        # # print("Tracks loaded in:", time.time() - start)
-        # # print((Track(
-        # #         track_id=row["track_id"],
-        # #         file_path=row["file_path"],
-        # #         title=row["title"],
-        # #         album=row["album"],
-        # #         artist=row["artist"],
-        # #         composer=row["composer"],
-        # #         genre=row["genre"],
-        # #         year=row["year"],
-        # #         length=row["length"],
-        # #         ) for row in rows))
-        #
-        # gen = (Track(
-        #         track_id=row["track_id"],
-        #         file_path=row["file_path"],
-        #         title=row["title"],
-        #         album=row["album"],
-        #         artist=row["artist"],
-        #         composer=row["composer"],
-        #         genre=row["genre"],
-        #         year=row["year"],
-        #         length=row["length"],
-        #         ) for row in self.my_gen(cursor))
-        # print("Data fetched from database in:", time.time() - start)
-        # return gen
-
-    # def my_gen(self, cursor):
-    #     if cursor.fetchone():
-    #         yield cursor.fetchone()
-
     def get_tracks(self) -> List[Track]:
         conn = self.get_connection()
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
         cursor.execute("SELECT * FROM tracks")
-
-        # for row in cursor.fetchall():
-        #     print(row)
 
         tracks: List[Track] = []
         for row in cursor.fetchall():
@@ -173,30 +134,6 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 track.artwork_pixmap = get_artwork_pixmap(track.file_path)
 
         return tracks
-
-    # def get_track_by_title(self, title: str) -> Track:
-    #     conn = self.get_connection()
-    #     conn.row_factory = sqlite3.Row
-    #     cursor = conn.cursor()
-    #
-    #     selected_row = cursor.execute(f"SELECT * FROM tracks WHERE name LIKE '%{title}%'").fetchone()
-    #
-    #     track = Track(
-    #         track_id=selected_row["track_id"],
-    #         file_path=selected_row["file_path"],
-    #         title=selected_row["title"],
-    #         album=selected_row["album"],
-    #         artist=selected_row["artist"],
-    #         composer=selected_row["composer"],
-    #         genre=selected_row["genre"],
-    #         year=selected_row["year"],
-    #         length=selected_row["length"]
-    #     )
-    #
-    #     if QtWidgets.QApplication.instance() is not None:
-    #         track.artwork_pixmap = get_artwork_pixmap(track.file_path)
-    #
-    #     return track
 
     def get_track_by_id(self, track_id: int) -> Track:
         conn = self.get_connection()
@@ -226,6 +163,13 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute("DELETE FROM tracks WHERE track_id = ?", (track_id,))
+        conn.commit()
+        conn.close()
+
+    def update_track(self, track: Track, column: str, value: Union[int, float, str]) -> None:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(f"UPDATE tracks SET {column} = ? WHERE track_id = ?", (value, track.track_id))
         conn.commit()
         conn.close()
 
@@ -259,3 +203,4 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 continue
 
         return tracks
+

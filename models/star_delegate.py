@@ -57,7 +57,7 @@ class StarDelegate(QStyledItemDelegate):
             return super().sizeHint(option, index)
 
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> StarEditor:
-        print("Created editor:", index.row(), index.column())
+        # print("Created editor:", index.row(), index.column())
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
             editor = StarEditor(parent, option.palette)
@@ -83,37 +83,12 @@ class StarDelegate(QStyledItemDelegate):
         else:
             super().setModelData(editor, model, index)
 
-    def commit_and_close_editors(self) -> None:  # TODO deprecate
-        """Closes all editors except the last one (if there's more than one editor), otherwise it closes all of them
-        (no new editor was opened)"""
-
-        # print("Commit and close editors:", self.active_editors)
-
-        editors_to_close = list(self.active_editors.values())[:-1] \
-            if len(self.active_editors) > 1 else list(self.active_editors.values())
-        print(editors_to_close)
-        for editor in editors_to_close:
-            self.commitData.emit(editor)
-            self.closeEditor.emit(editor)
-            editor.deleteLater()
-        print(list(self.active_editors.items()))
-
-        try:
-            if self.active_editors:
-                for key, val in list(self.active_editors.items())[-1]:
-                    if val:
-                        self.active_editors = {key: val}
-                    else:
-                        self.active_editors = {}
-        except TypeError:
-            pass
-
     def commit_and_close_editor(self, index: QModelIndex) -> None:
         if index_pos(index) not in self.active_editors:
             return
 
         editor = self.active_editors[index_pos(index)]
-        print(f"Commit and close editor: {index.row(), index.column(), editor}")
+        # print(f"Commit and close editor: {index.row(), index.column(), editor}")
         self.commitData.emit(editor)
         self.closeEditor.emit(editor)
         editor.deleteLater()

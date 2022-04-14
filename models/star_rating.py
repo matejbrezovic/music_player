@@ -80,7 +80,7 @@ class StarRating:
     def size_hint(self):
         return self.star_polygon_size * QSize(int(self._max_star_count), 1) * 2
 
-    def paint(self, painter, rect, palette, edit_mode, color = None):
+    def paint(self, painter, rect, palette, edit_mode, color=None):
         painter.save()
 
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
@@ -97,9 +97,9 @@ class StarRating:
         painter.translate(rect.x() + self.star_polygon_size, rect.y() + y_offset)
 
         for i in range(int(self._star_count * 2)):
-            if not i % 2:
+            if not i % 2 and i == int(self._star_count * 2) - 1:
                 painter.drawPolygon(self.half_star_polygon, Qt.FillRule.WindingFill)
-            else:
+            elif i % 2:
                 painter.drawPolygon(self.star_polygon, Qt.FillRule.WindingFill)
                 painter.translate(self.star_polygon_size * 2, 0.0)
 

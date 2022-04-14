@@ -355,7 +355,7 @@ class MarqueeLabel(QLabel):
         self.static_text.setTextFormat(Qt.TextFormat.PlainText)
         self._text = ''
         self.timer = QTimer()
-        self.timer.setInterval(16)
+        self.timer.setInterval(30)
         self.timer.setTimerType(Qt.TimerType.PreciseTimer)
         self.timer.timeout.connect(self.timer_timeout)
         self.wait_timer = QTimer()
