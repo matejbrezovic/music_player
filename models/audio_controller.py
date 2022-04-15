@@ -216,6 +216,7 @@ class AudioController(QFrame):
         name = color.name()
         self.setStyleSheet(self.default_stylesheet + f"QWidget {{color: {name};}}")
         self.seek_slider.set_dark_mode_enabled(dark_mode_enabled)
+        self.volume_slider.set_dark_mode_enabled(dark_mode_enabled)
 
         self.play_icon = change_icon_color(self.play_icon, color)
         self.pause_icon = change_icon_color(self.pause_icon, color)

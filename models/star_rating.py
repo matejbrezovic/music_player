@@ -11,7 +11,7 @@ class StarPolygon(QPolygonF):
         for i in range(5):
             x = math.cos(0.8 * i * math.pi - math.pi / 2)
             y = math.sin(0.8 * i * math.pi - math.pi / 2)
-            self << QPointF(size * x, size *  y)
+            self << QPointF(size * x, size * y)
 
 
 class HalfStarPolygon(QPolygonF):
@@ -23,33 +23,17 @@ class HalfStarPolygon(QPolygonF):
         star_angle_start = - math.pi / 2
         half_star_angle_start = star_angle_start - star_angle_step / 2
 
-        x = math.cos(star_angle_start)
-        y = math.sin(star_angle_start)
-        self << QPointF(size * x, size * y)
+        for _ in range(3):
+            x = math.cos(star_angle_start)
+            y = math.sin(star_angle_start)
+            self << QPointF(size * x, size * y)
 
-        x = math.cos(half_star_angle_start)
-        y = math.sin(half_star_angle_start)
-        self << QPointF(half_star_polygon_size * x, half_star_polygon_size * y)
+            x = math.cos(half_star_angle_start)
+            y = math.sin(half_star_angle_start)
+            self << QPointF(half_star_polygon_size * x, half_star_polygon_size * y)
 
-        star_angle_start -= star_angle_step
-        x = math.cos(star_angle_start)
-        y = math.sin(star_angle_start)
-        self << QPointF(size * x, size * y)
-
-        half_star_angle_start -= star_angle_step
-        x = math.cos(half_star_angle_start)
-        y = math.sin(half_star_angle_start)
-        self << QPointF(half_star_polygon_size * x, half_star_polygon_size * y)
-
-        star_angle_start -= star_angle_step
-        x = math.cos(star_angle_start)
-        y = math.sin(star_angle_start)
-        self << QPointF(size * x, size * y)
-
-        half_star_angle_start -= star_angle_step
-        x = math.cos(half_star_angle_start)
-        y = math.sin(half_star_angle_start)
-        self << QPointF(half_star_polygon_size * x, half_star_polygon_size * y)
+            star_angle_start -= star_angle_step
+            half_star_angle_start -= star_angle_step
 
 
 class StarRating:

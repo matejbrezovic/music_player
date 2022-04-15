@@ -8,7 +8,7 @@ from models.header_menu_widget import HeaderMenuWidget
 from models.information_panel import InformationPanel
 from models.main_panel import MainPanel
 from models.navigation_panel import NavigationPanel
-from models.queue_info_panel import QueueInfoPanel
+from models.queue_info_panel import StatusBar
 from models.scan_folders_dialog import *
 from repositories.cached_tracks_repository import CachedTracksRepository
 
@@ -72,7 +72,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.main_panel = MainPanel(self)
         self.information_panel = InformationPanel(self)
         self.audio_controller = AudioController(self)
-        self.queue_info_panel = QueueInfoPanel(self.audio_controller, self)
+        self.status_bar = StatusBar(self.audio_controller, self)
         self.header_menu = HeaderMenuWidget(self)
         self.horizontal_splitter = FixedHorizontalSplitter(self)
         self.horizontal_splitter.sizes_changed.connect(self.header_menu.set_sizes)
@@ -93,7 +93,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.central_widget_layout.addWidget(self.header_menu)
         self.central_widget_layout.addWidget(self.horizontal_splitter)
-        self.central_widget_layout.addWidget(self.queue_info_panel)
+        self.central_widget_layout.addWidget(self.status_bar)
         self.central_widget_layout.addWidget(self.audio_controller)
 
     def _setup_signals(self) -> None:
@@ -116,7 +116,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.header_menu.information_panel_view_key_changed.connect(self.information_panel.view_key_changed)
 
         self.main_panel.track_double_clicked.connect(
-            lambda track, index: (self.queue_info_panel.update_info(self.main_panel.displayed_tracks),
+            lambda track, index: (self.status_bar.update_info(self.main_panel.displayed_tracks),
                                   self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
                                   self.audio_controller.set_playlist_index(index),
                                   self.audio_controller.play(),
@@ -131,7 +131,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
         self.navigation_panel.group_double_clicked.connect(
             lambda tracks: (self.main_panel.display_tracks(tracks),
-                            self.queue_info_panel.update_info(tracks),
+                            self.status_bar.update_info(tracks),
                             self.audio_controller.set_playlist(tracks),
                             self.audio_controller.play()))
 
@@ -151,6 +151,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
                                                self.information_panel.unpause_playing_track()))
         self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
 
-        self.audio_controller.remaining_queue_time_changed.connect(self.queue_info_panel.update_remaining_queue_time)
+        self.audio_controller.remaining_queue_time_changed.connect(self.status_bar.update_remaining_queue_time)
         # self.queue_info_panel.right_label_clicked.connect(...)
 

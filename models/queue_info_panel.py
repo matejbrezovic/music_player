@@ -8,7 +8,7 @@ from models.audio_controller import AudioController
 from utils import ClickableLabel, format_seconds
 
 
-class QueueInfoPanel(QFrame):
+class StatusBar(QFrame):
     # right_label_clicked = pyqtSignal()
 
     def __init__(self, audio_controller: AudioController, parent=None):
@@ -41,7 +41,7 @@ class QueueInfoPanel(QFrame):
 
         self.setStyleSheet("""
 
-        QueueInfoPanel {border-top: 1px solid rgba(0, 0, 0, 0.2);}
+        StatusBar {border-top: 1px solid rgba(0, 0, 0, 0.2);}
         QLabel {color: grey;}
         
         """)

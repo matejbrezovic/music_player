@@ -5,7 +5,7 @@ import typing
 from typing import List, Optional, Any
 
 from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize, QEvent
+from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize
 from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
@@ -162,7 +162,7 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
                 if index.column():
                     alignment = Qt.AlignmentFlag.AlignVCenter
                     if index.column() == len(MAIN_PANEL_COLUMN_NAMES) - 1:
-                        alignment = Qt.AlignmentFlag.AlignRight
+                        alignment |= Qt.AlignmentFlag.AlignRight
                 else:
                     alignment = Qt.AlignmentFlag.AlignCenter
 

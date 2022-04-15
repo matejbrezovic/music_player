@@ -1,7 +1,6 @@
-import typing
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt, QRectF, QEvent, QTimer
+from PyQt6.QtCore import Qt, QRectF, QEvent
 from PyQt6.QtGui import QPainter, QMouseEvent
 from PyQt6.QtWidgets import QProxyStyle, QToolTip, QStyleOptionComplex
 
