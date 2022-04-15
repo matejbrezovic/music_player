@@ -19,10 +19,6 @@ class StarWidget(QWidget):
         self.editor = StarEditor(self, self.palette())
         self.editor.set_selected_star_count(star_count)
 
-        # palette = self.palette()
-        # palette.setColor(QPalette.ColorGroup.Normal, QPalette.ColorRole.Highlight, Qt.GlobalColor.green)
-        # self.setPalette(palette)
-
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
         self.background_stars.paint(painter, self.editor.rect(), self.palette(), StarRating.ReadOnly,

@@ -1,6 +1,7 @@
+import typing
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt, QRectF, QEvent
+from PyQt6.QtCore import Qt, QRectF, QEvent, QTimer
 from PyQt6.QtGui import QPainter, QMouseEvent
 from PyQt6.QtWidgets import QProxyStyle, QToolTip, QStyleOptionComplex
 
@@ -43,7 +44,7 @@ class Style(QProxyStyle):
         super().drawComplexControl(control, opt, qp, widget)
 
 
-class SeekSlider(ImprovedSlider):  # TODO add transparent background
+class SeekSlider(ImprovedSlider):
     light_stylesheet = f"""
         QSlider::groove:horizontal {{
             border: none;
@@ -92,22 +93,18 @@ class SeekSlider(ImprovedSlider):  # TODO add transparent background
         self.backup_volume = self.audio_controller.player.audio_output.volume()
         self.backup_action = -1
         self.setFixedHeight(14)
-        # self.setContentsMargins(0, 0, 0, 10)
         self.setStyleSheet(self.dark_stylesheet)
         self.length_in_seconds = format_player_position_to_seconds(self.audio_controller.player.duration())
         self.formatted_length_in_seconds = format_seconds(self.length_in_seconds)
 
-        # palette = self.palette()
-        # palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.Base, LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_BACKGROUND)
-        # self.setPalette(palette)
-
-        # self.setStyle(Style())
-
-        # self.light_palette = self.palette()
-        # self.light_palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.Base, Qt.GlobalColor.white)
+        #     self.__can_update_tooltip = True
+        #     self._tooltip_timer = QTimer()
+        #     self._tooltip_timer.setTimerType(Qt.TimerType.PreciseTimer)
+        #     self._tooltip_timer.setSingleShot(True)
+        #     self._tooltip_timer.timeout.connect(self._tooltip_timer_timeout)
         #
-        # self.dark_palette = self.palette()
-        # self.dark_palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.Base, Qt.GlobalColor.black)
+        # def _tooltip_timer_timeout(self):
+        #     self.__can_update_tooltip = True
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if not self.length_in_seconds:
@@ -123,16 +120,20 @@ class SeekSlider(ImprovedSlider):  # TODO add transparent background
             return
         super().mouseMoveEvent(event)
 
-    def event(self, event):
+    def event(self, event: QEvent):  # TODO fix fast refreshing when hovering near widget edge
         if event.type() == QEvent.Type.HoverMove:
             if not self.length_in_seconds:
                 return True
+            # print(self.height(), self.y(), event.oldPos().y())
+
             seconds = int((event.oldPos().x() / self.width()) * self.length_in_seconds)
             seconds = max(0, min(seconds, self.length_in_seconds))
             formatted_seconds = format_seconds(seconds)
             tool_tip_str = f"{formatted_seconds}/{self.formatted_length_in_seconds}"
-            QToolTip.showText(self.mapToGlobal(event.globalPosition().toPoint()), tool_tip_str, self)
+            QToolTip.showText(self.mapToGlobal(event.oldPos()), tool_tip_str, self)
+            # self.__can_update_tooltip = False
 
+            # self._tooltip_timer.start(30)
             return True
         return super().event(event)
 
@@ -148,12 +149,9 @@ class SeekSlider(ImprovedSlider):  # TODO add transparent background
             self.audio_controller.unpause(fade=False)
 
     def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
-        # return
         if dark_mode_enabled:
-            # self.setPalette(self.dark_palette)
             self.setStyleSheet(self.dark_stylesheet)
         else:
-            # self.setPalette(self.light_palette)
             self.setStyleSheet(self.light_stylesheet)
 
     def set_length_in_seconds(self, length_in_seconds: int) -> None:

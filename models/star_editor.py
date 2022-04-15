@@ -34,11 +34,6 @@ class StarEditor(QWidget):
         painter = QPainter(self)
         painter.setPen(Qt.PenStyle.NoPen)
 
-        # painter.save()
-        # painter.setBrush(Qt.GlobalColor.red)
-        # painter.drawRect(event.rect())
-        # painter.restore()
-
         self._star_rating.paint(painter, self.rect(), self.palette(), StarRating.Editable,
                                 self.palette().highlightedText())
 

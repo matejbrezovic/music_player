@@ -1,19 +1,19 @@
 import random
+import sys
 
-from PyQt5 import QtCore, QtGui, QtWidgets
-from PyQt5.QtCore import Qt
+from PyQt6 import QtCore, QtGui, QtWidgets
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QColor
+from PyQt6.QtWidgets import QWidget, QSizePolicy, QApplication
 
-print("load all modules!")
 
-
-class Equalizer_Bars(QtWidgets.QWidget):
-
+class Equalizer_Bars(QWidget):
     def __init__(self, bars, steps, *args, **kwargs):
         super().__init__(*args, **kwargs)
         # this fit the size to equalizer bars area
         self.setSizePolicy(
-            QtWidgets.QSizePolicy.MinimumExpanding,
-            QtWidgets.QSizePolicy.MinimumExpanding
+            QSizePolicy.Policy.MinimumExpanding,
+            QSizePolicy.Policy.MinimumExpanding
         )
         # set the size of the window
         self.setMinimumHeight(480)
@@ -60,7 +60,7 @@ class Equalizer_Bars(QtWidgets.QWidget):
         # create a brush for drawing
         brush = QtGui.QBrush()
         brush.setColor(self.set_background_color)
-        brush.setStyle(Qt.SolidPattern)
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
         rect = QtCore.QRect(0, 0, painter.device().width(), painter.device().height())
         painter.fillRect(rect, brush)
 
@@ -86,9 +86,9 @@ class Equalizer_Bars(QtWidgets.QWidget):
             for n in range(n_steps_to_draw):
                 brush.setColor(QtGui.QColor(self.steps[n]))
                 rect = QtCore.QRect(
-                    self.set_padding + (step_x * i) + bar_width_space,
+                    int(self.set_padding + (step_x * i) + bar_width_space),
                     int(self.set_padding + d_height - ((1 + n) * step_y) + bar_height_space),
-                    bar_width,
+                    int(bar_width),
                     int(bar_height)
                 )
                 painter.fillRect(rect, brush)
@@ -131,7 +131,7 @@ class Equalizer_Bars(QtWidgets.QWidget):
 
     # will be used with QBrush
     def setColor(self, color):
-        self.steps = [color] * self._bar.n_steps
+        self.steps = [color] * self.n_steps
         self.update()
 
     def set_color_bars(self, colors):
@@ -148,7 +148,7 @@ class Equalizer_Bars(QtWidgets.QWidget):
         self.update()
 
     def set_background_color(self, color):
-        self.set_background_color = QtGui.QColor(color)
+        self.set_background_color = QColor(color)
         self.update()
 
 
@@ -175,7 +175,9 @@ class Window(QtWidgets.QMainWindow):
 
 
 # start the program
-app = QtWidgets.QApplication([])
-w = Window()
-w.show()
-app.exec_()
+if __name__ == '__main__':
+
+    app = QApplication(sys.argv)
+    w = Window()
+    w.show()
+    app.exec()

@@ -13,7 +13,7 @@ class AudioPlayer(QMediaPlayer):
     def __init__(self, parent=None):
         super().__init__(parent)
         # self.__audio_output = QAudioOutput()
-        self.audio_output = QAudioOutput()
+        self.audio_output = QAudioOutput(self)
 
         # print([d.description() for d in self.audio_outputs])
 

@@ -3,18 +3,23 @@ from typing import List
 
 from PyQt6 import QtGui
 from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize
-from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon
+from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton, QFrame, QSpacerItem, QWidget
 
+from audio_visualizer_tests.fft_analyzer import FFTAnalyser
 from constants import *
 from data_models.track import Track
+from graphic_equalizer_tests.equalizer_bar import SpectrumEqualizer, SpectrumEqualizerWidget
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
+from models.marquee_label import MarqueeLabel
 from models.seek_slider import SeekSlider
 from models.star_widget import StarWidget
 from models.volume_slider import VolumeSlider
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
-                   get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, MarqueeLabel)
+                   get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton)
+
+import numpy as np
 
 
 class AudioController(QFrame):
@@ -99,22 +104,37 @@ class AudioController(QFrame):
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
 
         self.star_widget = StarWidget()
-        self.star_widget.setMaximumWidth(100)
+        self.star_widget.setFixedWidth(90)
         # self.star_widget.setStyleSheet("background-color: green;")
 
-        self.seek_slider_time_label = QLabel("0:00/0:00")
-        self.seek_slider_time_label.setMaximumWidth(100)
-        # self.offset_label = QLabel(self.seek_slider_time_label.text())
-        # self.offset_label.setMaximumWidth(100)
-        # self.offset_label.setStyleSheet("QLabel {color: rgba(0, 0, 0, 0); background-color: rgba(0, 0, 0, 0);}")
-        self.audio_file_name_label = MarqueeLabel(self)
-        # self.audio_file_name_label.setStyleSheet("background-color: blue;")
-        self.audio_file_name_label.setText("---")
-        # self.audio_file_name_label.setStyleSheet("background-color: blue;")
-        self.seek_slider_time_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
-        self.audio_file_name_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        """ DEPRECATED
+        ####################################################################
+        
+        def set_amplitudes(amps):
+            amps = np.array(amps)
+            amps = amps.tolist()
+            print(amps)
 
-        # self.offset_label.setStyleSheet("background-color: red;")
+        self.fft_analyser = FFTAnalyser(self.player)
+        self.fft_analyser.calculated_visual.connect(set_amplitudes)
+        self.fft_analyser.start()
+
+        self.spectrum_equalizer_widget = SpectrumEqualizerWidget(5, 10)
+        self.spectrum_equalizer_widget.setFixedSize(40, 30)
+        self.paused.connect(self.spectrum_equalizer_widget.stop)
+        self.unpaused.connect(self.spectrum_equalizer_widget.start)
+        self.updated_playing_track.connect(self.spectrum_equalizer_widget.start)
+
+        ########################################################################
+        """
+
+        self.passed_time_label = QLabel("0:00/ 0:00")
+        self.passed_time_label.setFixedWidth(90)
+        self.track_title_label = MarqueeLabel(self)
+        self.track_title_label.setFont(QFont(self.track_title_label.font().family(), 9))
+        self.track_title_label.setText("---")
+        self.passed_time_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.track_title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.name_time_label_container = QFrame(self)
         self.name_time_label_container.setContentsMargins(0, 0, 0, 0)
@@ -122,12 +142,11 @@ class AudioController(QFrame):
         self.name_time_label_container_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
         self.name_time_label_container_layout.setContentsMargins(0, 0, 0, 0)
         self.name_time_label_container_layout.addWidget(self.star_widget)
-        self.name_time_label_container_layout.addWidget(self.audio_file_name_label)
-        self.name_time_label_container_layout.addWidget(self.seek_slider_time_label)
+        self.name_time_label_container_layout.addWidget(self.track_title_label)
+        self.name_time_label_container_layout.addWidget(self.passed_time_label)
         self.name_time_label_container.setSizePolicy(QSizePolicy(QSizePolicy.Policy.Preferred,
                                                                  QSizePolicy.Policy.Expanding))
-        # self.name_time_label_container.setStyleSheet("background-color: blue;")
-        self.name_time_label_container.setFixedHeight(self.audio_file_name_label.sizeHint().height())
+        self.name_time_label_container.setFixedHeight(self.track_title_label.sizeHint().height())
 
         self.audio_order_button_modes = ("O", "S", "R")  # order, shuffle, repeat single
         self.audio_order_button_mode_index = 0
@@ -137,9 +156,7 @@ class AudioController(QFrame):
 
         # Layout logic
         self.left_part = QFrame(self)
-        # self.left_part.setStyleSheet("background: green;")
         self.middle_part = QFrame(self)
-        # self.middle_part.setStyleSheet("background-color: green;")
         self.right_part = QFrame(self)
 
         self.left_layout = QHBoxLayout(self.left_part)
@@ -167,6 +184,7 @@ class AudioController(QFrame):
         self.right_layout.setContentsMargins(0, 0, 0, 0)
         self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.right_layout.addWidget(self.audio_order_button)
+        # self.right_layout.addWidget(self.spectrum_equalizer_widget)
 
         self.right_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         self.right_part.setFixedSize(self.left_layout.sizeHint())
@@ -259,12 +277,14 @@ class AudioController(QFrame):
         new_playlist = self.current_playlist.playlist + tracks
         self.set_playlist(new_playlist)
 
+    @pyqtSlot(int)
     def update_total_queue_time(self, time_in_secs: int) -> None:
         self.total_queue_time = time_in_secs
         self._rounded_remaining_queue_time = time_in_secs
         self.remaining_queue_time = time_in_secs
         self.remaining_queue_time_changed.emit(self.remaining_queue_time)
 
+    @pyqtSlot()
     def change_audio_order(self) -> None:
         self.current_playlist.change_mode()
         self.audio_order_button_mode_index = self.audio_order_button_mode_index + 1 if \
@@ -273,9 +293,11 @@ class AudioController(QFrame):
 
         self.update_total_queue_time(sum(track.length for track in self.current_playlist.playlist))
 
+    @pyqtSlot(int)
     def set_player_position(self, position: int) -> None:
         self.player.setPosition(position)
 
+    @pyqtSlot(list)
     def set_playlist(self, playlist: List[Track]) -> None:
         # print("New playlist:\n", "\n".join(str(t) for t in playlist))
         self.prev_button.setEnabled(True)
@@ -284,12 +306,14 @@ class AudioController(QFrame):
         self.updated_playlist.emit(playlist)
         self.update_total_queue_time(sum(track.length for track in playlist))
 
+    @pyqtSlot(int)
     def set_playlist_index(self, index: int) -> None:
         # print("New index:", index)
         self.current_playlist.set_playlist_index(index)
 
+    @pyqtSlot()
     def play(self) -> None:
-        self.seek_slider_time_label.setText("0:00/0:00")
+        self.passed_time_label.setText("0:00/ 0:00")
         self.updated_playing_track.emit(self.current_playlist.playing_track, self.current_playlist.playing_track_index)
         self.update_background_pixmap(self.current_playlist.playing_track)
         self.play_button.setIcon(self.pause_icon)
@@ -298,13 +322,14 @@ class AudioController(QFrame):
         # self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing.file_path))
         # artist = self.current_playlist.currently_playing.artist
         title = self.current_playlist.playing_track.title
-        self.audio_file_name_label.setText(title)
+        artist = self.current_playlist.playing_track.artist
+        self.track_title_label.setText(f"{artist} - {title}")
         self.player.setSource(QUrl(self.current_playlist.playing_track.file_path))
         self.player.play()
 
     def player_duration_changed(self, duration: int) -> None:
         self.seek_slider.setRange(0, duration - 120)
-        self.seek_slider_time_label.setText(get_formatted_time(self.player.duration()))
+        self.passed_time_label.setText(get_formatted_time(self.player.duration()))
         self.seek_slider.set_length_in_seconds(format_player_position_to_seconds(self.player.duration()))
 
     def player_position_changed(self, position: int) -> None:
@@ -315,10 +340,10 @@ class AudioController(QFrame):
             self.next_button_clicked()
         else:
             self.seek_slider.setSliderPosition(position)
-            old_text = self.seek_slider_time_label.text()
-            self.seek_slider_time_label.setText(get_formatted_time(self.player.position()) + "/" +
-                                                get_formatted_time(self.player.duration()))
-            if old_text != self.seek_slider_time_label.text():
+            old_text = self.passed_time_label.text()
+            self.passed_time_label.setText(get_formatted_time(self.player.position()) + "/" +
+                                           get_formatted_time(self.player.duration()))
+            if old_text != self.passed_time_label.text():
                 # self.remaining_queue_time -= format_player_position_to_seconds(self.player.position())
                 self.remaining_queue_time_changed.emit(self.remaining_queue_time -
                                                        format_player_position_to_seconds(self.player.position()))
@@ -388,6 +413,7 @@ class AudioController(QFrame):
     def get_playing_track(self) -> Track:
         return self.current_playlist.playing_track
 
+    @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:
         if track not in self.current_playlist.playlist:
             raise TrackNotInPlaylistError

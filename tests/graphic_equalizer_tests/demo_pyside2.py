@@ -2,7 +2,7 @@ import random
 
 from PySide2 import QtCore, QtWidgets
 
-from equalizer_bar import EqualizerBar
+from equalizer_bar import SpectrumEqualizer
 
 
 class Window(QtWidgets.QMainWindow):
@@ -10,7 +10,7 @@ class Window(QtWidgets.QMainWindow):
     def __init__(self):
         super().__init__()
 
-        self.equalizer = EqualizerBar(5, ['#0C0786', '#40039C', '#6A00A7', '#8F0DA3', '#B02A8F', '#CA4678', '#E06461',
+        self.equalizer = SpectrumEqualizer(5, ['#0C0786', '#40039C', '#6A00A7', '#8F0DA3', '#B02A8F', '#CA4678', '#E06461',
                                           '#F1824C', '#FCA635', '#FCCC25', '#EFF821'])
         self.setCentralWidget(self.equalizer)
 
