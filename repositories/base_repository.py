@@ -63,3 +63,8 @@ class BaseRepository:
 
         conn.commit()
         conn.close()
+
+
+if __name__ == "__main__":
+    b = BaseRepository()
+    b.reset_table("tracks")

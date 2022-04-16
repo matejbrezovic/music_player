@@ -196,6 +196,7 @@ class AudioController(QFrame):
             self.next_button.setEnabled(False)
 
         self.background_pixmap = None
+        self.star_widget.setEnabled(False)
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         if self.background_pixmap:
@@ -310,6 +311,7 @@ class AudioController(QFrame):
 
     @pyqtSlot()
     def play(self) -> None:
+        self.star_widget.setEnabled(True)
         self.passed_time_label.setText("0:00/ 0:00")
         self.updated_playing_track.emit(self.current_playlist.playing_track, self.current_playlist.playing_track_index)
         self.update_background_pixmap(self.current_playlist.playing_track)

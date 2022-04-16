@@ -4,7 +4,7 @@ from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot
 from PyQt6.QtGui import QPen, QBrush, QPainter
 from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle,
-                             QStyleOptionViewItem, QApplication)
+                             QStyleOptionViewItem, QApplication, QAbstractItemView)
 
 from constants import *
 from data_models.navigation_group import NavigationGroup
@@ -125,17 +125,18 @@ class NavigationTableView(QTableView):
         self._table_delegate = NavigationTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
         self.clicked.connect(self.single_click_action)
         self.doubleClicked.connect(self.double_click_action)
 
-    def get_tracks_from_selected_group(self) -> List[Track]:
-        if not self.selectedIndexes():
-            return []
-
-        selected_row = self.selectedIndexes()[0].row()
-        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[selected_row].title)
-        return tracks
+    # def get_tracks_from_selected_group(self) -> List[Track]:
+    #     if not self.selectedIndexes():
+    #         return []
+    #
+    #     selected_row = self.selectedIndexes()[0].row()
+    #     tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[selected_row].title)
+    #     return tracks
 
     @pyqtSlot(str)
     def set_group_key(self, key: str) -> None:

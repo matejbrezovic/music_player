@@ -19,17 +19,19 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         conn = self.get_connection()
         cursor = conn.cursor()
 
-        cursor.execute("INSERT INTO tracks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (None,
-                                                                                    track.file_path,
-                                                                                    track.title,
-                                                                                    track.album,
-                                                                                    track.artist,
-                                                                                    track.composer,
-                                                                                    track.genre,
-                                                                                    track.year,
-                                                                                    track.length,
-                                                                                    track.rating
-                                                                                    ))
+        cursor.execute("INSERT INTO tracks VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+                       (None,
+                        track.file_path,
+                        track.title,
+                        track.album,
+                        track.artist,
+                        track.composer,
+                        track.genre,
+                        track.year,
+                        track.length,
+                        track.size,
+                        track.rating
+                        ))
         conn.commit()
         conn.close()
 
@@ -96,6 +98,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 genre=row["genre"],
                 year=row["year"],
                 length=row["length"],
+                size=row["size"],
                 # artwork_pixmap=get_artwork_pixmap(row["file_path"])
             )
 
@@ -119,7 +122,8 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 composer=row["composer"],
                 genre=row["genre"],
                 year=row["year"],
-                length=row["length"]
+                length=row["length"],
+                size=row["size"]
                 )
             )
 
@@ -145,7 +149,8 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
             composer=row["composer"],
             genre=row["genre"],
             year=row["year"],
-            length=row["length"]
+            length=row["length"],
+            size=row["size"]
         )
 
         if QtWidgets.QApplication.instance() is not None:
@@ -229,6 +234,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                     loaded_file["genre"].first,
                     int(loaded_file["year"]) if int(loaded_file["year"]) else None,
                     int(loaded_file["#length"].first),
+                    int(os.path.getsize(file_path))
                     # get_artwork_pixmap(file_path, "album")
                 ))
             except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError):

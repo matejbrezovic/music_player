@@ -14,8 +14,10 @@ class Track:
     genre: str = field(repr=False)
     year: int = field(repr=False)
     length: int = field(repr=False)
+    size: int = field(repr=False)
     rating: int = field(repr=False, default=0)
     # artwork_path: str = field(repr=False)
+
     artwork_pixmap: Any = field(repr=False, default=None)
     # size: int = field(repr=False, default=0)
 
@@ -31,9 +33,9 @@ class Track:
 
         return self.file_path == other.file_path
 
-    @property
-    def size(self):
-        return os.path.getsize(self.file_path)
+    # @property
+    # def size(self):
+    #     return os.path.getsize(self.file_path)
 
     @property
     def format(self):

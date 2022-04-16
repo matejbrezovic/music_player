@@ -46,6 +46,7 @@ class ScanFoldersDialog(QDialog):
         self.select_folders_dialog.folders_selected.connect(self.update_selected_folders)
 
         self.choose_folders_button = QPushButton("Choose Folders")
+
         self.choose_folders_button.clicked.connect(lambda: (self.select_folders_dialog.set_preselected_folders(
                                                             self.checked_folders), self.select_folders_dialog.exec()))
         self.selected_folders_scroll_area = QScrollArea()
@@ -60,6 +61,10 @@ class ScanFoldersDialog(QDialog):
         self.proceed_button.clicked.connect(self.proceed_button_clicked)
         self.close_button = QPushButton("Close")
         self.close_button.clicked.connect(lambda: self.done(0))
+
+        self.choose_folders_button.setAutoDefault(False)
+        self.proceed_button.setAutoDefault(False)
+        self.close_button.setAutoDefault(False)
 
         self.main_layout.addWidget(self.main_frame)
         self.vertical_layout = QVBoxLayout(self.main_frame)

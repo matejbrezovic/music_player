@@ -113,10 +113,13 @@ class NavigationPanel(QFrame):
     def removed_tracks(self) -> None:
         ...
 
-    def get_tracks_from_selected_group(self) -> List[Track]:
-        return self.navigation_table_view.get_tracks_from_selected_group()
+    # def get_tracks_from_selected_group(self) -> List[Track]:
+    #     return self.navigation_table_view.get_tracks_from_selected_group()
 
     def get_last_selected_tracks(self) -> List[Track]:
+        if not self.navigation_table_view.last_group_key or not self.navigation_table_view.last_group_title:
+            return []
+
         tracks = CachedTracksRepository().get_tracks_by(self.navigation_table_view.last_group_key,
                                                         self.navigation_table_view.last_group_title)
         return tracks
