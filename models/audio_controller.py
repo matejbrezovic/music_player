@@ -322,13 +322,13 @@ class AudioController(QFrame):
     def play(self) -> None:
         playing_track = self.get_playing_track()
 
-        print("Playing track:", playing_track)
+        # print("Playing track:", playing_track)
 
         self.passed_time_label.setText(f"0:00/ {format_seconds(playing_track.length)}")
         self.track_title_label.setText(f"{playing_track.artist} - {playing_track.title}")
 
         self.is_playing = playing_track.is_valid()
-        print("Track is valid:", playing_track.is_valid())
+        # print("Track is valid:", playing_track.is_valid())
 
         if playing_track.is_valid():
             self.user_action = 1
@@ -377,7 +377,7 @@ class AudioController(QFrame):
         return self._rounded_remaining_queue_time - format_player_position_to_seconds(self.player.position())
 
     def pause(self, fade=True) -> None:
-        print("Pause")
+        # print("Pause")
         self.play_button.setIcon(self.play_icon)
         self.is_playing = False
         self.user_action = 2
@@ -385,7 +385,7 @@ class AudioController(QFrame):
         self.paused.emit(self.get_playing_track())
 
     def unpause(self, fade=True) -> None:
-        print("Unpause")
+        # print("Unpause")
         self.play_button.setIcon(self.pause_icon)
         self.is_playing = True
         self.user_action = 1

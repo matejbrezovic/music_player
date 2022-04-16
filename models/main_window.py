@@ -166,3 +166,4 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
     def _player_stopped(self) -> None:
         self.main_panel.stop_playing()
+        self.information_panel.stop_playing()

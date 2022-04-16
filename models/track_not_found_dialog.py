@@ -8,7 +8,7 @@ from data_models.track import Track
 
 
 class TrackNotFoundDialog(QDialog):
-    def __init__(self, track: Track = None, *args):
+    def __init__(self, track: Track, *args):
         super().__init__(*args)
 
         self.setWindowFlag(Qt.WindowType.CustomizeWindowHint, True)
@@ -34,7 +34,7 @@ class TrackNotFoundDialog(QDialog):
         self.warning_icon_label.setFixedWidth(50)
         self.warning_icon_label.setPixmap(self.warning_pixmap)
 
-        self.text_label = QLabel(f"The source file for track '{'track.title'}' could not be found")
+        self.text_label = QLabel(f"The source file for track '{track.title}' could not be found")
         self.text_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
         self.text_label.setWordWrap(True)
         self.ok_button = QPushButton("OK")

@@ -1,8 +1,8 @@
-from typing import List, Any
+from typing import List, Any, Union
 
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot
-from PyQt6.QtGui import QPen, QBrush, QPainter
+from PyQt6.QtGui import QPen, QBrush, QPainter, QFont
 from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle,
                              QStyleOptionViewItem, QApplication, QAbstractItemView)
 
@@ -97,10 +97,10 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
 
             painter.save()
             painter.translate(option.rect.x(), option.rect.y())
-            if option.state & QStyle.StateFlag.State_Selected:
-                painter.setPen(QColor(option.palette.highlightedText()))
+            if option.state & QStyle.StateFlag.State_Selected and self._table_view.hasFocus():
+                navigation_group_widget.set_text_colors(option.palette.highlightedText(), option.palette.brightText())
             else:
-                painter.setPen(QColor(option.palette.text()))
+                navigation_group_widget.set_text_colors(Qt.GlobalColor.black, Qt.GlobalColor.darkGray)
 
             navigation_group_widget.render(painter)
             painter.restore()
@@ -127,16 +127,12 @@ class NavigationTableView(QTableView):
         self.setItemDelegate(self._table_delegate)
         self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
 
+        palette = self.palette()
+        palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.BrightText, QColor(79, 180, 242))
+        self.setPalette(palette)
+
         self.clicked.connect(self.single_click_action)
         self.doubleClicked.connect(self.double_click_action)
-
-    # def get_tracks_from_selected_group(self) -> List[Track]:
-    #     if not self.selectedIndexes():
-    #         return []
-    #
-    #     selected_row = self.selectedIndexes()[0].row()
-    #     tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[selected_row].title)
-    #     return tracks
 
     @pyqtSlot(str)
     def set_group_key(self, key: str) -> None:
@@ -171,7 +167,6 @@ class NavigationTableView(QTableView):
         return super().focusOutEvent(event)
 
 
-
 class NavigationGroupWidget(QWidget):
     def __init__(self, title: str, tracks_num: int, parent=None):
         super().__init__(parent)
@@ -179,19 +174,25 @@ class NavigationGroupWidget(QWidget):
         self.group_id = f"{title}{tracks_num}"
         self.v_layout = QVBoxLayout(self)
         self.v_layout.setContentsMargins(5, 0, 5, 0)
-        self.v_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.h_layout = QHBoxLayout()
-        self.h_layout.setContentsMargins(0, 0, 0, 0)
+        self.v_layout.setAlignment(Qt.AlignmentFlag.AlignVCenter)
+        self.v_layout.setSpacing(0)
 
-        title_label = ElidedLabel(title)
-        title_label.setContentsMargins(0, 0, 0, 0)
-        title_label.setMinimumHeight(20)
+        self.title_label = ElidedLabel(title)
+        self.title_label.setContentsMargins(0, 0, 0, 0)
 
-        tracks_label = ElidedLabel(f"{tracks_num} {'Tracks' if tracks_num > 1 else 'Track'}")
-        tracks_label.setContentsMargins(0, 0, 0, 0)
-        tracks_label.setMinimumHeight(20)
+        self.tracks_label = ElidedLabel(f"{tracks_num} {'tracks' if tracks_num > 1 else 'track'}")
+        self.tracks_label.setFont(QFont(self.tracks_label.font().family(), 7))
+        self.tracks_label.setContentsMargins(0, 0, 0, 0)
 
-        self.v_layout.addWidget(title_label)
-        self.v_layout.addWidget(tracks_label)
+        self.v_layout.addWidget(self.title_label)
+        self.v_layout.addWidget(self.tracks_label)
 
         self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+
+    def set_text_colors(self, top: Union[QColor, Qt.GlobalColor, int, str],
+                        bottom: Union[QColor, Qt.GlobalColor, int, str]) -> None:
+        top = QColor(top)
+        bottom = QColor(bottom)
+
+        self.title_label.setStyleSheet(f"color: {top.name()}")
+        self.tracks_label.setStyleSheet(f"color: {bottom.name()}")

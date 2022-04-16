@@ -156,3 +156,6 @@ class InformationPanel(QFrame):
 
     def unpause_playing_track(self) -> None:
         self.information_table_view.set_unpaused()
+
+    def stop_playing(self) -> None:
+        self.information_table_view.stop_playing()

@@ -45,6 +45,5 @@ class VolumeSlider(ImprovedSlider):
         if dark_mode_enabled:
             self.setStyleSheet(self.dark_stylesheet)
         else:
-            print("Set light stylesheet")
             self.setStyleSheet(self.light_stylesheet)
 
