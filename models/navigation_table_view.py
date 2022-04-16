@@ -146,10 +146,17 @@ class NavigationTableView(QTableView):
 
     @pyqtSlot(QModelIndex)
     def single_click_action(self, index: QModelIndex) -> None:
+        if not self.groups:
+            return
+
         self.last_group_key = self.group_key
         self.last_group_title = self.groups[index.row()].title
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
         self.group_clicked.emit(tracks)
+
+    def currentChanged(self, current: QtCore.QModelIndex, previous: QtCore.QModelIndex) -> None:
+        self.single_click_action(current)
+        super().currentChanged(current, previous)
 
     @pyqtSlot(QModelIndex)
     def double_click_action(self, index: QModelIndex) -> None:

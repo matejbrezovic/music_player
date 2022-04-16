@@ -6,7 +6,8 @@ from typing import List, Optional, Any
 
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize
-from PyQt6.QtGui import QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut
+from PyQt6.QtGui import (QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut,
+                         QContextMenuEvent)
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
                              QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame, QMainWindow,
@@ -109,7 +110,7 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         self.layoutChanged.emit()
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
-        if not self._tracks:
+        if not self._tracks or index.row() >= len(self._tracks):
             return None
         if role == Qt.ItemDataRole.TextAlignmentRole:
             if index.column() == 0:
@@ -358,7 +359,7 @@ class TrackTableView(QTableView):
             self.openPersistentEditor(index)
         self.prev_index = index
 
-    def contextMenuEvent(self, event):
+    def contextMenuEvent(self, e: QContextMenuEvent) -> None:
         self.context_menu.popup(QtGui.QCursor.pos())
 
     @pyqtSlot()

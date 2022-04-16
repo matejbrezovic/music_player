@@ -29,7 +29,6 @@ class VolumeSlider(ImprovedSlider):
                 margin: -8px -6px;
                 width: 6px;
             }}
-
             """
 
     def __init__(self, *args):
