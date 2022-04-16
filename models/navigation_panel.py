@@ -124,3 +124,4 @@ class NavigationPanel(QFrame):
                                                         self.navigation_table_view.last_group_title)
         return tracks
 
+

@@ -17,12 +17,7 @@ class Track:
     size: int = field(repr=False)
     rating: int = field(repr=False, default=0)
     # artwork_path: str = field(repr=False)
-
     artwork_pixmap: Any = field(repr=False, default=None)
-    # size: int = field(repr=False, default=0)
-
-    # def __post_init__(self):
-    #     self.size = os.path.getsize(self.file_path)
 
     def __str__(self):
         return repr(self)
@@ -33,11 +28,10 @@ class Track:
 
         return self.file_path == other.file_path
 
-    # @property
-    # def size(self):
-    #     return os.path.getsize(self.file_path)
-
     @property
     def format(self):
         return os.path.splitext(self.file_path)[-1]
+
+    def is_valid(self):
+        return os.path.exists(self.file_path)
 

@@ -1,7 +1,6 @@
 import sys
 
 from PyQt6.QtCore import Qt, QSize
-from PyQt6.QtGui import QShowEvent
 from PyQt6.QtWidgets import (QDialog, QApplication, QFrame, QHBoxLayout, QWidget, QLabel, QPushButton, QVBoxLayout,
                              QSpacerItem, QSizePolicy, QStyle)
 
@@ -15,6 +14,7 @@ class TrackNotFoundDialog(QDialog):
         self.setWindowFlag(Qt.WindowType.CustomizeWindowHint, True)
         self.setWindowFlag(Qt.WindowType.WindowTitleHint, True)
         self.setWindowFlag(Qt.WindowType.WindowSystemMenuHint, False)
+        self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
         self.dialog_layout = QVBoxLayout(self)
         self.dialog_layout.setContentsMargins(3, 3, 3, 3)
@@ -34,7 +34,7 @@ class TrackNotFoundDialog(QDialog):
         self.warning_icon_label.setFixedWidth(50)
         self.warning_icon_label.setPixmap(self.warning_pixmap)
 
-        self.text_label = QLabel(f"The source file for track '{'Test track'}' could not be found")
+        self.text_label = QLabel(f"The source file for track '{'track.title'}' could not be found")
         self.text_label.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.MinimumExpanding)
         self.text_label.setWordWrap(True)
         self.ok_button = QPushButton("OK")
@@ -59,6 +59,6 @@ class TrackNotFoundDialog(QDialog):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-    t = TrackNotFoundDialog()
+    t = TrackNotFoundDialog(...)
     t.show()
     sys.exit(app.exec())

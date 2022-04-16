@@ -70,10 +70,10 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         self.pixmap_width = 16
         self.pixmap_height = 16
 
-        self.playing_pixmap = QPixmap("icons/speaker_playing.png").scaled(self.pixmap_width, self.pixmap_height,
+        self.playing_pixmap = QPixmap("icons/speaker-playing.png").scaled(self.pixmap_width, self.pixmap_height,
                                                                           Qt.AspectRatioMode.IgnoreAspectRatio,
                                                                           Qt.TransformationMode.SmoothTransformation)
-        self.paused_pixmap = QPixmap("icons/speaker_muted.png").scaled(self.pixmap_width, self.pixmap_height,
+        self.paused_pixmap = QPixmap("icons/speaker-muted.png").scaled(self.pixmap_width, self.pixmap_height,
                                                                        Qt.AspectRatioMode.IgnoreAspectRatio,
                                                                        Qt.TransformationMode.SmoothTransformation)
 
@@ -82,14 +82,14 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():
                 fill_color = SELECTION_QCOLOR
-                border_color = SELECTION_QCOLOR_BORDER
+                # border_color = SELECTION_QCOLOR_BORDER
             else:
                 fill_color = LOST_FOCUS_QCOLOR
-                border_color = LOST_FOCUS_QCOLOR_BORDER
+                # border_color = LOST_FOCUS_QCOLOR_BORDER
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
-            painter.setPen(QPen(QBrush(border_color), 1))
-            painter.drawLine(option.rect.topLeft(), option.rect.topRight())
+            # painter.setPen(QPen(QBrush(border_color), 1))
+            # painter.drawLine(option.rect.topLeft(), option.rect.topRight())
             # if index.row() == self._table_view.selectedIndexes()[-1].row():  # might be ruining performance
             #     painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
 

@@ -101,3 +101,7 @@ class TrackViewWidget(QWidget):
     @pyqtSlot(list)
     def added_tracks(self, tracks: List[Track]) -> None:
         self.table_view.added_tracks(tracks)
+
+    @pyqtSlot()
+    def stop_playing(self):
+        self.table_view.stop_playing()

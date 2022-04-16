@@ -4,7 +4,7 @@ from typing import List
 from PyQt6 import QtGui
 from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont
-from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton, QFrame, QSpacerItem, QWidget
+from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton, QFrame, QSpacerItem, QWidget)
 
 from constants import *
 from data_models.track import Track
@@ -13,9 +13,10 @@ from models.audio_playlist import AudioPlaylist
 from models.marquee_label import MarqueeLabel
 from models.seek_slider import SeekSlider
 from models.star_widget import StarWidget
+from models.track_not_found_dialog import TrackNotFoundDialog
 from models.volume_slider import VolumeSlider
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
-                   get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton)
+                   get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds)
 
 
 class AudioController(QFrame):
@@ -24,6 +25,8 @@ class AudioController(QFrame):
     paused = pyqtSignal(Track)
     unpaused = pyqtSignal(Track)
     remaining_queue_time_changed = pyqtSignal(int)
+    playback_error_encountered = pyqtSignal(Track)
+    player_stopped = pyqtSignal()
 
     default_stylesheet = "QFrame#audio_controller {background-color: rgba(0, 0, 0, 0.2)}"
 
@@ -35,8 +38,10 @@ class AudioController(QFrame):
 
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        self.current_playlist = AudioPlaylist()
-        self.current_playlist.updated_playlist.connect(self.updated_playlist)
+        self._is_dark_mode_enabled = True
+
+        self.playlist = AudioPlaylist()
+        self.playlist.updated_playlist.connect(self.updated_playlist)
 
         self.total_queue_time = 0
         self._rounded_remaining_queue_time = 0  # doesn't update while track is playing
@@ -191,7 +196,7 @@ class AudioController(QFrame):
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
 
-        if not self.current_playlist:
+        if not self.playlist:
             self.prev_button.setEnabled(False)
             self.next_button.setEnabled(False)
 
@@ -209,6 +214,11 @@ class AudioController(QFrame):
             painter.drawRect(self.rect())
 
     def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
+        if self._is_dark_mode_enabled == dark_mode_enabled:
+            return
+
+        self._is_dark_mode_enabled = dark_mode_enabled
+
         color = DARK_AUDIO_CONTROLLER_COLOR if dark_mode_enabled else LIGHT_AUDIO_CONTROLLER_COLOR
         name = color.name()
         self.setStyleSheet(self.default_stylesheet + f"QWidget {{color: {name};}}")
@@ -223,9 +233,9 @@ class AudioController(QFrame):
         self.volume_off_icon = change_icon_color(self.volume_off_icon, color)
 
         if self.is_playing:
-            self.play_button.setIcon(self.play_icon)
-        else:
             self.play_button.setIcon(self.pause_icon)
+        else:
+            self.play_button.setIcon(self.play_icon)
 
         if self.is_muted:
             self.volume_button.setIcon(self.volume_off_icon)
@@ -243,10 +253,10 @@ class AudioController(QFrame):
         palette.setColor(QPalette.ColorGroup.Normal, QPalette.ColorRole.HighlightedText, color)
         self.star_widget.setPalette(palette)
 
-    def update_background_pixmap(self, track: Track) -> None:
-        start = time.time()
+    def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
+        # start = time.time()
         pixmap = get_artwork_pixmap(track.file_path)
-        if not pixmap:
+        if not pixmap or reset_to_default:
             self.background_pixmap = None
             self.set_dark_mode_enabled(True)
             self.repaint()
@@ -264,15 +274,14 @@ class AudioController(QFrame):
 
     @pyqtSlot(list)
     def queue_next(self, tracks: List[Track]) -> None:
-        insert_index = self.current_playlist.playing_track_index + 1
-        new_playlist = self.current_playlist.playlist[:insert_index] + tracks + \
-            self.current_playlist.playlist[insert_index:]
+        insert_index = self.playlist.playing_track_index + 1
+        new_playlist = self.playlist.playlist[:insert_index] + tracks + self.playlist.playlist[insert_index:]
         self.set_playlist(new_playlist)
         # self.current_playlist.queue_next(tracks)
 
     @pyqtSlot(list)
     def queue_last(self, tracks: List[Track]) -> None:
-        new_playlist = self.current_playlist.playlist + tracks
+        new_playlist = self.playlist.playlist + tracks
         self.set_playlist(new_playlist)
 
     @pyqtSlot(int)
@@ -284,12 +293,12 @@ class AudioController(QFrame):
 
     @pyqtSlot()
     def change_audio_order(self) -> None:
-        self.current_playlist.change_mode()
+        self.playlist.change_mode()
         self.audio_order_button_mode_index = self.audio_order_button_mode_index + 1 if \
             self.audio_order_button_mode_index <= 1 else 0
         self.audio_order_button.setText(self.audio_order_button_modes[self.audio_order_button_mode_index])
 
-        self.update_total_queue_time(sum(track.length for track in self.current_playlist.playlist))
+        self.update_total_queue_time(sum(track.length for track in self.playlist.playlist))
 
     @pyqtSlot(int)
     def set_player_position(self, position: int) -> None:
@@ -300,31 +309,46 @@ class AudioController(QFrame):
         # print("New playlist:\n", "\n".join(str(t) for t in playlist))
         self.prev_button.setEnabled(True)
         self.next_button.setEnabled(True)
-        self.current_playlist.set_playlist(playlist)
+        self.playlist.set_playlist(playlist)
         self.updated_playlist.emit(playlist)
         self.update_total_queue_time(sum(track.length for track in playlist))
 
     @pyqtSlot(int)
     def set_playlist_index(self, index: int) -> None:
         # print("New index:", index)
-        self.current_playlist.set_playlist_index(index)
+        self.playlist.set_playlist_index(index)
 
     @pyqtSlot()
     def play(self) -> None:
-        self.star_widget.setEnabled(True)
-        self.passed_time_label.setText("0:00/ 0:00")
-        self.updated_playing_track.emit(self.current_playlist.playing_track, self.current_playlist.playing_track_index)
-        self.update_background_pixmap(self.current_playlist.playing_track)
-        self.play_button.setIcon(self.pause_icon)
-        self.is_playing = True
-        self.user_action = 1
-        # self.audio_file_name_label.setText(os.path.basename(self.current_playlist.currently_playing.file_path))
-        # artist = self.current_playlist.currently_playing.artist
-        title = self.current_playlist.playing_track.title
-        artist = self.current_playlist.playing_track.artist
-        self.track_title_label.setText(f"{artist} - {title}")
-        self.player.setSource(QUrl(self.current_playlist.playing_track.file_path))
-        self.player.play()
+        playing_track = self.get_playing_track()
+
+        print("Playing track:", playing_track)
+
+        self.passed_time_label.setText(f"0:00/ {format_seconds(playing_track.length)}")
+        self.track_title_label.setText(f"{playing_track.artist} - {playing_track.title}")
+
+        self.is_playing = playing_track.is_valid()
+        print("Track is valid:", playing_track.is_valid())
+
+        if playing_track.is_valid():
+            self.user_action = 1
+            self.star_widget.setEnabled(True)
+            self.seek_slider.setEnabled(True)
+            self.update_background_pixmap(playing_track)
+            self.play_button.setIcon(self.pause_icon)
+            self.player.setSource(QUrl(playing_track.file_path))
+            self.player.play()
+            self.updated_playing_track.emit(playing_track, self.playlist.playing_track_index)
+        else:
+            self.user_action = 0
+            self.star_widget.setEnabled(False)
+            self.update_background_pixmap(playing_track, reset_to_default=True)
+            self.play_button.setIcon(self.play_icon)
+            self.player.stop()
+            self.seek_slider.setEnabled(False)
+            self.player_stopped.emit()
+            t = TrackNotFoundDialog(playing_track)
+            t.exec()  # must be exec, not show, because on the first 'show' dialog instantly closes
 
     # @pyqtSlot(int)
     def player_duration_changed(self, duration: int) -> None:
@@ -353,6 +377,7 @@ class AudioController(QFrame):
         return self._rounded_remaining_queue_time - format_player_position_to_seconds(self.player.position())
 
     def pause(self, fade=True) -> None:
+        print("Pause")
         self.play_button.setIcon(self.play_icon)
         self.is_playing = False
         self.user_action = 2
@@ -360,6 +385,7 @@ class AudioController(QFrame):
         self.paused.emit(self.get_playing_track())
 
     def unpause(self, fade=True) -> None:
+        print("Unpause")
         self.play_button.setIcon(self.pause_icon)
         self.is_playing = True
         self.user_action = 1
@@ -368,11 +394,12 @@ class AudioController(QFrame):
 
     @pyqtSlot()
     def play_pause_button_clicked(self) -> None:
-        if not self.current_playlist:
+        if not self.playlist:
             return
 
         if self.user_action <= 0:
-            self.current_playlist.set_playlist_index(0)
+            if self.get_playing_track().is_valid():
+                self.playlist.set_playlist_index(0)
             self.play()
         elif self.user_action == 1:
             self.pause()
@@ -381,13 +408,29 @@ class AudioController(QFrame):
 
     @pyqtSlot()
     def next_button_clicked(self) -> None:
-        self.current_playlist.set_next()
-        self.play()
+        self.playlist.set_next()
+        if not self.playlist.has_valid_tracks():
+            t = TrackNotFoundDialog(self.get_playing_track())
+            self.playlist.set_prev()
+            t.show()
+        elif not self.get_playing_track().is_valid():
+            self.playback_error_encountered.emit(self.get_playing_track())
+            self.next_button_clicked()
+        else:
+            self.play()
 
     @pyqtSlot()
     def prev_button_clicked(self) -> None:
-        self.current_playlist.set_prev()
-        self.play()
+        self.playlist.set_prev()
+        if not self.playlist.has_valid_tracks():
+            t = TrackNotFoundDialog(self.get_playing_track())
+            self.playlist.set_next()
+            t.show()
+        elif not self.get_playing_track().is_valid():
+            self.playback_error_encountered.emit(self.get_playing_track())
+            self.prev_button_clicked()
+        else:
+            self.play()
 
     @pyqtSlot(int)
     def volume_changed(self, volume_value: int) -> None:
@@ -417,14 +460,14 @@ class AudioController(QFrame):
             self.is_muted = False
 
     def get_playing_track(self) -> Track:
-        return self.current_playlist.playing_track
+        return self.playlist.playing_track
 
     @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:
-        if track not in self.current_playlist.playlist:
+        if track not in self.playlist.playlist:
             raise TrackNotInPlaylistError
 
-        self.set_playlist_index(self.current_playlist.playlist.index(track))
+        self.set_playlist_index(self.playlist.playlist.index(track))
         self.play()
 
     @pyqtSlot(str)

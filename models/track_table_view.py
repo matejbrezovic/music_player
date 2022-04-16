@@ -97,8 +97,8 @@ class TrackTableModel(QtCore.QAbstractTableModel):
         self.is_playing = False
         self.playing_track_index: Optional[int] = None
 
-        self.playing_speaker_pixmap = QPixmap("icons/speaker_playing.png")
-        self.muted_speaker_pixmap = QPixmap("icons/speaker_muted.png")
+        self.playing_speaker_pixmap = QPixmap("icons/speaker-playing.png")
+        self.muted_speaker_pixmap = QPixmap("icons/speaker-muted.png")
 
         self.general_flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
 
@@ -410,6 +410,10 @@ class TrackTableView(QTableView):
     @pyqtSlot(list)
     def added_tracks(self, tracks: List[Track]):
         ...
+
+    @pyqtSlot()
+    def stop_playing(self) -> None:
+        self.set_playing_track_index(None)
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
         # It's important to clear selection for better visuals, but to do it before opening new editor

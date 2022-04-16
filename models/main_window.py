@@ -151,6 +151,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
                                                self.information_panel.unpause_playing_track()))
         self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
         self.audio_controller.remaining_queue_time_changed.connect(self.status_bar.update_remaining_queue_time)
+        self.audio_controller.player_stopped.connect(self._player_stopped)
 
         self.scan_folders_dialog.added_tracks.connect(self._added_tracks_to_database)
         self.scan_folders_dialog.removed_tracks.connect(self._removed_tracks_from_database)
@@ -162,3 +163,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
 
     def _removed_tracks_from_database(self, tracks: List[Track]) -> None:
         ...
+
+    def _player_stopped(self) -> None:
+        self.main_panel.stop_playing()

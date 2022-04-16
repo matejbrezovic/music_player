@@ -21,6 +21,9 @@ class AudioPlaylist(QObject):
     def __bool__(self):
         return bool(self.playlist)
 
+    def has_valid_tracks(self) -> bool:
+        return any(track.is_valid() for track in self.playlist)
+
     @pyqtSlot(list)
     def queue_next(self, tracks: List[Track]) -> None:
         insert_index = self.playing_track_index + 1

@@ -121,7 +121,7 @@ class SeekSlider(ImprovedSlider):
 
     def event(self, event: QEvent):  # TODO fix fast refreshing when hovering near widget edge
         if event.type() == QEvent.Type.HoverMove:
-            if not self.length_in_seconds:
+            if not self.length_in_seconds or not self.isEnabled():
                 return True
             # print(self.height(), self.y(), event.oldPos().y())
 
@@ -152,6 +152,12 @@ class SeekSlider(ImprovedSlider):
             self.setStyleSheet(self.dark_stylesheet)
         else:
             self.setStyleSheet(self.light_stylesheet)
+
+    # def hide_handle(self) -> None:
+    #     self.setStyleSheet(self.styleSheet() + "\nQSlider::handle:horizontal {background: transparent;}")
+    #
+    # def show_handle(self) -> None:
+    #     self.
 
     def set_length_in_seconds(self, length_in_seconds: int) -> None:
         self.length_in_seconds = length_in_seconds

@@ -135,7 +135,7 @@ class InformationPanel(QFrame):
             channels = "Stereo" if f["#channels"].first == 2 else "Mono"
             return f"{extension} {bitrate}, {samplerate}, {channels}, {format_seconds(t.length)}"
 
-        self.currently_playing_track_title.setText(track.title)
+        self.currently_playing_track_title.setText(str(track.title))
         self.currently_playing_track_info.setText(get_track_info(track))
         artwork_pixmap = get_artwork_pixmap(track.file_path)
         if not artwork_pixmap:

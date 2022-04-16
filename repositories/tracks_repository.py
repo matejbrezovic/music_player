@@ -227,7 +227,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 tracks.append(Track(
                     i,  # temporary id
                     file_path,
-                    title,
+                    str(title),
                     loaded_file["album"].first,
                     loaded_file["artist"].first,
                     loaded_file["composer"].first,
