@@ -1,1 +1,5 @@
-{"preselected_folders": ["/home", "/My Files", "/Program Files (x86)/Caesium/lib/imageformats", "/Users/matey/Music"]}
+{
+	"preselected_folders": [
+		"/home/matey/test"
+	]
+}

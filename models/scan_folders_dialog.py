@@ -1,5 +1,8 @@
 from __future__ import annotations
 
+import sys
+import time
+from collections import defaultdict
 from typing import List, Tuple
 
 from PyQt6.QtWidgets import (QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout,
@@ -11,19 +14,25 @@ from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import *
 
 
-# TODO only overwrite files from folders which were scanned, not other ones; don't allow to proceed when no
-#  folders are checked
+# TODO only overwrite files from folders which were scanned, not other ones
 
 class ScanFoldersDialog(QDialog):
     # noinspection PyTypeChecker
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        self.setWindowFlag(Qt.WindowType.CustomizeWindowHint, True)
+        self.setWindowFlag(Qt.WindowType.WindowTitleHint, True)
+        self.setWindowFlag(Qt.WindowType.WindowSystemMenuHint, False)
+
         self.setWindowTitle("Scan Folders for New Files")
         self.setFixedSize(700, 400)
         self.selected_folders: List[str] = []
         self.checked_folders: List[str] = []
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setContentsMargins(5, 5, 5, 5)
+
+        self.cached_tracks_repository = CachedTracksRepository()
 
         self.main_frame = QFrame()
         self.main_frame.setObjectName("main_frame")
@@ -41,7 +50,7 @@ class ScanFoldersDialog(QDialog):
         self.selected_folders_widget_grid_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.selected_folders_scroll_area.setWidget(self.selected_folders_widget)
         self.selected_folders_scroll_area.setWidgetResizable(True)
-        self.selected_folders_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.selected_folders_scroll_area.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.selected_folders_scroll_area.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.proceed_button = QPushButton("Proceed")
         self.proceed_button.clicked.connect(self.proceed_button_clicked)
@@ -74,46 +83,64 @@ class ScanFoldersDialog(QDialog):
         config.load(DEFAULT_CONFIG_PATH)
         self.update_selected_folders(config.get_setting("preselected_folders"))
 
-    def exec(self) -> None:  # TODO not needed?
-        super().exec()
-
     def proceed_button_clicked(self) -> None:
         config = Config()
         config.load(DEFAULT_CONFIG_PATH)
-        found_file_paths = []
-        for folder in config.get_setting("preselected_folders"):
-            for root, dirs, files in os.walk("C:/" + folder):
-                for file in files:
-                    if file.rsplit(".")[-1] in SUPPORTED_AUDIO_FORMATS:
-                        found_file_paths.append(f"{root}/{file}")
-        tracks = CachedTracksRepository().convert_file_paths_to_tracks(
-            [file_path.replace("\\", "/").replace("//", "/") for file_path in found_file_paths])
+        config.set_setting("preselected_folders", self.checked_folders)
+        config.save(DEFAULT_CONFIG_PATH)
 
-        CachedTracksRepository().set_tracks(tracks)
-        CachedTracksRepository().delete_cache()
-        CachedTracksRepository().cache_tracks()
+        start = time.perf_counter()
+        found_file_paths = defaultdict(list)
+        for folder in self.checked_folders:
+            for root, _, files in os.walk("C:" + folder):
+                for file in files:
+                    if os.path.splitext(file)[-1] in SUPPORTED_AUDIO_FORMATS:
+                        found_file_paths[root.replace("\\", "/")].append(
+                            f"{root}/{file}".replace("\\", "/").replace("//", "/"))
+
+        scan_end = time.perf_counter()
+        print("Scanned folders in:", scan_end - start)
+
+        for dir_root, file_paths in found_file_paths.items():
+            self.cached_tracks_repository.update_tracks_by_folder(dir_root, file_paths)
+
+        conversion_end = time.perf_counter()
+        print("Converted to tracks in:", conversion_end - scan_end)
+
+        # self.cached_tracks_repository.set_tracks(tracks)
+        self.cached_tracks_repository.delete_cache()
+        self.cached_tracks_repository.cache_tracks()
+
+        cache_end = time.perf_counter()
+        print("Cached in:", cache_end - conversion_end)
         self.done(0)
+
+    def checkbox_state_changed(self, is_checked: bool, checkbox_path: str) -> None:
+        if is_checked:
+            self.checked_folders.append(checkbox_path)
+        else:
+            self.checked_folders.remove(checkbox_path)
+        if not self.checked_folders:
+            self.proceed_button.setEnabled(False)
+        else:
+            self.proceed_button.setEnabled(True)
 
     def update_selected_folders(self, paths: List[str]) -> None:
         if not paths:
             return
         delete_grid_layout_items(self.selected_folders_widget_grid_layout)
-        for i, path in enumerate(paths):
+        for i, folder_path in enumerate(paths):
             checkbox = PathCheckbox()
             checkbox.setCheckState(Qt.CheckState.Checked)
-            checkbox.set_path(path)
-            checkbox.state_changed.connect(lambda is_checked, checkbox_path: self.checked_folders.append(checkbox_path) if is_checked
-                                           else self.checked_folders.remove(checkbox_path))
+            checkbox.set_path(folder_path)
+            checkbox.state_changed.connect(self.checkbox_state_changed)
             self.selected_folders_widget_grid_layout.addWidget(checkbox, i, 0)
-            self.selected_folders_widget_grid_layout.addWidget(QLabel(path), i, 1)
-            self.selected_folders.append(path)
-            self.checked_folders.append(path)
+            self.selected_folders_widget_grid_layout.addWidget(QLabel(folder_path), i, 1)
+            if folder_path not in self.selected_folders:
+                self.selected_folders.append(folder_path)
+                self.checked_folders.append(folder_path)
         self.selected_folders_widget_grid_layout.addItem(QSpacerItem(1, 1, QSizePolicy.Policy.Minimum,
                                                                      QSizePolicy.Policy.Expanding))
-        config = Config()
-        config.load(DEFAULT_CONFIG_PATH)
-        config.add_setting("preselected_folders", paths)
-        config.save(DEFAULT_CONFIG_PATH)
 
 
 class SelectFoldersDialog(QDialog):
@@ -121,6 +148,11 @@ class SelectFoldersDialog(QDialog):
 
     def __init__(self, preselected_folders: Tuple[str] = ()):
         super().__init__()
+
+        self.setWindowFlag(Qt.WindowType.CustomizeWindowHint, True)
+        self.setWindowFlag(Qt.WindowType.WindowTitleHint, True)
+        self.setWindowFlag(Qt.WindowType.WindowSystemMenuHint, False)
+
         self.setWindowTitle("Choose Folders...")
         self.setFixedSize(500, 600)
         self.preselected_folders = preselected_folders
@@ -156,8 +188,9 @@ class SelectFoldersDialog(QDialog):
         self.scroll_area.setStyleSheet("border: none")
 
         self.info_label = QLabel("Select folders containing music to add to the library")
+        self.info_label.setContentsMargins(5, 4, 4, 5)
         self.info_label.setStyleSheet("color: rgba(0, 0, 0, 0.4)")
-        self.info_label.setFixedHeight(20)
+        self.info_label.setFixedHeight(26)
 
         self.ok_button = QPushButton("OK")
         self.ok_button.clicked.connect(self.ok_button_clicked)
@@ -172,7 +205,7 @@ class SelectFoldersDialog(QDialog):
         self.bottom_horizontal_layout.addWidget(self.ok_button)
         self.bottom_horizontal_layout.addWidget(self.cancel_button)
         self.bottom_horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
-        self.bottom_widget = QWidget()
+        self.bottom_widget = QWidget(self)
         self.bottom_widget.setLayout(self.bottom_horizontal_layout)
 
         self.vertical_layout.addWidget(self.info_label)
@@ -302,3 +335,10 @@ class DirectoryItem(QTreeWidgetItem):
 class PlaceholderItem(DirectoryItem):
     def __init__(self, parent):
         super().__init__(parent, ["/"])
+
+
+if __name__ == "__main__":
+    app = QApplication(sys.argv)
+    dialog = ScanFoldersDialog()
+    dialog.show()
+    sys.exit(app.exec())

@@ -6,10 +6,10 @@ from PyQt6.QtGui import QColor, QPalette
 import utils
 
 APPLICATION_NAME = "Music Player"
-APPLICATION_VERSION = "0.0.16"
+APPLICATION_VERSION = "0.0.17"
 
 
-SUPPORTED_AUDIO_FORMATS = ["mp3", "m4a"]
+SUPPORTED_AUDIO_FORMATS = {".mp3", ".m4a"}
 
 # Gui constants
 
@@ -26,7 +26,7 @@ AUDIO_CONTROLLER_HEIGHT = 40
 CONTROLLER_BUTTON_HEIGHT = 25
 CONTROLLER_BUTTON_WIDTH = 25
 
-STARTING_AUDIO_VOLUME = 50
+STARTING_AUDIO_VOLUME = 1
 
 DEFAULT_AUDIO_PATH = "/home/matey/Music"
 
@@ -44,20 +44,13 @@ LIGHT_AUDIO_CONTROLLER_COLOR = QColor("white")
 DARK_AUDIO_CONTROLLER_HOVER_COLOR = QColor(80, 80, 80)
 LIGHT_AUDIO_CONTROLLER_HOVER_COLOR = QColor(190, 190, 190)
 
-LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_BACKGROUND = QColor(210, 170, 170, 1)
-LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_PASSED_BACKGROUND = QColor(200, 200, 200)
-LIGHT_AUDIO_CONTROLLER_SEEK_SLIDER_HANDLE_BACKGROUND = QColor("white")
-DARK_AUDIO_CONTROLLER_SEEK_SLIDER_BACKGROUND = QColor("lightGray")
-DARK_AUDIO_CONTROLLER_SEEK_SLIDER_PASSED_BACKGROUND = QColor("darkGray")
-DARK_AUDIO_CONTROLLER_SEEK_SLIDER_HANDLE_BACKGROUND = QColor(0, 0, 0, 255)
-
 MAIN_PANEL_COLUMN_NAMES = ("", "", "Artist", "Title", "Album", "Year", "Genre", "Rating", "Time")
 MAIN_PANEL_VIEW_OPTIONS = ("Tracks", "Album and Tracks", "Album Covers", "Artists")
 GROUP_OPTIONS = ("Album", "Artist", "Composer", "Folder", "Genre", "Year")
 
 ROOT = utils.get_project_root(__file__)
 
-# Database settings
+# Database constants
 
 DATABASE_PATH = os.path.join(ROOT, "database/test.db")
 

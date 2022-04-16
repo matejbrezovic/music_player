@@ -253,8 +253,8 @@ class PathCheckbox(QCheckBox):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.path = None
-        self.stateChanged.connect(lambda: self.state_changed.emit(True if self.checkState() == Qt.CheckState.Checked
-                                                                  else False, self.path))
+        self.stateChanged.connect(lambda: self.state_changed.emit(self.checkState() == Qt.CheckState.Checked,
+                                                                  self.path))
 
     def set_path(self, p: str) -> None:
         self.path = p

@@ -75,8 +75,9 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         cursor = conn.cursor()
 
         if key.lower() == "folder":
-            key = "file_path"
-            cursor.execute(f"SELECT * FROM tracks WHERE {key} LIKE '%{value}%'")
+            # key = "file_path"
+            conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
+            cursor.execute(f"SELECT * FROM tracks WHERE get_folder_path(file_path) = ?", (value, ))
 
         elif value:
             # print(key, value)
@@ -166,12 +167,64 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         conn.commit()
         conn.close()
 
+    def drop_track_by(self, key: str, value: Union[int, float, str]) -> None:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+        cursor.execute(f"DELETE FROM tracks WHERE {key} = ?", (value, ))
+        conn.commit()
+        conn.close()
+
     def update_track(self, track: Track, column: str, value: Union[int, float, str]) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(f"UPDATE tracks SET {column} = ? WHERE track_id = ?", (value, track.track_id))
         conn.commit()
         conn.close()
+
+    def update_tracks_by_folder(self, folder_path: str, new_file_paths: List[str]) -> Tuple[List[Track], List[Track]]:
+        """Adds new tracks to database if they're already not there and removes tracks from database
+        if they're not in new tracks."""
+        conn = self.get_connection()
+        conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
+        cursor = conn.cursor()
+
+        # tracks_in_database = cursor.execute(f"SELECT file_path FROM tracks WHERE get_folder_path(file_path) = ?",
+        #                                         (folder_path, )).fetchall()
+
+        tracks_in_database = self.get_tracks_by("folder", folder_path)
+        file_paths_in_database = [track.file_path for track in tracks_in_database]
+
+        # print(tracks_in_database)
+        # print(file_paths_in_database)
+
+        if not tracks_in_database:
+            to_add = new_file_paths
+            to_remove = []
+        else:
+            if isinstance(file_paths_in_database[0], tuple):
+                file_paths_in_database = [t[0] for t in file_paths_in_database]
+
+            to_add = list(set(new_file_paths) - set(file_paths_in_database))
+            to_remove = list(set(file_paths_in_database) - set(new_file_paths))
+
+        print("FOLDER:", folder_path)
+        print("CURRENTLY IN FOLDER:", new_file_paths)
+        print("NEW FILE PATHS:", set(new_file_paths))
+        print("IN DATABASE:", set(file_paths_in_database))
+        print("TO ADD:", to_add)
+        print("TO REMOVE:", to_remove)
+
+        # return
+
+        tracks_to_add = self.convert_file_paths_to_tracks(to_add)
+        tracks_to_remove = [track for track in tracks_in_database if track.file_path in to_remove]
+
+        self.add_tracks(tracks_to_add)
+
+        for file_path_to_remove in to_remove:
+            self.drop_track_by("file_path", file_path_to_remove)
+
+        return tracks_to_add, tracks_to_remove
 
     @staticmethod
     def convert_file_paths_to_tracks(file_paths: List[str]) -> List[Track]:
@@ -186,7 +239,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                     title = os.path.basename(file_path).split("-", 1)[-1].strip()
 
                 tracks.append(Track(
-                    i,
+                    i,  # temporary id
                     file_path,
                     title,
                     loaded_file["album"].first,

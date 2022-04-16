@@ -8,7 +8,7 @@ from models.header_menu_widget import HeaderMenuWidget
 from models.information_panel import InformationPanel
 from models.main_panel import MainPanel
 from models.navigation_panel import NavigationPanel
-from models.queue_info_panel import StatusBar
+from models.status_bar import StatusBar
 from models.scan_folders_dialog import *
 from repositories.cached_tracks_repository import CachedTracksRepository
 

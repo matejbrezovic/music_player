@@ -4,21 +4,25 @@ from typing import Dict, Any
 
 class Config:
     def __init__(self):
-        self.settings: Dict[str, Any] = {}
+        self.__settings: Dict[str, Any] = {}
 
-    def add_setting(self, key: str, value: Any) -> None:
-        self.settings[key] = value
+    def set_setting(self, key: str, value: Any) -> None:
+        self.__settings[key] = value
 
     def get_setting(self, key: str) -> Any:
-        return self.settings[key] if key in self.settings else None
+        return self.__settings[key] if key in self.__settings else None
 
     def save(self, file_path: str) -> None:
         with open(file_path, 'w') as f:
-            json.dump(self.settings, f)
+            json.dump(self.__settings, f,
+                      sort_keys=True,
+                      indent='\t',
+                      separators=(',', ': '))
 
     def load(self, file_path: str) -> Dict[str, Any]:
         with open(file_path, 'r') as f:
             try:
-                self.settings = json.load(f)
+                self.__settings = json.load(f)
+                return self.__settings
             except json.decoder.JSONDecodeError:
                 return {}
