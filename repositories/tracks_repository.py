@@ -68,21 +68,15 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         return track_counts
 
     def get_tracks_by(self, key: str, value: Union[str, int]) -> List[Track]:
-        # start = time.time()
-
         conn = self.get_connection()
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
         if key.lower() == "folder":
-            # key = "file_path"
             conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
             cursor.execute(f"SELECT * FROM tracks WHERE get_folder_path(file_path) = ?", (value, ))
 
         elif value:
-            # print(key, value)
-            # if "'" in value:
-            #     value = value.replace("'", "''")
             if isinstance(value, str):
                 value = value.replace("'", "''")
             cursor.execute(f"SELECT * FROM tracks WHERE {key} = '{value}'")
@@ -91,7 +85,6 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
         tracks: List[Track] = []
         rows = cursor.fetchall()
-        # print("Data fetched from database in:", time.time() - start)
         for row in rows:
             track = Track(
                 track_id=row["track_id"],
@@ -104,7 +97,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 year=row["year"],
                 length=row["length"],
                 # artwork_pixmap=get_artwork_pixmap(row["file_path"])
-                )
+            )
 
             tracks.append(track)
         return tracks
@@ -184,18 +177,8 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
     def update_tracks_by_folder(self, folder_path: str, new_file_paths: List[str]) -> Tuple[List[Track], List[Track]]:
         """Adds new tracks to database if they're already not there and removes tracks from database
         if they're not in new tracks."""
-        conn = self.get_connection()
-        conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
-        cursor = conn.cursor()
-
-        # tracks_in_database = cursor.execute(f"SELECT file_path FROM tracks WHERE get_folder_path(file_path) = ?",
-        #                                         (folder_path, )).fetchall()
-
         tracks_in_database = self.get_tracks_by("folder", folder_path)
         file_paths_in_database = [track.file_path for track in tracks_in_database]
-
-        # print(tracks_in_database)
-        # print(file_paths_in_database)
 
         if not tracks_in_database:
             to_add = new_file_paths
@@ -207,14 +190,12 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
             to_add = list(set(new_file_paths) - set(file_paths_in_database))
             to_remove = list(set(file_paths_in_database) - set(new_file_paths))
 
-        print("FOLDER:", folder_path)
-        print("CURRENTLY IN FOLDER:", new_file_paths)
-        print("NEW FILE PATHS:", set(new_file_paths))
-        print("IN DATABASE:", set(file_paths_in_database))
-        print("TO ADD:", to_add)
-        print("TO REMOVE:", to_remove)
-
-        # return
+        # print("FOLDER:", folder_path)
+        # print("CURRENTLY IN FOLDER:", new_file_paths)
+        # print("NEW FILE PATHS:", set(new_file_paths))
+        # print("IN DATABASE:", set(file_paths_in_database))
+        # print("TO ADD:", to_add)
+        # print("TO REMOVE:", to_remove)
 
         tracks_to_add = self.convert_file_paths_to_tracks(to_add)
         tracks_to_remove = [track for track in tracks_in_database if track.file_path in to_remove]
@@ -250,7 +231,6 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                     int(loaded_file["#length"].first),
                     # get_artwork_pixmap(file_path, "album")
                 ))
-                # print(tracks[i].title)
             except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError):
                 # TODO cannot convert '2020-10-26T20:39:57-04:00' to int type for year so ValueError (can be improved)
                 continue

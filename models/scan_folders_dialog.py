@@ -10,6 +10,7 @@ from PyQt6.QtWidgets import (QPushButton, QScrollArea, QTreeWidgetItem, QTreeWid
 
 from config import Config
 from constants import *
+from data_models.track import Track
 from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import *
 
@@ -17,6 +18,9 @@ from utils import *
 # TODO only overwrite files from folders which were scanned, not other ones
 
 class ScanFoldersDialog(QDialog):
+    added_tracks = pyqtSignal(list)
+    removed_tracks = pyqtSignal(list)
+
     # noinspection PyTypeChecker
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -83,13 +87,17 @@ class ScanFoldersDialog(QDialog):
         config.load(DEFAULT_CONFIG_PATH)
         self.update_selected_folders(config.get_setting("preselected_folders"))
 
+    def exec(self) -> None:
+        # returning None, not int
+        super().exec()
+
     def proceed_button_clicked(self) -> None:
         config = Config()
         config.load(DEFAULT_CONFIG_PATH)
         config.set_setting("preselected_folders", self.checked_folders)
         config.save(DEFAULT_CONFIG_PATH)
 
-        start = time.perf_counter()
+        # start = time.perf_counter()
         found_file_paths = defaultdict(list)
         for folder in self.checked_folders:
             for root, _, files in os.walk("C:" + folder):
@@ -98,21 +106,29 @@ class ScanFoldersDialog(QDialog):
                         found_file_paths[root.replace("\\", "/")].append(
                             f"{root}/{file}".replace("\\", "/").replace("//", "/"))
 
-        scan_end = time.perf_counter()
-        print("Scanned folders in:", scan_end - start)
+        # scan_end = time.perf_counter()
+        # print("Scanned folders in:", scan_end - start)
+
+        tracks_added, tracks_removed = [], []
 
         for dir_root, file_paths in found_file_paths.items():
-            self.cached_tracks_repository.update_tracks_by_folder(dir_root, file_paths)
+            added, removed = self.cached_tracks_repository.update_tracks_by_folder(dir_root, file_paths)
+            tracks_added += added
+            tracks_removed += removed
 
-        conversion_end = time.perf_counter()
-        print("Converted to tracks in:", conversion_end - scan_end)
+        # conversion_end = time.perf_counter()
+        # print("Converted to tracks in:", conversion_end - scan_end)
 
         # self.cached_tracks_repository.set_tracks(tracks)
         self.cached_tracks_repository.delete_cache()
         self.cached_tracks_repository.cache_tracks()
 
-        cache_end = time.perf_counter()
-        print("Cached in:", cache_end - conversion_end)
+        # cache_end = time.perf_counter()
+        # print("Cached in:", cache_end - conversion_end)
+
+        self.added_tracks.emit(tracks_added)
+        self.removed_tracks.emit(tracks_removed)
+
         self.done(0)
 
     def checkbox_state_changed(self, is_checked: bool, checkbox_path: str) -> None:

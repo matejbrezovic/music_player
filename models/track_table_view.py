@@ -20,6 +20,75 @@ from repositories.tracks_repository import TracksRepository
 from utils import get_artwork_pixmap, get_formatted_time_in_mins
 
 
+class TrackTableHeader(QHeaderView):
+    def __init__(self, orientation: Qt.Orientation, parent: TrackTableView = None):
+        super().__init__(orientation, parent)
+        self.padding = parent.padding
+        self.setSectionsClickable(True)
+        self.setSortIndicatorShown(True)
+        self.setSectionsMovable(True)
+        self.setFirstSectionMovable(False)
+
+        self.sectionMoved.connect(self.section_moved)
+        self.sectionResized.connect(self.section_resized)
+        self.__section_moved_recursions = 0
+
+        self.section_text = MAIN_PANEL_COLUMN_NAMES
+
+        self.minimum_last_section_size = self.padding * 2 + self.fontMetrics().horizontalAdvance(self.section_text[-1])
+
+        self.setStyleSheet("""
+        QHeaderView {
+        border-bottom: 1px solid gray;
+        border-top: 0px;
+        border-right: 0px;
+        border-left: 0px;
+        }
+        """)
+
+    @pyqtSlot(int, int, int)
+    def section_resized(self, logical_index: int, _: int, new_size: int) -> None:
+        """Sets minimum size for the last section."""
+        if logical_index == self.count() - 1 and new_size < self.minimum_last_section_size:
+            self.resizeSection(self.count() - 1, self.minimum_last_section_size)
+
+    @pyqtSlot(int, int, int)
+    def section_moved(self, _: int, old_visual_index: int, new_visual_index: int) -> None:
+        """Prevents section 1 from moving."""
+        if self.__section_moved_recursions:
+            self.__section_moved_recursions = 0
+            return
+        if {0, 1} & {old_visual_index, new_visual_index}:
+            self.__section_moved_recursions += 1
+            self.moveSection(new_visual_index, old_visual_index)
+
+    def text(self, section: int):
+        if isinstance(self.model(), QtCore.QAbstractItemModel):
+            return self.section_text[section]
+
+    def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logical_index: int) -> None:
+        elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logical_index),
+                                                                Qt.TextElideMode.ElideRight,
+                                                                self.sectionSize(logical_index) - self.padding)
+
+        top = rect.topRight()
+        top.setY(top.y() + 1)
+        bottom = rect.bottomRight()
+        bottom.setY(bottom.y() - 2)
+
+        painter.setPen(Qt.GlobalColor.gray)
+        painter.drawLine(top, bottom)
+
+        painter.setPen(Qt.GlobalColor.black)
+        rect.setLeft(rect.left() + self.padding)
+        rect.setRight(rect.right() - self.padding)
+
+        if logical_index == self.count() - 1:
+            painter.drawText(rect, Qt.AlignmentFlag.AlignRight, elided_text)
+        else:
+            painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
+
+
 class TrackTableModel(QtCore.QAbstractTableModel):
     def __init__(self, parent: TrackTableView = None):
         super().__init__(parent)
@@ -188,75 +257,6 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
             painter.drawPixmap(rect, pixmap)
 
 
-class TrackTableHeader(QHeaderView):
-    def __init__(self, orientation: Qt.Orientation, parent: TrackTableView = None):
-        super().__init__(orientation, parent)
-        self.padding = parent.padding
-        self.setSectionsClickable(True)
-        self.setSortIndicatorShown(True)
-        self.setSectionsMovable(True)
-        self.setFirstSectionMovable(False)
-
-        self.sectionMoved.connect(self.section_moved)
-        self.sectionResized.connect(self.section_resized)
-        self.__section_moved_recursions = 0
-
-        self.section_text = MAIN_PANEL_COLUMN_NAMES
-
-        self.minimum_last_section_size = self.padding * 2 + self.fontMetrics().horizontalAdvance(self.section_text[-1])
-
-        self.setStyleSheet("""
-        QHeaderView {
-        border-bottom: 1px solid gray;
-        border-top: 0px;
-        border-right: 0px;
-        border-left: 0px;
-        }
-        """)
-
-    @pyqtSlot(int, int, int)
-    def section_resized(self, logical_index: int, _: int, new_size: int) -> None:
-        """Sets minimum size for the last section."""
-        if logical_index == self.count() - 1 and new_size < self.minimum_last_section_size:
-            self.resizeSection(self.count() - 1, self.minimum_last_section_size)
-
-    @pyqtSlot(int, int, int)
-    def section_moved(self, _: int, old_visual_index: int, new_visual_index: int) -> None:
-        """Prevents section 1 from moving."""
-        if self.__section_moved_recursions:
-            self.__section_moved_recursions = 0
-            return
-        if {0, 1} & {old_visual_index, new_visual_index}:
-            self.__section_moved_recursions += 1
-            self.moveSection(new_visual_index, old_visual_index)
-
-    def text(self, section: int):
-        if isinstance(self.model(), QtCore.QAbstractItemModel):
-            return self.section_text[section]
-
-    def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logical_index: int) -> None:
-        elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logical_index),
-                                                                Qt.TextElideMode.ElideRight,
-                                                                self.sectionSize(logical_index) - self.padding)
-
-        top = rect.topRight()
-        top.setY(top.y() + 1)
-        bottom = rect.bottomRight()
-        bottom.setY(bottom.y() - 2)
-
-        painter.setPen(Qt.GlobalColor.gray)
-        painter.drawLine(top, bottom)
-
-        painter.setPen(Qt.GlobalColor.black)
-        rect.setLeft(rect.left() + self.padding)
-        rect.setRight(rect.right() - self.padding)
-
-        if logical_index == self.count() - 1:
-            painter.drawText(rect, Qt.AlignmentFlag.AlignRight, elided_text)
-        else:
-            painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
-
-
 class TrackTableView(QTableView):
     new_tracks_set = pyqtSignal()
     play_now_triggered = pyqtSignal(list)
@@ -406,6 +406,10 @@ class TrackTableView(QTableView):
     @pyqtSlot()
     def set_unpaused(self) -> None:
         self._table_model.set_unpaused()
+
+    @pyqtSlot(list)
+    def added_tracks(self, tracks: List[Track]):
+        ...
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
         # It's important to clear selection for better visuals, but to do it before opening new editor

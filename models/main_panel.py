@@ -72,3 +72,7 @@ class MainPanel(QtWidgets.QFrame):
     @pyqtSlot()
     def unpause_playing_track(self) -> None:
         self.track_view_widget.unpause_playing_track()
+
+    @pyqtSlot(list)
+    def added_tracks(self, tracks: List[Track]) -> None:
+        self.track_view_widget.added_tracks(tracks)

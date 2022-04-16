@@ -6,10 +6,8 @@ from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton, QFrame, QSpacerItem, QWidget
 
-from audio_visualizer_tests.fft_analyzer import FFTAnalyser
 from constants import *
 from data_models.track import Track
-from graphic_equalizer_tests.equalizer_bar import SpectrumEqualizer, SpectrumEqualizerWidget
 from models.audio_player import AudioPlayer
 from models.audio_playlist import AudioPlaylist
 from models.marquee_label import MarqueeLabel
@@ -18,8 +16,6 @@ from models.star_widget import StarWidget
 from models.volume_slider import VolumeSlider
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
                    get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton)
-
-import numpy as np
 
 
 class AudioController(QFrame):
@@ -108,7 +104,7 @@ class AudioController(QFrame):
         # self.star_widget.setStyleSheet("background-color: green;")
 
         """ DEPRECATED
-        ####################################################################
+        ########################################################################
         
         def set_amplitudes(amps):
             amps = np.array(amps)
@@ -263,7 +259,7 @@ class AudioController(QFrame):
         self.background_pixmap = pixmap
         self.set_dark_mode_enabled(False)
         self.repaint()
-        print("Audio controller background updated in:", time.time() - start)
+        # print("Audio controller background updated in:", time.time() - start)
 
     @pyqtSlot(list)
     def queue_next(self, tracks: List[Track]) -> None:
@@ -328,11 +324,13 @@ class AudioController(QFrame):
         self.player.setSource(QUrl(self.current_playlist.playing_track.file_path))
         self.player.play()
 
+    # @pyqtSlot(int)
     def player_duration_changed(self, duration: int) -> None:
         self.seek_slider.setRange(0, duration - 120)
         self.passed_time_label.setText(get_formatted_time(self.player.duration()))
         self.seek_slider.set_length_in_seconds(format_player_position_to_seconds(self.player.duration()))
 
+    # @pyqtSlot(int)
     def player_position_changed(self, position: int) -> None:
         if not self.player.duration():
             return
@@ -366,6 +364,7 @@ class AudioController(QFrame):
         self.player.play(fade=fade)
         self.unpaused.emit(self.get_playing_track())
 
+    @pyqtSlot()
     def play_pause_button_clicked(self) -> None:
         if not self.current_playlist:
             return
@@ -378,14 +377,17 @@ class AudioController(QFrame):
         elif self.user_action == 2:
             self.unpause()
 
+    @pyqtSlot()
     def next_button_clicked(self) -> None:
         self.current_playlist.set_next()
         self.play()
 
+    @pyqtSlot()
     def prev_button_clicked(self) -> None:
         self.current_playlist.set_prev()
         self.play()
 
+    @pyqtSlot(int)
     def volume_changed(self, volume_value: int) -> None:
         # print("volume changed:", volume_value)
         self.player.audio_output.setVolume(volume_value / 100)
@@ -399,6 +401,7 @@ class AudioController(QFrame):
             self.volume_button.setIcon(self.volume_on_icon)
             self.is_muted = False
 
+    @pyqtSlot()
     def volume_button_clicked(self) -> None:
         if self.player.audio_output.volume():
             self.volume_slider_position_backup = self.volume_slider_position

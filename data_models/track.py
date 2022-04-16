@@ -3,7 +3,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
-@dataclass
+@dataclass(eq=False)
 class Track:
     track_id: int
     file_path: str = field(repr=False)
@@ -24,6 +24,12 @@ class Track:
 
     def __str__(self):
         return repr(self)
+
+    def __eq__(self, other):
+        if not isinstance(other, Track):
+            return False
+
+        return self.file_path == other.file_path
 
     @property
     def size(self):

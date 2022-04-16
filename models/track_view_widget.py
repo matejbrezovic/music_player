@@ -3,6 +3,8 @@ from typing import List
 from PyQt6 import QtWidgets
 
 # from auto_resizing_header_view_test import HeaderView
+from PyQt6.QtCore import pyqtSlot
+
 from data_models.track import Track
 from models.track_table_view import TrackTableView
 from utils import *
@@ -69,6 +71,7 @@ class TrackViewWidget(QWidget):
 
         self.main_layout.addWidget(self.table_view)
 
+    @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         self.table_view.set_tracks(tracks)
         self.displayed_tracks = tracks
@@ -77,16 +80,24 @@ class TrackViewWidget(QWidget):
         self.table_view.selectionModel().clearSelection()
         self.table_view.scrollToTop()
 
+    @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:
         self.playing_track = track
         if track not in self.displayed_tracks:
+            print("Track not in displayed tracks!")
             self.table_view.set_playing_track_index(None)
             return
         self.table_view.set_playing_track_index(self.displayed_tracks.index(track))
         self.table_view.set_unpaused()
 
+    @pyqtSlot()
     def pause_playing_track(self) -> None:
         self.table_view.set_paused()
 
+    @pyqtSlot()
     def unpause_playing_track(self) -> None:
         self.table_view.set_unpaused()
+
+    @pyqtSlot(list)
+    def added_tracks(self, tracks: List[Track]) -> None:
+        self.table_view.added_tracks(tracks)

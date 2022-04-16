@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QSty
 
 from constants import *
 from data_models.navigation_group import NavigationGroup
+from data_models.track import Track
 from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import ElidedLabel
 
@@ -118,6 +119,8 @@ class NavigationTableView(QTableView):
         super().__init__(parent)
         self.groups: List[NavigationGroup] = []
         self.group_key = None
+        self.last_group_key = self.group_key
+        self.last_group_title = None
         self._table_model = NavigationTableModel(self)
         self._table_delegate = NavigationTableItemDelegate(self)
         self.setModel(self._table_model)
@@ -126,15 +129,13 @@ class NavigationTableView(QTableView):
         self.clicked.connect(self.single_click_action)
         self.doubleClicked.connect(self.double_click_action)
 
-        # self.click_timer = QTimer()
+    def get_tracks_from_selected_group(self) -> List[Track]:
+        if not self.selectedIndexes():
+            return []
 
-    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
-            self.clearSelection()
-        return super().focusInEvent(event)
-
-    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
-        return super().focusOutEvent(event)
+        selected_row = self.selectedIndexes()[0].row()
+        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[selected_row].title)
+        return tracks
 
     @pyqtSlot(str)
     def set_group_key(self, key: str) -> None:
@@ -146,28 +147,28 @@ class NavigationTableView(QTableView):
         self._table_model.set_groups(groups)
         self._table_delegate.set_groups(groups)
 
-    # def g_clicked(self, index):
-    #     self.click_timer.singleShot(80, lambda: self.perform_single_click_action(index))
-    #
-    # def g_double_clicked(self, index):
-    #     self.click_timer.stop()
-    #     self.group_double_clicked.emit(
-    #         CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title))
-
     @pyqtSlot(QModelIndex)
-    def single_click_action(self, index):
-        # global_timer.timer_init()
-        # global_timer.start()
-        # print("click")
-        # start = time.time()
-        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
-        # print("Tracks got in: ", time.time() - start)
+    def single_click_action(self, index: QModelIndex) -> None:
+        self.last_group_key = self.group_key
+        self.last_group_title = self.groups[index.row()].title
+        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
         self.group_clicked.emit(tracks)
 
     @pyqtSlot(QModelIndex)
-    def double_click_action(self, index):
-        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.groups[index.row()].title)
+    def double_click_action(self, index: QModelIndex) -> None:
+        self.last_group_key = self.group_key
+        self.last_group_title = self.groups[index.row()].title
+        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
         self.group_double_clicked.emit(tracks)
+
+    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
+            self.clearSelection()
+        return super().focusInEvent(event)
+
+    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+        return super().focusOutEvent(event)
+
 
 
 class NavigationGroupWidget(QWidget):

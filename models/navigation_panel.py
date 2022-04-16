@@ -5,6 +5,7 @@ from PyQt6.QtCore import pyqtSlot
 
 from constants import *
 from data_models.navigation_group import NavigationGroup
+from data_models.track import Track
 from models.navigation_table_view import NavigationTableView
 from repositories.cached_tracks_repository import CachedTracksRepository
 from tag_manager import TagManager
@@ -20,7 +21,10 @@ class NavigationPanel(QFrame):
         self.setStyleSheet("NavigationPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
-        self.tag_manager = TagManager()
+        # self.tag_manager = TagManager()
+
+        self._last_group_key = None
+        self._last_group_title = None
 
         default_row_height = 56
         self.navigation_table_view = NavigationTableView()
@@ -39,7 +43,7 @@ class NavigationPanel(QFrame):
         self.navigation_table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.navigation_table_view.setFrameShape(QFrame.Shape.NoFrame)
 
-        self.navigation_table_view.group_clicked.connect(self.group_clicked.emit)
+        self.navigation_table_view.group_clicked.connect(self._group_clicked)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
 
         self.vertical_layout = QtWidgets.QVBoxLayout(self)
@@ -50,6 +54,10 @@ class NavigationPanel(QFrame):
 
         self.view_key = 0
         self.group_key_changed(0)
+
+    def _group_clicked(self, group_tracks: List[Track]):
+        # self._last_selected_tracks = group_tracks
+        self.group_clicked.emit(group_tracks)
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:
@@ -82,10 +90,7 @@ class NavigationPanel(QFrame):
 
             self.groups.append(NavigationGroup(title, visual_title, count, pixmap))
 
-        # print("Groups created in:", time.time() - start)
         self.navigation_table_view.set_groups(self.groups)
-        # print("Groups fully displayed in:", time.time() - start)
-        # print("Updated Groups")
 
     @pyqtSlot(int)
     def group_key_changed(self, new_key: int) -> None:
@@ -99,4 +104,20 @@ class NavigationPanel(QFrame):
     def refresh_groups(self) -> None:
         self._load_groups(self.view_key)
 
+    @pyqtSlot(list)
+    def added_tracks(self) -> None:
+        return
+        # self._last_selected_tracks = self.navigation_table_view.get_tracks_from_selected_group()
+
+    @pyqtSlot(list)
+    def removed_tracks(self) -> None:
+        ...
+
+    def get_tracks_from_selected_group(self) -> List[Track]:
+        return self.navigation_table_view.get_tracks_from_selected_group()
+
+    def get_last_selected_tracks(self) -> List[Track]:
+        tracks = CachedTracksRepository().get_tracks_by(self.navigation_table_view.last_group_key,
+                                                        self.navigation_table_view.last_group_title)
+        return tracks
 

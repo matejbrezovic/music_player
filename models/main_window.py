@@ -122,7 +122,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
                                   self.audio_controller.play(),
                                   ))
         self.main_panel.play_now_triggered.connect(play_now_triggered)
-        self.main_panel.queue_next_triggered.connect(self.audio_controller.queue_next)  # TODO update queue info panel
+        self.main_panel.queue_next_triggered.connect(self.audio_controller.queue_next)  # TODO update status bar
         self.main_panel.queue_last_triggered.connect(self.audio_controller.queue_last)
         self.main_panel.output_to_triggered.connect(self.audio_controller.set_audio_output)
 
@@ -150,7 +150,16 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.audio_controller.unpaused.connect(lambda: (self.main_panel.unpause_playing_track(),
                                                self.information_panel.unpause_playing_track()))
         self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
-
         self.audio_controller.remaining_queue_time_changed.connect(self.status_bar.update_remaining_queue_time)
-        # self.queue_info_panel.right_label_clicked.connect(...)
 
+        self.scan_folders_dialog.added_tracks.connect(self._added_tracks)
+        self.scan_folders_dialog.removed_tracks.connect(self._removed_tracks)
+
+    def _added_tracks(self, tracks: List[Track]) -> None:
+        tracks_from_last_selected_group = self.navigation_panel.get_last_selected_tracks()
+        self.main_panel.display_tracks(tracks_from_last_selected_group)
+        self.main_panel.set_playing_track(self.audio_controller.get_playing_track())
+
+
+    def _removed_tracks(self, tracks: List[Track]) -> None:
+        ...
