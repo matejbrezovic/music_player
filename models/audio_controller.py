@@ -326,6 +326,7 @@ class AudioController(QFrame):
 
         self.passed_time_label.setText(f"0:00/ {format_seconds(playing_track.length)}")
         self.track_title_label.setText(f"{playing_track.artist} - {playing_track.title}")
+        print(format_seconds(playing_track.length))
 
         self.is_playing = playing_track.is_valid()
         # print("Track is valid:", playing_track.is_valid())
@@ -353,8 +354,9 @@ class AudioController(QFrame):
     # @pyqtSlot(int)
     def player_duration_changed(self, duration: int) -> None:
         self.seek_slider.setRange(0, duration - 120)
-        self.passed_time_label.setText(get_formatted_time(self.player.duration()))
+        # self.passed_time_label.setText(get_formatted_time(self.player.duration()))
         self.seek_slider.set_length_in_seconds(format_player_position_to_seconds(self.player.duration()))
+        print(get_formatted_time(self.player.duration()))
 
     # @pyqtSlot(int)
     def player_position_changed(self, position: int) -> None:
@@ -366,8 +368,8 @@ class AudioController(QFrame):
         else:
             self.seek_slider.setSliderPosition(position)
             old_text = self.passed_time_label.text()
-            self.passed_time_label.setText(get_formatted_time(self.player.position()) + "/" +
-                                           get_formatted_time(self.player.duration()))
+            self.passed_time_label.setText(get_formatted_time(self.player.position()) + "/ " +
+                                           format_seconds(self.get_playing_track().length))
             if old_text != self.passed_time_label.text():
                 # self.remaining_queue_time -= format_player_position_to_seconds(self.player.position())
                 self.remaining_queue_time_changed.emit(self.remaining_queue_time -

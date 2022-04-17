@@ -183,7 +183,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         """Adds new tracks to database if they're already not there and removes tracks from database
         if they're not in new tracks."""
         tracks_in_database = self.get_tracks_by("folder", folder_path)
-        file_paths_in_database = [track.file_path for track in tracks_in_database]
+        file_paths_in_database = [t.file_path for t in tracks_in_database]
 
         if not tracks_in_database:
             to_add = new_file_paths
@@ -214,22 +214,30 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
     @staticmethod
     def convert_file_paths_to_tracks(file_paths: List[str]) -> List[Track]:
-        tracks = []
+        converted_tracks = []
         tag_manager = TagManager()
         for i, file_path in enumerate(file_paths):
             try:
                 loaded_file = tag_manager.load_file(file_path)
 
                 title = loaded_file["title"].first
-                if not title:
-                    title = os.path.basename(file_path).split("-", 1)[-1].strip()
+                artist = loaded_file["artist"].first
+                if not title and not artist:
+                    title = os.path.splitext(os.path.basename(file_path))[0]
+                    artist, title = title.split(" - ", 1)
+                    artist = artist.strip()
+                    title = title.strip()
+                elif not title:
+                    title = os.path.splitext(os.path.basename(file_path))[0]
+                elif not artist:
+                    pass
 
-                tracks.append(Track(
+                converted_tracks.append(Track(
                     i,  # temporary id
                     file_path,
                     str(title),
                     loaded_file["album"].first,
-                    loaded_file["artist"].first,
+                    str(artist),
                     loaded_file["composer"].first,
                     loaded_file["genre"].first,
                     int(loaded_file["year"]) if int(loaded_file["year"]) else None,
@@ -241,5 +249,22 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 # TODO cannot convert '2020-10-26T20:39:57-04:00' to int type for year so ValueError (can be improved)
                 continue
 
-        return tracks
+        return converted_tracks
+
+
+if __name__ == "__main__":
+    t = TracksRepository()
+    root = "C:\\home\\matey\\Music\\"
+    files = ["Nanatsu no Taizai OST - ELIEtheBEST.mp3",
+             "My Hero Academia -You Say Run- (Orchestral Arrangement) - 10K SPECIAL.mp3",
+             "Piano Orchestral 60 Minutes Version (With Relaxin - Alan Walker The Spectre - Piano Orchestral 60 Minu.mp3",
+             "y2mate.com - - - SAO II OST Track 01 - Gunland_OS-UjCmrJh0.mp3"]
+
+    file_paths = [root + file for file in files]
+
+    tracks = t.convert_file_paths_to_tracks(file_paths)
+
+    for track in tracks:
+        print(f"{track.artist} ||| {track.title}")
+
 

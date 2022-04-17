@@ -188,7 +188,7 @@ class NavigationGroupWidget(QWidget):
         self.title_label.setContentsMargins(0, 0, 0, 0)
 
         self.tracks_label = ElidedLabel(f"{tracks_num} {'tracks' if tracks_num > 1 else 'track'}")
-        self.tracks_label.setFont(QFont(self.tracks_label.font().family(), 7))
+        self.tracks_label.setFont(QFont(self.tracks_label.font().family(), 8))
         self.tracks_label.setContentsMargins(0, 0, 0, 0)
 
         self.v_layout.addWidget(self.title_label)
