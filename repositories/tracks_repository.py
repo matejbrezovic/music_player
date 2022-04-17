@@ -224,8 +224,13 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 artist = loaded_file["artist"].first
                 if not title and not artist:
                     title = os.path.splitext(os.path.basename(file_path))[0]
-                    artist, title = title.split(" - ", 1)
-                    artist = artist.strip()
+                    split = title.split(" - ", 1)
+                    if len(split) == 2:
+                        artist, title = split
+                    else:
+                        title = split[0]
+                    if artist:
+                        artist = artist.strip()
                     title = title.strip()
                 elif not title:
                     title = os.path.splitext(os.path.basename(file_path))[0]
@@ -237,7 +242,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                     file_path,
                     str(title),
                     loaded_file["album"].first,
-                    str(artist),
+                    artist,
                     loaded_file["composer"].first,
                     loaded_file["genre"].first,
                     int(loaded_file["year"]) if int(loaded_file["year"]) else None,
@@ -245,7 +250,8 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                     int(os.path.getsize(file_path))
                     # get_artwork_pixmap(file_path, "album")
                 ))
-            except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError):
+            except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError) as e:
+                print(e)
                 # TODO cannot convert '2020-10-26T20:39:57-04:00' to int type for year so ValueError (can be improved)
                 continue
 
@@ -258,7 +264,9 @@ if __name__ == "__main__":
     files = ["Nanatsu no Taizai OST - ELIEtheBEST.mp3",
              "My Hero Academia -You Say Run- (Orchestral Arrangement) - 10K SPECIAL.mp3",
              "Piano Orchestral 60 Minutes Version (With Relaxin - Alan Walker The Spectre - Piano Orchestral 60 Minu.mp3",
-             "y2mate.com - - - SAO II OST Track 01 - Gunland_OS-UjCmrJh0.mp3"]
+             "y2mate.com - - - SAO II OST Track 01 - Gunland_OS-UjCmrJh0.mp3",
+             "Eminem Rap God (Explicit).mp3",
+             "Black Clover Rover & Catcher.mp3"]
 
     file_paths = [root + file for file in files]
 

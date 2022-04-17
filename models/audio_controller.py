@@ -325,7 +325,11 @@ class AudioController(QFrame):
         # print("Playing track:", playing_track)
 
         self.passed_time_label.setText(f"0:00/ {format_seconds(playing_track.length)}")
-        self.track_title_label.setText(f"{playing_track.artist} - {playing_track.title}")
+
+        if playing_track.artist:
+            self.track_title_label.setText(f"{playing_track.artist} - {playing_track.title}")
+        else:
+            self.track_title_label.setText(playing_track.title)
         print(format_seconds(playing_track.length))
 
         self.is_playing = playing_track.is_valid()
