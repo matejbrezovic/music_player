@@ -57,16 +57,15 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
         if group_key.lower() == "folder":
             conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
-            track_counts = cursor.execute(f"SELECT get_folder_path(file_path), COUNT (*) "
+            track_counts = cursor.execute(f"SELECT 'get_folder_path(file_path)', COUNT (*) "
                                           f"FROM tracks "
                                           # f"WHERE {group_key} IS NOT NULL "
-                                          f"GROUP BY get_folder_path(file_path)").fetchall()
+                                          f"GROUP BY 'get_folder_path(file_path)'").fetchall()
         else:
             track_counts = cursor.execute(f"SELECT {group_key}, COUNT (*) "
                                           f"FROM tracks "
                                           # f"WHERE {group_key} IS NOT NULL "
                                           f"GROUP BY {group_key}").fetchall()
-
         return track_counts
 
     def get_tracks_by(self, key: str, value: Union[str, int]) -> List[Track]:
@@ -76,7 +75,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
         if key.lower() == "folder":
             conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
-            cursor.execute(f"SELECT * FROM tracks WHERE get_folder_path(file_path) = ?", (value, ))
+            cursor.execute(f"SELECT * FROM tracks WHERE 'get_folder_path(file_path)' = ?", (value, ))
 
         elif value:
             if isinstance(value, str):
@@ -263,7 +262,6 @@ if __name__ == "__main__":
     root = "C:\\home\\matey\\Music\\"
     files = ["Nanatsu no Taizai OST - ELIEtheBEST.mp3",
              "My Hero Academia -You Say Run- (Orchestral Arrangement) - 10K SPECIAL.mp3",
-             "Piano Orchestral 60 Minutes Version (With Relaxin - Alan Walker The Spectre - Piano Orchestral 60 Minu.mp3",
              "y2mate.com - - - SAO II OST Track 01 - Gunland_OS-UjCmrJh0.mp3",
              "Eminem Rap God (Explicit).mp3",
              "Black Clover Rover & Catcher.mp3"]

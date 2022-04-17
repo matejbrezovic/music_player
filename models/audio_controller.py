@@ -330,7 +330,7 @@ class AudioController(QFrame):
             self.track_title_label.setText(f"{playing_track.artist} - {playing_track.title}")
         else:
             self.track_title_label.setText(playing_track.title)
-        print(format_seconds(playing_track.length))
+        # print(format_seconds(playing_track.length))
 
         self.is_playing = playing_track.is_valid()
         # print("Track is valid:", playing_track.is_valid())
@@ -360,7 +360,7 @@ class AudioController(QFrame):
         self.seek_slider.setRange(0, duration - 120)
         # self.passed_time_label.setText(get_formatted_time(self.player.duration()))
         self.seek_slider.set_length_in_seconds(format_player_position_to_seconds(self.player.duration()))
-        print(get_formatted_time(self.player.duration()))
+        # print(get_formatted_time(self.player.duration()))
 
     # @pyqtSlot(int)
     def player_position_changed(self, position: int) -> None:

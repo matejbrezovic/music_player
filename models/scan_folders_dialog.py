@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import sys
-import time
+import typing
 from collections import defaultdict
 from typing import List, Tuple
 
@@ -10,7 +10,6 @@ from PyQt6.QtWidgets import (QPushButton, QScrollArea, QTreeWidgetItem, QTreeWid
 
 from config import Config
 from constants import *
-from data_models.track import Track
 from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import *
 
@@ -93,7 +92,7 @@ class ScanFoldersDialog(QDialog):
         self.update_selected_folders(config.get_setting("preselected_folders"))
 
     def exec(self) -> None:
-        # returning None, not int
+        # must return None, not int
         super().exec()
 
     def proceed_button_clicked(self) -> None:
@@ -102,7 +101,6 @@ class ScanFoldersDialog(QDialog):
         config.set_setting("preselected_folders", self.checked_folders)
         config.save(DEFAULT_CONFIG_PATH)
 
-        # start = time.perf_counter()
         found_file_paths = defaultdict(list)
         for folder in self.checked_folders:
             for root, _, files in os.walk("C:" + folder):
@@ -111,9 +109,6 @@ class ScanFoldersDialog(QDialog):
                         found_file_paths[root.replace("\\", "/")].append(
                             f"{root}/{file}".replace("\\", "/").replace("//", "/"))
 
-        # scan_end = time.perf_counter()
-        # print("Scanned folders in:", scan_end - start)
-
         tracks_added, tracks_removed = [], []
 
         for dir_root, file_paths in found_file_paths.items():
@@ -121,15 +116,8 @@ class ScanFoldersDialog(QDialog):
             tracks_added += added
             tracks_removed += removed
 
-        # conversion_end = time.perf_counter()
-        # print("Converted to tracks in:", conversion_end - scan_end)
-
-        # self.cached_tracks_repository.set_tracks(tracks)
         self.cached_tracks_repository.delete_cache()
         self.cached_tracks_repository.cache_tracks()
-
-        # cache_end = time.perf_counter()
-        # print("Cached in:", cache_end - conversion_end)
 
         self.added_tracks.emit(tracks_added)
         self.removed_tracks.emit(tracks_removed)
@@ -147,14 +135,17 @@ class ScanFoldersDialog(QDialog):
             self.proceed_button.setEnabled(True)
 
     def update_selected_folders(self, paths: List[str]) -> None:
-        if not paths:
-            return
         delete_grid_layout_items(self.selected_folders_widget_grid_layout)
+        if not paths:
+            self.proceed_button.setEnabled(False)
+            return
+        self.proceed_button.setEnabled(True)
         for i, folder_path in enumerate(paths):
             checkbox = PathCheckbox()
             checkbox.setCheckState(Qt.CheckState.Checked)
             checkbox.set_path(folder_path)
             checkbox.state_changed.connect(self.checkbox_state_changed)
+
             self.selected_folders_widget_grid_layout.addWidget(checkbox, i, 0)
             self.selected_folders_widget_grid_layout.addWidget(QLabel(folder_path), i, 1)
             if folder_path not in self.selected_folders:
@@ -235,7 +226,7 @@ class SelectFoldersDialog(QDialog):
         self.vertical_layout.addWidget(self.bottom_widget)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
 
-    def exec(self):
+    def exec(self) -> None:
         self.select_preselected_folders()
         super().exec()
 

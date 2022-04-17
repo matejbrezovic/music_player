@@ -1,7 +1,8 @@
+import typing
 from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt, QRectF, QEvent
-from PyQt6.QtGui import QPainter, QMouseEvent
+from PyQt6.QtCore import Qt, QRectF, QEvent, QPoint
+from PyQt6.QtGui import QPainter, QMouseEvent, QMoveEvent
 from PyQt6.QtWidgets import QProxyStyle, QToolTip, QStyleOptionComplex
 
 from audio_player_test import ImprovedSlider
@@ -123,13 +124,13 @@ class SeekSlider(ImprovedSlider):
         if event.type() == QEvent.Type.HoverMove:
             if not self.length_in_seconds or not self.isEnabled():
                 return True
-            # print(self.height(), self.y(), event.oldPos().y())
-
+            event = typing.cast(QMoveEvent, event)
             seconds = int((event.oldPos().x() / self.width()) * self.length_in_seconds)
             seconds = max(0, min(seconds, self.length_in_seconds))
             formatted_seconds = format_seconds(seconds)
             tool_tip_str = f"{formatted_seconds}/{self.formatted_length_in_seconds}"
-            QToolTip.showText(self.mapToGlobal(event.oldPos()), tool_tip_str, self)
+            QToolTip.showText(self.mapToGlobal(QPoint(event.oldPos().x(), self.y() - self.height())),
+                              tool_tip_str, self)
             # self.__can_update_tooltip = False
 
             # self._tooltip_timer.start(30)
@@ -152,12 +153,6 @@ class SeekSlider(ImprovedSlider):
             self.setStyleSheet(self.dark_stylesheet)
         else:
             self.setStyleSheet(self.light_stylesheet)
-
-    # def hide_handle(self) -> None:
-    #     self.setStyleSheet(self.styleSheet() + "\nQSlider::handle:horizontal {background: transparent;}")
-    #
-    # def show_handle(self) -> None:
-    #     self.
 
     def set_length_in_seconds(self, length_in_seconds: int) -> None:
         self.length_in_seconds = length_in_seconds

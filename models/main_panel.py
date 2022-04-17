@@ -55,7 +55,7 @@ class MainPanel(QtWidgets.QFrame):
         self.track_view_widget.set_tracks(tracks)
         self.displayed_tracks = tracks
         # global_timer.print_elapsed_time()
-        print("Tracks displayed in:", time.time() - start)
+        # print("Tracks displayed in:", time.time() - start)
 
     # def select_track(self, track: Track) -> None: # TODO remove
     #     self.track_view_widget.select_row_by_track(track)

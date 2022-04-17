@@ -1,6 +1,7 @@
 from PyQt6 import QtWidgets
 from PyQt6.QtGui import QAction
 
+from data_models.track import Track
 from models.add_files_dialog import AddFilesDialog
 from models.audio_controller import AudioController
 from models.header_menu_widget import HeaderMenuWidget
