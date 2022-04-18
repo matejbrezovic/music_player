@@ -57,10 +57,10 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
         if group_key.lower() == "folder":
             conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
-            track_counts = cursor.execute(f"SELECT 'get_folder_path(file_path)', COUNT (*) "
+            track_counts = cursor.execute(f"SELECT get_folder_path(file_path), COUNT (*) "
                                           f"FROM tracks "
                                           # f"WHERE {group_key} IS NOT NULL "
-                                          f"GROUP BY 'get_folder_path(file_path)'").fetchall()
+                                          f"GROUP BY get_folder_path(file_path)").fetchall()
         else:
             track_counts = cursor.execute(f"SELECT {group_key}, COUNT (*) "
                                           f"FROM tracks "
@@ -75,7 +75,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
         if key.lower() == "folder":
             conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
-            cursor.execute(f"SELECT * FROM tracks WHERE 'get_folder_path(file_path)' = ?", (value, ))
+            cursor.execute(f"SELECT * FROM tracks WHERE get_folder_path(file_path) = ?", (value, ))
 
         elif value:
             if isinstance(value, str):

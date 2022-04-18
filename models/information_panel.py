@@ -2,6 +2,7 @@ import math
 from typing import List
 
 from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtGui import QFont
 
 from constants import *
 from data_models.track import Track
@@ -74,8 +75,11 @@ class InformationPanel(QFrame):
         self.track_info_scroll_area_widget_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.track_info_scroll_area.setWidget(self.track_info_scroll_area_widget)
 
-        self.currently_playing_track_title = ElidedLabel("No Track")
-        self.currently_playing_track_title.setContentsMargins(4, 0, 4, 0)
+        self.playing_track_title_label = ElidedLabel("No Track")
+        font = self.playing_track_title_label.font()
+        font.setBold(True)
+        self.playing_track_title_label.setFont(font)
+        self.playing_track_title_label.setContentsMargins(4, 0, 4, 0)
         # self.currently_playing_track_title.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.currently_playing_track_info = ElidedLabel("No Info")
         self.currently_playing_track_info.setContentsMargins(4, 0, 4, 0)
@@ -84,9 +88,9 @@ class InformationPanel(QFrame):
         artwork_pixmap = get_artwork_pixmap("")
         if not artwork_pixmap:
             artwork_pixmap = get_default_artwork_pixmap("album")
-        self.currently_playing_track_image_label = SpecificImageLabel(artwork_pixmap)
-        self.currently_playing_track_image_label.setUpdatesEnabled(True)
-        self.currently_playing_track_image_label.setAlignment(Qt.AlignmentFlag.AlignTop)
+        self.playing_track_image_label = SpecificImageLabel(artwork_pixmap)
+        self.playing_track_image_label.setUpdatesEnabled(True)
+        self.playing_track_image_label.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         self.track_information_header = QWidget(self)
         self.track_information_header.setFixedHeight(24)
@@ -98,10 +102,10 @@ class InformationPanel(QFrame):
         self.track_information_combo_box.addItem("Track Information")
         self.track_information_header_layout.addWidget(self.track_information_combo_box)
 
-        self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_title)
+        self.track_info_scroll_area_widget_layout.addWidget(self.playing_track_title_label)
         self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_info)
         self.track_info_scroll_area_widget_layout.addSpacerItem(QSpacerItem(20, 40))
-        self.track_info_scroll_area_widget_layout.addWidget(self.currently_playing_track_image_label)
+        self.track_info_scroll_area_widget_layout.addWidget(self.playing_track_image_label)
 
         self.track_info_widget_layout.addWidget(self.track_information_header)
         self.track_info_widget_layout.addWidget(self.track_info_scroll_area)
@@ -135,13 +139,13 @@ class InformationPanel(QFrame):
             channels = "Stereo" if f["#channels"].first == 2 else "Mono"
             return f"{extension} {bitrate}, {samplerate}, {channels}, {format_seconds(t.length)}"
 
-        self.currently_playing_track_title.setText(str(track.title))
+        self.playing_track_title_label.setText(str(track.title))
         self.currently_playing_track_info.setText(get_track_info(track))
         artwork_pixmap = get_artwork_pixmap(track.file_path)
         if not artwork_pixmap:
             artwork_pixmap = self.artwork_pixmap
-        self.currently_playing_track_image_label.pixmap = artwork_pixmap
-        self.currently_playing_track_image_label.setPixmap(artwork_pixmap)
+        self.playing_track_image_label.pixmap = artwork_pixmap
+        self.playing_track_image_label.setPixmap(artwork_pixmap)
 
         # print("Inf index:", track_index)
         if track_index is None:
