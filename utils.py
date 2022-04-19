@@ -387,21 +387,32 @@ def get_blurred_pixmap(pixmap: QPixmap) -> QPixmap:
 class HoverButton(QPushButton):
     def __init__(self, *args):
         super().__init__(*args)
-        self.backup_icon = None
+        self.normal_icon = None
+        self.hover_icon = None
         self.is_in_dark_mode = True
 
     def enterEvent(self, event: QEnterEvent) -> None:
-        if self.isEnabled():
-            self.backup_icon = self.icon()
-            self.setIcon(get_hover_icon(self.backup_icon, self.is_in_dark_mode))
+        if self.isEnabled() and self.hover_icon:
+            super().setIcon(self.hover_icon)
 
     def leaveEvent(self, e: QEvent) -> None:
-        if self.isEnabled():
-            self.setIcon(self.backup_icon)
+        if self.isEnabled() and self.normal_icon:
+            super().setIcon(self.normal_icon)
 
     def mousePressEvent(self, e: QMouseEvent) -> None:
         self.clicked.emit()
-        self.enterEvent(QEnterEvent(QPointF(1, 1), QPointF(1, 1), QPointF(1, 1)))
+        if self.isEnabled() and self.hover_icon:
+            super().setIcon(self.hover_icon)
+
+    def setIcon(self, icon: QIcon) -> None:
+        self.normal_icon = icon
+        self.hover_icon = get_hover_icon(icon, self.is_in_dark_mode)
+        super().setIcon(icon)
+
+    def set_is_in_dark_mode(self, is_in_dark_mode: bool) -> None:
+        self.is_in_dark_mode = is_in_dark_mode
+        if self.normal_icon:
+            self.hover_icon = get_hover_icon(self.normal_icon, is_in_dark_mode)
 
 
 def change_icon_color(icon: QIcon, color: QColor) -> QIcon:

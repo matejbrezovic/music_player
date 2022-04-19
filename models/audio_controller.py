@@ -251,10 +251,10 @@ class AudioController(QFrame):
         self.prev_button.setIcon(self.prev_icon)
         self.next_button.setIcon(self.next_icon)
 
-        self.play_button.is_in_dark_mode = dark_mode_enabled
-        self.volume_button.is_in_dark_mode = dark_mode_enabled
-        self.prev_button.is_in_dark_mode = dark_mode_enabled
-        self.next_button.is_in_dark_mode = dark_mode_enabled
+        self.play_button.set_is_in_dark_mode(dark_mode_enabled)
+        self.volume_button.set_is_in_dark_mode(dark_mode_enabled)
+        self.prev_button.set_is_in_dark_mode(dark_mode_enabled)
+        self.next_button.set_is_in_dark_mode(dark_mode_enabled)
 
         self.star_widget.set_star_color(color)
 
