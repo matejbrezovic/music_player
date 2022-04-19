@@ -227,8 +227,8 @@ class HeaderView(QtWidgets.QHeaderView):
 
 
 class Model(QtCore.QAbstractTableModel):
-    def __init__(self, parent: Optional[QtWidgets.QWidget] = None) -> None:
-        super(Model, self).__init__(parent)
+    def __init__(self, *args) -> None:
+        super(Model, self).*args)
         self.__headers = ["Column A", "Column B", "Column C", "Column D", "Column E", "Column F", "Column G"]
         self.__data = []
         for i in range(10):

@@ -15,8 +15,8 @@ class InformationPanel(QFrame):
     track_clicked = pyqtSignal(Track, int)
     track_double_clicked = pyqtSignal(Track, int)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
         # self.setObjectName("information_panel")
         # self.setStyleSheet("InformationPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH)

@@ -8,8 +8,8 @@ from PyQt6 import QtGui
 
 
 class Model(QtCore.QAbstractTableModel):
-    def __init__(self, parent: Optional[QWidget] = None) -> None:
-        super(Model, self).__init__(parent)
+    def __init__(self, *args) -> None:
+        super(Model, self).*args)
         self.__data = []
         for i in range(10):
             row = [0, 1, 2, 3, 4, 5, 6, 7]

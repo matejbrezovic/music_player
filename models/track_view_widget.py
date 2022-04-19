@@ -19,8 +19,8 @@ class TrackViewWidget(QWidget):
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.displayed_tracks: List[Track] = []
         self.loaded_displays = {}
         self.default_stylesheet = ""

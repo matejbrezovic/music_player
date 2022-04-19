@@ -6,8 +6,8 @@ from repositories.tracks_repository import TracksRepository
 
 
 class AddFilesDialog(QFileDialog):
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
 
     def exec(self) -> None:
         extension_string = ' '.join([f'*{extension}' for extension in SUPPORTED_AUDIO_FORMATS])

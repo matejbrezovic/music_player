@@ -19,8 +19,8 @@ class ScanFoldersDialog(QDialog):
     removed_tracks = pyqtSignal(list)
 
     # noinspection PyTypeChecker
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
 
         self.setWindowFlag(Qt.WindowType.CustomizeWindowHint, True)
         self.setWindowFlag(Qt.WindowType.WindowTitleHint, True)

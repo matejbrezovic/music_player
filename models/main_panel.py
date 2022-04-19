@@ -20,8 +20,8 @@ class MainPanel(QtWidgets.QFrame):
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.displayed_tracks = []
         self.cached_tracks_repository = CachedTracksRepository()
         self.setStyleSheet("MainPanel {background-color: rgba(0, 0, 0, 0.3)}")
@@ -51,6 +51,7 @@ class MainPanel(QtWidgets.QFrame):
     def display_tracks(self, key: str, value: str, tracks: List[Track]) -> None:
         if (self.key, self.value) == (key, value):
             return
+        self.key, self.value = key, value
         self.track_view_widget.set_tracks(tracks)
         self.displayed_tracks = tracks
 

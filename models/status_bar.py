@@ -11,8 +11,8 @@ from utils import ClickableLabel, format_seconds
 class StatusBar(QFrame):
     # right_label_clicked = pyqtSignal()
 
-    def __init__(self, audio_controller: AudioController, parent=None):
-        super().__init__(parent)
+    def __init__(self, audio_controller: AudioController, *args):
+        super().__init__(*args)
         self.setFixedHeight(18)
 
         self.audio_controller = audio_controller

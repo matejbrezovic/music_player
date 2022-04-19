@@ -115,8 +115,8 @@ class NavigationTableView(QTableView):
     group_clicked = pyqtSignal(str, str, list)
     group_double_clicked = pyqtSignal(str, str, list)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.groups: List[NavigationGroup] = []
         self.group_key = None
         self.last_group_key = self.group_key
@@ -175,8 +175,8 @@ class NavigationTableView(QTableView):
 
 
 class NavigationGroupWidget(QWidget):
-    def __init__(self, title: str, tracks_num: int, parent=None):
-        super().__init__(parent)
+    def __init__(self, title: str, tracks_num: int, *args):
+        super().__init__(*args)
 
         self.group_id = f"{title}{tracks_num}"
         self.v_layout = QVBoxLayout(self)

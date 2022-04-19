@@ -83,8 +83,8 @@ class ElidedLabel(QLabel):
 
 
 class ImageLabel(QLabel):
-    def __init__(self, pixmap: QPixmap, parent=None):
-        super().__init__(parent)
+    def __init__(self, pixmap: QPixmap, *args):
+        super().__init__(*args)
         self.pixmap = pixmap
 
         size_policy = QSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Expanding)  # Very important!
@@ -122,8 +122,8 @@ class ImageLabel(QLabel):
 
 
 class SpecificImageLabel(QLabel):
-    def __init__(self, pixmap: QPixmap, parent=None):
-        super().__init__(parent)
+    def __init__(self, pixmap: QPixmap, *args):
+        super().__init__(*args)
         self.pixmap = pixmap
         # self.setStyleSheet("background-color: red;")
         # self.setMinimumWidth(super().minimumWidth())
@@ -166,8 +166,8 @@ class ClickableLabel(QLabel):
     clicked = pyqtSignal()
     double_clicked = pyqtSignal()
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
 
     def mousePressEvent(self, event: QMouseEvent) -> None:
         self.clicked.emit()
@@ -181,8 +181,8 @@ class ClickableLabel(QLabel):
 class FixedHorizontalSplitter(QSplitter):
     sizes_changed = pyqtSignal(list)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.setOrientation(Qt.Orientation.Horizontal)
         self.setStyle(FixedHorizontalSplitterProxyStyle())
         self.last_sizes = self.sizes()
@@ -275,8 +275,8 @@ class TransparentComboBox(QComboBox):
                             background-color: rgba(255, 255, 255, 0);
                         }'''
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
 
         self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
         self.setUpdatesEnabled(True)

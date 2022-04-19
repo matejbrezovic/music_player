@@ -149,8 +149,8 @@ class SpectrumEqualizer(QWidget):
 
 
 class SpectrumEqualizerWidget(QWidget):
-    def __init__(self, bars, steps, parent=None):
-        super().__init__(parent)
+    def __init__(self, bars, steps, *args):
+        super().*args)
 
         self.spectrum_equalizer = SpectrumEqualizer(bars, steps, self)
         self.v_layout = QVBoxLayout(self)
