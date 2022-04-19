@@ -112,8 +112,8 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
 
 class NavigationTableView(QTableView):
     set_new_groups = pyqtSignal()
-    group_clicked = pyqtSignal(list)
-    group_double_clicked = pyqtSignal(list)
+    group_clicked = pyqtSignal(str, str, list)
+    group_double_clicked = pyqtSignal(str, str, list)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -152,7 +152,7 @@ class NavigationTableView(QTableView):
         self.last_group_key = self.group_key
         self.last_group_title = self.groups[index.row()].title
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
-        self.group_clicked.emit(tracks)
+        self.group_clicked.emit(self.group_key, self.last_group_title, tracks)
 
     def currentChanged(self, current: QtCore.QModelIndex, previous: QtCore.QModelIndex) -> None:
         self.single_click_action(current)
@@ -163,7 +163,7 @@ class NavigationTableView(QTableView):
         self.last_group_key = self.group_key
         self.last_group_title = self.groups[index.row()].title
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
-        self.group_double_clicked.emit(tracks)
+        self.group_double_clicked.emit(self.group_key, self.last_group_title, tracks)
 
     def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
         if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:

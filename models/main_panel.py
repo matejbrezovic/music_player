@@ -8,6 +8,7 @@ from PyQt6.QtWidgets import QVBoxLayout
 from constants import *
 from data_models.track import Track
 from models.track_view_widget import TrackViewWidget
+from repositories.cached_tracks_repository import CachedTracksRepository
 from tag_manager import TagManager
 
 
@@ -22,6 +23,7 @@ class MainPanel(QtWidgets.QFrame):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.displayed_tracks = []
+        self.cached_tracks_repository = CachedTracksRepository()
         self.setStyleSheet("MainPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(MAIN_PANEL_MIN_WIDTH)
         self.tag_manager = TagManager()
@@ -39,22 +41,18 @@ class MainPanel(QtWidgets.QFrame):
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.main_layout.addWidget(self.track_view_widget)
 
+        self.key = None
+        self.value = None
+
     def view_key_changed(self) -> None:
         ...
 
     @pyqtSlot(list)
-    def display_tracks(self, tracks: List[Track]) -> None:
-        # global_timer.print_elapsed_time()
-        start = time.time()
-        if self.displayed_tracks == tracks:
+    def display_tracks(self, key: str, value: str, tracks: List[Track]) -> None:
+        if (self.key, self.value) == (key, value):
             return
         self.track_view_widget.set_tracks(tracks)
         self.displayed_tracks = tracks
-        # global_timer.print_elapsed_time()
-        # print("Tracks displayed in:", time.time() - start)
-
-    # def select_track(self, track: Track) -> None: # TODO remove
-    #     self.track_view_widget.select_row_by_track(track)
 
     @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:

@@ -13,8 +13,8 @@ from utils import *
 
 
 class NavigationPanel(QFrame):
-    group_clicked = pyqtSignal(list)
-    group_double_clicked = pyqtSignal(list)
+    group_clicked = pyqtSignal(str, str, list)
+    group_double_clicked = pyqtSignal(str, str, list)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -44,7 +44,7 @@ class NavigationPanel(QFrame):
         self.navigation_table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.navigation_table_view.setFrameShape(QFrame.Shape.NoFrame)
 
-        self.navigation_table_view.group_clicked.connect(self._group_clicked)
+        self.navigation_table_view.group_clicked.connect(self.group_clicked.emit)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
 
         self.vertical_layout = QtWidgets.QVBoxLayout()
@@ -57,9 +57,9 @@ class NavigationPanel(QFrame):
         self.view_key = 0
         self.group_key_changed(0)
 
-    def _group_clicked(self, group_tracks: List[Track]):
-        # self._last_selected_tracks = group_tracks
-        self.group_clicked.emit(group_tracks)
+    # def _group_clicked(self, key: str, value: str):
+    #     # self._last_selected_tracks = group_tracks
+    #     self.group_clicked.emit(key, value)
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:

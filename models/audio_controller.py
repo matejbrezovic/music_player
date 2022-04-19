@@ -202,7 +202,7 @@ class AudioController(QFrame):
             self.next_button.setEnabled(False)
 
         self.background_pixmap = None
-        # self.star_widget.setEnabled(False)
+        self.star_widget.setEnabled(False)
 
         for child in self.findChildren(QWidget):
             if isinstance(child, QWidget):

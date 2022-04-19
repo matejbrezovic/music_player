@@ -426,11 +426,11 @@ class TrackTableView(QTableView):
 
         return super().focusInEvent(event)
 
-    def focusOutEvent(self, e: QFocusEvent) -> None:
+    def focusOutEvent(self, event: QFocusEvent) -> None:
         for index in self.selectedIndexes():
             if index.column() == self.rating_column:
                 typing.cast(StarDelegate, self.itemDelegateForColumn(self.rating_column)).commit_and_close_editor(index)
-        super().focusOutEvent(e)
+        super().focusOutEvent(event)
 
 
 class TestMainWindow(QMainWindow):
