@@ -20,6 +20,8 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.scan_folders_dialog = ScanFoldersDialog()
         self.add_files_dialog = AddFilesDialog()
 
+        CachedTracksRepository().cache_tracks()
+
         self._setup_ui()
 
         self.setWindowTitle(APPLICATION_NAME)
@@ -31,8 +33,6 @@ class MainWindowUi(QtWidgets.QMainWindow):
         # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
 
         # self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
-
-        CachedTracksRepository().cache_tracks()
 
     def __post__(self):
         self._setup_signals()

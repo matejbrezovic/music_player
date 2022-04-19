@@ -3,7 +3,7 @@ import sqlite3
 from typing import List, Union, Iterable, Tuple
 
 import mutagen.mp3
-from PyQt6 import QtWidgets
+from PyQt6.QtWidgets import QApplication
 
 from data_models.track import Track
 from repositories.base_repository import BaseRepository
@@ -39,7 +39,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         for track in tracks:
             self.add_track(track)
 
-    def add_new_tracks(self, tracks: Iterable[Track]) -> None:
+    def add_new_tracks(self, tracks: Iterable[Track]) -> None:  # TODO remove?
         existing_tracks = self.get_tracks()
         tracks_to_add = []
         for track in tracks:
@@ -57,15 +57,13 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
         if group_key.lower() == "folder":
             conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
-            track_counts = cursor.execute(f"SELECT get_folder_path(file_path), COUNT (*) "
-                                          f"FROM tracks "
-                                          # f"WHERE {group_key} IS NOT NULL "
-                                          f"GROUP BY get_folder_path(file_path)").fetchall()
-        else:
-            track_counts = cursor.execute(f"SELECT {group_key}, COUNT (*) "
-                                          f"FROM tracks "
-                                          # f"WHERE {group_key} IS NOT NULL "
-                                          f"GROUP BY {group_key}").fetchall()
+            group_key = "get_folder_path(file_path)"
+
+        track_counts = cursor.execute(f"SELECT {group_key}, COUNT (*) "
+                                      f"FROM tracks "
+                                      f"GROUP BY {group_key}").fetchall()
+
+        conn.close()
         return track_counts
 
     def get_tracks_by(self, key: str, value: Union[str, int]) -> List[Track]:
@@ -73,10 +71,11 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
 
+        if value == "all":
+            return self.get_tracks()
         if key.lower() == "folder":
             conn.create_function("get_folder_path", 1, lambda s: s.rsplit("/", 1)[0])
             cursor.execute(f"SELECT * FROM tracks WHERE get_folder_path(file_path) = ?", (value, ))
-
         elif value:
             if isinstance(value, str):
                 value = value.replace("'", "''")
@@ -126,11 +125,18 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 )
             )
 
-        if QtWidgets.QApplication.instance() is not None:
+        if QApplication.instance() is not None:
             for track in tracks:
                 track.artwork_pixmap = get_artwork_pixmap(track.file_path)
 
         return tracks
+
+    def get_track_count(self) -> int:
+        conn = self.get_connection()
+        cursor = conn.cursor()
+
+        track_count = cursor.execute("SELECT Count(track_id) FROM tracks").fetchone()[0]
+        return track_count
 
     def get_track_by_id(self, track_id: int) -> Track:
         conn = self.get_connection()
@@ -152,7 +158,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
             size=row["size"]
         )
 
-        if QtWidgets.QApplication.instance() is not None:
+        if QApplication.instance() is not None:
             track.artwork_pixmap = get_artwork_pixmap(track.file_path)
 
         return track
@@ -259,18 +265,23 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
 if __name__ == "__main__":
     t = TracksRepository()
-    root = "C:\\home\\matey\\Music\\"
-    files = ["Nanatsu no Taizai OST - ELIEtheBEST.mp3",
-             "My Hero Academia -You Say Run- (Orchestral Arrangement) - 10K SPECIAL.mp3",
-             "y2mate.com - - - SAO II OST Track 01 - Gunland_OS-UjCmrJh0.mp3",
-             "Eminem Rap God (Explicit).mp3",
-             "Black Clover Rover & Catcher.mp3"]
 
-    file_paths = [root + file for file in files]
+    def test():
+        global t
+        root = "C:\\home\\matey\\Music\\"
+        files = ["Nanatsu no Taizai OST - ELIEtheBEST.mp3",
+                 "My Hero Academia -You Say Run- (Orchestral Arrangement) - 10K SPECIAL.mp3",
+                 "y2mate.com - - - SAO II OST Track 01 - Gunland_OS-UjCmrJh0.mp3",
+                 "Eminem Rap God (Explicit).mp3",
+                 "Black Clover Rover & Catcher.mp3"]
 
-    tracks = t.convert_file_paths_to_tracks(file_paths)
+        file_paths = [root + file for file in files]
 
-    for track in tracks:
-        print(f"{track.artist} ||| {track.title}")
+        tracks = t.convert_file_paths_to_tracks(file_paths)
+
+        for track in tracks:
+            print(f"{track.artist} ||| {track.title}")
+
+    print(t.get_track_count())
 
 

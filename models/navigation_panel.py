@@ -16,12 +16,13 @@ class NavigationPanel(QFrame):
     group_clicked = pyqtSignal(list)
     group_double_clicked = pyqtSignal(list)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.setStyleSheet("NavigationPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
         # self.tag_manager = TagManager()
+        self.cached_tracks_repository = CachedTracksRepository()
 
         self._last_group_key = None
         self._last_group_title = None
@@ -46,11 +47,12 @@ class NavigationPanel(QFrame):
         self.navigation_table_view.group_clicked.connect(self._group_clicked)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
 
-        self.vertical_layout = QtWidgets.QVBoxLayout(self)
+        self.vertical_layout = QtWidgets.QVBoxLayout()
         self.vertical_layout.setSpacing(0)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.vertical_layout.addWidget(self.navigation_table_view)
+        self.setLayout(self.vertical_layout)
 
         self.view_key = 0
         self.group_key_changed(0)
@@ -61,11 +63,11 @@ class NavigationPanel(QFrame):
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:
-            tracks = CachedTracksRepository().get_tracks_by(group_key, group_title)  # TODO should be optimized
+            tracks = self.cached_tracks_repository.get_tracks_by(group_key, group_title)  # TODO should be optimized
             artwork_pixmap = get_artwork_pixmap(tracks[0].file_path)
 
             if not artwork_pixmap:
-                if group_key in ["artist", "composer"]:
+                if group_key in ("artist", "composer"):
                     return QPixmap("icons/artist.png")
                 elif group_key == "album":
                     return QPixmap("icons/album.png")
@@ -75,16 +77,22 @@ class NavigationPanel(QFrame):
                     return QPixmap("icons/misc.png")
             return artwork_pixmap
 
-        self.groups: List[NavigationGroup] = []
+        group_key: str = GROUP_OPTIONS[key].lower()
+        self.groups: List[NavigationGroup] = [NavigationGroup("all",
+                                                              f"All {group_key.capitalize()}s",
+                                                              self.cached_tracks_repository.get_track_count(),
+                                                              get_default_artwork_pixmap(group_key)
+                                                              )]
 
-        group_key = GROUP_OPTIONS[key].lower()
-        for title, count in CachedTracksRepository().get_track_counts_grouped_by(group_key):
+        for title, count in self.cached_tracks_repository.get_track_counts_grouped_by(group_key):
             pixmap = get_group_pixmap(group_key, title)
 
             if title is None and group_key == "album":
                 visual_title = "[Empty]"
-            elif title is None and group_key == "artist":
+            elif title is None:
                 visual_title = "[Unknown]"
+            elif title == "all":
+                visual_title = f"All {group_key.capitalize()}s"
             else:
                 visual_title = title
 
@@ -120,8 +128,8 @@ class NavigationPanel(QFrame):
         if not self.navigation_table_view.last_group_key or not self.navigation_table_view.last_group_title:
             return []
 
-        tracks = CachedTracksRepository().get_tracks_by(self.navigation_table_view.last_group_key,
-                                                        self.navigation_table_view.last_group_title)
+        tracks = self.cached_tracks_repository.get_tracks_by(self.navigation_table_view.last_group_key,
+                                                             self.navigation_table_view.last_group_title)
         return tracks
 
 

@@ -5,8 +5,7 @@ from PyQt6.QtCore import Qt, QRectF, QEvent, QPoint
 from PyQt6.QtGui import QPainter, QMouseEvent, QMoveEvent, QKeyEvent
 from PyQt6.QtWidgets import QProxyStyle, QToolTip, QStyleOptionComplex
 
-from audio_player_test import ImprovedSlider
-from utils import format_player_position_to_seconds, format_seconds
+from utils import format_player_position_to_seconds, format_seconds, ImprovedSlider
 
 if TYPE_CHECKING:
     pass

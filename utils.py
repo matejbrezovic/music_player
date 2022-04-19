@@ -362,8 +362,9 @@ def get_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
 
 
 def get_default_artwork_pixmap(default_type: str) -> QPixmap:
-    if default_type.lower() in ('album', 'artist', 'composer', 'folder'):
-        return QPixmap(f"icons/{default_type.lower()}.png")
+    default_type = default_type.lower()
+    if default_type in ('album', 'artist', 'composer', 'folder'):
+        return QPixmap(f"icons/{default_type}.png")
     return QPixmap("icons/misc.png")
 
 
