@@ -2,7 +2,7 @@ import typing
 from typing import TYPE_CHECKING
 
 from PyQt6.QtCore import Qt, QRectF, QEvent, QPoint
-from PyQt6.QtGui import QPainter, QMouseEvent, QMoveEvent
+from PyQt6.QtGui import QPainter, QMouseEvent, QMoveEvent, QKeyEvent
 from PyQt6.QtWidgets import QProxyStyle, QToolTip, QStyleOptionComplex
 
 from audio_player_test import ImprovedSlider
@@ -88,7 +88,7 @@ class SeekSlider(ImprovedSlider):
         """
 
     def __init__(self, audio_controller, *args):
-        super().__init__(*args)
+        super().__init__(audio_controller, *args)
         self.audio_controller = audio_controller  # TODO remove self.audio_controller
         self.backup_volume = self.audio_controller.player.audio_output.volume()
         self.backup_action = -1
@@ -119,6 +119,9 @@ class SeekSlider(ImprovedSlider):
         if not self.length_in_seconds:
             return
         super().mouseMoveEvent(event)
+
+    def keyPressEvent(self, event: QKeyEvent) -> None:
+        return
 
     def event(self, event: QEvent):  # TODO fix fast refreshing when hovering near widget edge
         if event.type() == QEvent.Type.HoverMove:

@@ -14,8 +14,6 @@ from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import *
 
 
-# TODO only overwrite files from folders which were scanned, not other ones
-
 class ScanFoldersDialog(QDialog):
     added_tracks = pyqtSignal(list)
     removed_tracks = pyqtSignal(list)
@@ -136,6 +134,8 @@ class ScanFoldersDialog(QDialog):
 
     def update_selected_folders(self, paths: List[str]) -> None:
         delete_grid_layout_items(self.selected_folders_widget_grid_layout)
+        self.selected_folders = []
+        self.checked_folders = []
         if not paths:
             self.proceed_button.setEnabled(False)
             return
@@ -153,7 +153,6 @@ class ScanFoldersDialog(QDialog):
                 self.checked_folders.append(folder_path)
         self.selected_folders_widget_grid_layout.addItem(QSpacerItem(1, 1, QSizePolicy.Policy.Minimum,
                                                                      QSizePolicy.Policy.Expanding))
-
 
 class SelectFoldersDialog(QDialog):
     folders_selected = pyqtSignal(list)

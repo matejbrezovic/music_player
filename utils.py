@@ -6,10 +6,8 @@ from typing import Optional, Union
 import mutagen
 from PIL import Image, ImageFilter
 from PIL.ImageQt import ImageQt
-from PyQt6 import QtGui, QtCore
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QPointF, QTimer, QModelIndex
-from PyQt6.QtGui import (QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent, qRgba, QImage, QLinearGradient,
-                         QTransform, QStaticText)
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QPointF, QModelIndex, QEvent
+from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent, QResizeEvent, QMouseEvent, QImage
 from PyQt6.QtWidgets import *
 from mutagen import MutagenError
 from mutagen.id3 import ID3
@@ -103,7 +101,7 @@ class ImageLabel(QLabel):
         self.setPixmap(self.pixmap)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
-    def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
+    def resizeEvent(self, ev: QResizeEvent) -> None:
         if self.pixmap is None:
             return
         if self.pixmap.width() != 0 and self.width() != 0:
@@ -142,7 +140,7 @@ class SpecificImageLabel(QLabel):
         self.setPixmap(self.pixmap)
         self.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-    def resizeEvent(self, ev: QtGui.QResizeEvent) -> None:
+    def resizeEvent(self, ev: QResizeEvent) -> None:
         # self.resize_counter += 1
         # if self.resize_counter > 100:
         #     self.resize_counter = 0
@@ -171,11 +169,11 @@ class ClickableLabel(QLabel):
     def __init__(self, parent=None):
         super().__init__(parent)
 
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+    def mousePressEvent(self, event: QMouseEvent) -> None:
         self.clicked.emit()
         super().mousePressEvent(event)
 
-    def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
+    def mouseDoubleClickEvent(self, event: QMouseEvent) -> None:
         self.double_clicked.emit()
         super().mouseDoubleClickEvent(event)
 
@@ -190,7 +188,7 @@ class FixedHorizontalSplitter(QSplitter):
         self.last_sizes = self.sizes()
         self.splitterMoved.connect(self.splitter_moved)
 
-    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
+    def resizeEvent(self, event: QResizeEvent) -> None:
         super().resizeEvent(event)
         try:
             if self.sizes()[0] > self.last_sizes[0] or self.sizes()[2] > self.last_sizes[2]:
@@ -216,7 +214,7 @@ class FixedHorizontalSplitterProxyStyle(QProxyStyle):
     def drawControl(self,
                     element: QStyle.ControlElement,
                     option: QStyleOption,
-                    painter: QtGui.QPainter,
+                    painter: QPainter,
                     widget: Optional[QWidget] = ...) -> None:
         if element == QStyle.ControlElement.CE_RubberBand:
             painter.save()
@@ -230,28 +228,17 @@ class FixedHorizontalSplitterProxyStyle(QProxyStyle):
 
 
 class QHLine(QFrame):
-    def __init__(self):
-        super().__init__()
+    def __init__(self, *args):
+        super().__init__(*args)
         self.setFrameShape(QFrame.Shape.HLine)
         self.setFrameShadow(QFrame.Shadow.Sunken)
-
-
-class HeaderSplitter(QSplitter):
-    resized = pyqtSignal()
-
-    def __init__(self, parent=None):
-        super().__init__(parent)
-
-    def resizeEvent(self, event: QtGui.QResizeEvent) -> None:
-        self.resized.emit()
-        super().resizeEvent(event)
 
 
 class PathCheckbox(QCheckBox):
     state_changed = pyqtSignal(bool, str)
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.path = None
         self.stateChanged.connect(lambda: self.state_changed.emit(self.checkState() == Qt.CheckState.Checked,
                                                                   self.path))
@@ -316,13 +303,13 @@ class ImprovedSlider(QSlider):
     def __init__(self, *args):
         super().__init__(*args)
 
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        if event.button() == QtCore.Qt.MouseButton.LeftButton:
+    def mousePressEvent(self, event: QMouseEvent) -> None:
+        if event.button() == Qt.MouseButton.LeftButton:
             val = self.pixel_pos_to_range_value(event.pos())
             self.setValue(val)
             self.value_changed.emit(val)
 
-    def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
+    def mouseMoveEvent(self, event: QMouseEvent) -> None:
         val = self.pixel_pos_to_range_value(event.pos())
         self.setValue(val)
         self.value_changed.emit(val)
@@ -340,7 +327,7 @@ class ImprovedSlider(QSlider):
         slider_max = gr.right() - slider_length + 2
 
         pr = pos - sr.center() + sr.topLeft()
-        p = pr.x() if self.orientation() == QtCore.Qt.Orientation.Horizontal else pr.y()
+        p = pr.x() if self.orientation() == Qt.Orientation.Horizontal else pr.y()
         val = QStyle.sliderValueFromPosition(self.minimum(), self.maximum(), p - slider_min,
                                              slider_max - slider_min, opt.upsideDown)
         if val == 99:  # it wasn't able to be 100
@@ -391,7 +378,7 @@ def get_blurred_pixmap(pixmap: QPixmap) -> QPixmap:
 
     im2 = blur_img.convert("RGBA")
     data = im2.tobytes("raw", "BGRA")
-    qim = QtGui.QImage(data, blur_img.size[0], blur_img.size[1], QtGui.QImage.Format.Format_ARGB32)
+    qim = QImage(data, blur_img.size[0], blur_img.size[1], QImage.Format.Format_ARGB32)
 
     return QPixmap.fromImage(qim)
 
@@ -402,16 +389,16 @@ class HoverButton(QPushButton):
         self.backup_icon = None
         self.is_in_dark_mode = True
 
-    def enterEvent(self, event: QtGui.QEnterEvent) -> None:
+    def enterEvent(self, event: QEnterEvent) -> None:
         if self.isEnabled():
             self.backup_icon = self.icon()
             self.setIcon(get_hover_icon(self.backup_icon, self.is_in_dark_mode))
 
-    def leaveEvent(self, e: QtCore.QEvent) -> None:
+    def leaveEvent(self, e: QEvent) -> None:
         if self.isEnabled():
             self.setIcon(self.backup_icon)
 
-    def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
+    def mousePressEvent(self, e: QMouseEvent) -> None:
         self.clicked.emit()
         self.enterEvent(QEnterEvent(QPointF(1, 1), QPointF(1, 1), QPointF(1, 1)))
 

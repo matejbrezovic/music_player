@@ -30,8 +30,8 @@ class AudioController(QFrame):
 
     default_stylesheet = "QFrame#audio_controller {background-color: rgba(0, 0, 0, 0.2)}"
 
-    def __init__(self, parent: QWidget = None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
         self.setObjectName("audio_controller")
         self.setStyleSheet(self.default_stylesheet)
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
@@ -83,19 +83,20 @@ class AudioController(QFrame):
         self.prev_button.clicked.connect(self.prev_button_clicked)
 
         self.volume_slider = VolumeSlider(Qt.Orientation.Horizontal)
-        self.volume_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.volume_slider.setMaximumWidth(100)
         self.volume_slider.setMinimumWidth(50)
         self.volume_slider_position = STARTING_AUDIO_VOLUME
         self.volume_slider_position_backup = STARTING_AUDIO_VOLUME
         self.volume_slider.setSliderPosition(self.volume_slider_position)
         self.volume_slider.valueChanged.connect(self.volume_changed)
+        self.volume_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.volume_button = HoverButton()
         self.volume_button.setIcon(self.volume_on_icon)
         self.volume_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.volume_button.clicked.connect(self.volume_button_clicked)
         self.volume_button.setStyleSheet("background-color: transparent;")
+        self.volume_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.seek_slider = SeekSlider(self)
         self.seek_slider.setMinimum(0)
@@ -103,8 +104,9 @@ class AudioController(QFrame):
         self.seek_slider.setOrientation(Qt.Orientation.Horizontal)
         self.seek_slider.setTracking(False)
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        # self.seek_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        self.star_widget = StarWidget()
+        self.star_widget = StarWidget(0, self)
         self.star_widget.setFixedWidth(90)
         # self.star_widget.setStyleSheet("background-color: green;")
 
@@ -202,6 +204,11 @@ class AudioController(QFrame):
 
         self.background_pixmap = None
         self.star_widget.setEnabled(False)
+
+        for child in self.findChildren(QWidget):
+            if isinstance(child, QWidget):
+                child.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        # print(self.isPa)
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         if self.background_pixmap:

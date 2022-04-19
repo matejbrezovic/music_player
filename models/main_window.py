@@ -1,5 +1,6 @@
 from PyQt6 import QtWidgets
-from PyQt6.QtGui import QAction
+from PyQt6.QtCore import QEvent, QObject
+from PyQt6.QtGui import QAction, QFocusEvent
 
 from data_models.track import Track
 from models.add_files_dialog import AddFilesDialog
@@ -95,6 +96,19 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.central_widget_layout.addWidget(self.horizontal_splitter)
         self.central_widget_layout.addWidget(self.status_bar)
         self.central_widget_layout.addWidget(self.audio_controller)
+
+        self.audio_controller.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+
+        # self.main_panel.installEventFilter(self)
+
+    def eventFilter(self, obj: QObject, e: QEvent) -> bool:
+        # print(obj, e)
+        if isinstance(obj, MainPanel):
+            if isinstance(e, QFocusEvent) and e.lostFocus():
+                print("Focus Out MAIN WINDOW")
+                return True
+
+        return False
 
     def _setup_signals(self) -> None:
         def play_now_triggered(tracks: List[Track]) -> None:

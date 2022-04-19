@@ -10,8 +10,8 @@ class AudioPlayer(QMediaPlayer):
     fade_out_anim_key_value = fade_in_anim_key_value
     fade_out_anim_end_value = 0
 
-    def __init__(self, parent=None):
-        super().__init__(parent)
+    def __init__(self, *args):
+        super().__init__(*args)
         # self.__audio_output = QAudioOutput()
         self.audio_output = QAudioOutput(self)
 

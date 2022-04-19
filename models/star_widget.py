@@ -9,8 +9,8 @@ from models.star_rating import StarRating
 
 
 class StarWidget(QWidget):
-    def __init__(self, star_count: float = 0, parent: QWidget = None):
-        super().__init__(parent)
+    def __init__(self, star_count: float = 0, *args):
+        super().__init__(*args)
         self.background_stars = StarRating(5)
         self.setContentsMargins(0, 0, 0, 0)
 

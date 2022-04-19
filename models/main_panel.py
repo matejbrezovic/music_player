@@ -37,11 +37,7 @@ class MainPanel(QtWidgets.QFrame):
         self.main_layout.setSpacing(0)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        # self.main_layout.addWidget(self.view_options_combo_box)
         self.main_layout.addWidget(self.track_view_widget)
-
-        # self.track_view_widget.set_tracks(CachedTracksRepository().get_tracks()[:10])
-        # self.track_view_widget.set_tracks(CachedTracksRepository().get_tracks()[:2])
 
     def view_key_changed(self) -> None:
         ...

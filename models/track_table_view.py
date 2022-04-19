@@ -7,7 +7,7 @@ from typing import List, Optional, Any
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize
 from PyQt6.QtGui import (QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut,
-                         QContextMenuEvent)
+                         QContextMenuEvent, QFocusEvent)
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
                              QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame, QMainWindow,
@@ -416,7 +416,7 @@ class TrackTableView(QTableView):
     def stop_playing(self) -> None:
         self.set_playing_track_index(None)
 
-    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+    def focusInEvent(self, event: QFocusEvent) -> None:
         # It's important to clear selection for better visuals, but to do it before opening new editor
         if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
             self.clearSelection()
@@ -426,7 +426,7 @@ class TrackTableView(QTableView):
 
         return super().focusInEvent(event)
 
-    def focusOutEvent(self, e: QtGui.QFocusEvent) -> None:
+    def focusOutEvent(self, e: QFocusEvent) -> None:
         for index in self.selectedIndexes():
             if index.column() == self.rating_column:
                 typing.cast(StarDelegate, self.itemDelegateForColumn(self.rating_column)).commit_and_close_editor(index)
