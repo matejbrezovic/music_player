@@ -49,6 +49,8 @@ class StarRating:
         self.star_polygon = StarPolygon(self.star_polygon_size)
         self.half_star_polygon = HalfStarPolygon(self.star_polygon_size)
 
+        self.color = None
+
     def star_count(self):
         return self._star_count
 
@@ -64,14 +66,16 @@ class StarRating:
     def size_hint(self):
         return self.star_polygon_size * QSize(int(self._max_star_count), 1) * 2
 
-    def paint(self, painter, rect, palette, edit_mode, color=None):
+    def paint(self, painter, rect, palette, edit_mode, forced_color=None) -> None:
         painter.save()
 
         painter.setRenderHint(QPainter.RenderHint.Antialiasing, True)
         painter.setPen(Qt.PenStyle.NoPen)
 
-        if color:
-            painter.setBrush(color)
+        if forced_color:
+            painter.setBrush(forced_color)
+        elif self.color:
+            painter.setBrush(self.color)
         elif edit_mode == StarRating.Editable:
             painter.setBrush(Qt.GlobalColor.red)
         else:
@@ -88,3 +92,6 @@ class StarRating:
                 painter.translate(self.star_polygon_size * 2, 0.0)
 
         painter.restore()
+
+    def set_color(self, color) -> None:
+        self.color = color

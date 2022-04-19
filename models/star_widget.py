@@ -12,6 +12,7 @@ class StarWidget(QWidget):
     def __init__(self, star_count: float = 0, *args):
         super().__init__(*args)
         self.background_stars = StarRating(5)
+        self.background_stars.set_color(QColor(255, 255, 255, 70))
         self.setContentsMargins(0, 0, 0, 0)
 
         self.star_count = star_count
@@ -21,15 +22,17 @@ class StarWidget(QWidget):
 
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
-        self.background_stars.paint(painter, self.editor.rect(), self.palette(), StarRating.ReadOnly,
-                                    QColor(255, 255, 255, 70))
+        self.background_stars.paint(painter, self.editor.rect(), self.palette(), StarRating.ReadOnly)
 
     def sizeHint(self):
         return self.background_stars.size_hint()
 
     def setPalette(self, palette: QPalette) -> None:
-        super().setPalette(palette)
         self.editor.setPalette(palette)
+        super().setPalette(palette)
+
+    def set_star_color(self, color) -> None:
+        self.editor.set_star_color(color)
 
 
 class TestWindow(QMainWindow):
@@ -44,10 +47,6 @@ class TestWindow(QMainWindow):
         self.central_widget_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
         sw = StarWidget()
-        # sw.setFixedSize(40, 40)
-        # test_widget = QFrame(self)
-        # test_widget.setStyleSheet("background-color: yellow;")
-        # test_widget.setFixedSize(40, 40)
 
         self.central_widget_layout.addWidget(sw)
         self.central_widget_layout.addWidget(QPushButton("TEST"))

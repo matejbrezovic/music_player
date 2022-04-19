@@ -38,7 +38,7 @@ class AudioController(QFrame):
 
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        self._is_dark_mode_enabled = True
+        self._is_dark_mode_enabled = None
 
         self.playlist = AudioPlaylist()
         self.playlist.updated_playlist.connect(self.updated_playlist)
@@ -89,14 +89,14 @@ class AudioController(QFrame):
         self.volume_slider_position_backup = STARTING_AUDIO_VOLUME
         self.volume_slider.setSliderPosition(self.volume_slider_position)
         self.volume_slider.valueChanged.connect(self.volume_changed)
-        self.volume_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        # self.volume_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.volume_button = HoverButton()
         self.volume_button.setIcon(self.volume_on_icon)
         self.volume_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.volume_button.clicked.connect(self.volume_button_clicked)
         self.volume_button.setStyleSheet("background-color: transparent;")
-        self.volume_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        # self.volume_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.seek_slider = SeekSlider(self)
         self.seek_slider.setMinimum(0)
@@ -203,12 +203,13 @@ class AudioController(QFrame):
             self.next_button.setEnabled(False)
 
         self.background_pixmap = None
-        self.star_widget.setEnabled(False)
+        # self.star_widget.setEnabled(False)
 
         for child in self.findChildren(QWidget):
             if isinstance(child, QWidget):
                 child.setFocusPolicy(Qt.FocusPolicy.NoFocus)
-        # print(self.isPa)
+
+        self.set_dark_mode_enabled(True)
 
     def paintEvent(self, event: QtGui.QPaintEvent) -> None:
         if self.background_pixmap:
@@ -256,9 +257,7 @@ class AudioController(QFrame):
         self.prev_button.is_in_dark_mode = dark_mode_enabled
         self.next_button.is_in_dark_mode = dark_mode_enabled
 
-        palette = self.palette()
-        palette.setColor(QPalette.ColorGroup.Normal, QPalette.ColorRole.HighlightedText, color)
-        self.star_widget.setPalette(palette)
+        self.star_widget.set_star_color(color)
 
     def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
         # start = time.time()

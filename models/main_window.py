@@ -1,5 +1,5 @@
 from PyQt6 import QtWidgets
-from PyQt6.QtCore import QEvent, QObject
+from PyQt6.QtCore import QObject
 from PyQt6.QtGui import QAction, QFocusEvent
 
 from data_models.track import Track

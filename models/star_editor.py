@@ -1,4 +1,3 @@
-from PyQt6 import QtCore
 from PyQt6.QtCore import Qt, QEvent
 from PyQt6.QtGui import QPainter, QMoveEvent, QPalette, QMouseEvent, QPaintEvent
 from PyQt6.QtWidgets import QWidget
@@ -14,11 +13,15 @@ class StarEditor(QWidget):
         self.setMouseTracking(True)
         self.setPalette(palette)
 
+        self.color = None
+
     def __repr__(self):
         return f"Editor {self._star_rating.star_count()}"
 
     def set_star_rating(self, star_rating: StarRating):
         self._star_rating = star_rating
+        if self.color:
+            self._star_rating.set_color(self.color)
 
     def set_selected_star_count(self, star_count: float) -> None:
         self.selected_star_count = star_count
@@ -34,8 +37,7 @@ class StarEditor(QWidget):
         painter = QPainter(self)
         painter.setPen(Qt.PenStyle.NoPen)
 
-        self._star_rating.paint(painter, self.rect(), self.palette(), StarRating.Editable,
-                                self.palette().highlightedText())
+        self._star_rating.paint(painter, self.rect(), self.palette(), StarRating.Editable)
 
     def mouseMoveEvent(self, event: QMoveEvent):
         star = self.star_at_position(event.pos().x())
@@ -63,3 +65,7 @@ class StarEditor(QWidget):
             return num_of_stars
 
         return -1
+
+    def set_star_color(self, color) -> None:
+        self.color = color
+        self._star_rating.set_color(color)

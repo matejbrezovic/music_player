@@ -61,6 +61,7 @@ class StarDelegate(QStyledItemDelegate):
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
             editor = StarEditor(parent, option.palette)
+            editor.set_star_color(self._table_view.palette().highlightedText().color())
             editor.set_selected_star_count(star_rating.star_count())
         else:
             editor = super().createEditor(parent, option, index)
