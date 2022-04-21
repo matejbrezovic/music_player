@@ -13,8 +13,8 @@ from utils import *
 
 
 class NavigationPanel(QFrame):
-    group_clicked = pyqtSignal(str, str, list)
-    group_double_clicked = pyqtSignal(str, str, list)
+    group_clicked = pyqtSignal(list, str, str)
+    group_double_clicked = pyqtSignal(list, str, str)
 
     def __init__(self, *args):
         super().__init__(*args)

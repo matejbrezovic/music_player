@@ -1,5 +1,5 @@
 import time
-from typing import List
+from typing import List, Optional
 
 from PyQt6 import QtWidgets
 from PyQt6.QtCore import pyqtSignal, pyqtSlot
@@ -41,23 +41,22 @@ class MainPanel(QtWidgets.QFrame):
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.main_layout.addWidget(self.track_view_widget)
 
-        self.key = None
-        self.value = None
+        self._display_key = None
+        self._display_value = None
 
     def view_key_changed(self) -> None:
         ...
 
     @pyqtSlot(list)
-    def display_tracks(self, key: str, value: str, tracks: List[Track]) -> None:
-        if (self.key, self.value) == (key, value):
+    def display_tracks(self, tracks: List[Track], key: Optional[str] = None, value: Optional[str] = None, ) -> None:
+        if (self._display_key, self._display_value) == (key, value):
             return
-        self.key, self.value = key, value
+        self._display_key, self._display_value = key, value
         self.track_view_widget.set_tracks(tracks)
         self.displayed_tracks = tracks
 
     @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:
-        # print("SET")
         self.track_view_widget.set_playing_track(track)
 
     @pyqtSlot()

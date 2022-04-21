@@ -2,7 +2,7 @@ from typing import List, Any, Union
 
 from PyQt6 import QtCore, QtGui
 from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot
-from PyQt6.QtGui import QPen, QBrush, QPainter, QFont
+from PyQt6.QtGui import QPen, QBrush, QPainter, QFont, QFocusEvent
 from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle,
                              QStyleOptionViewItem, QApplication, QAbstractItemView)
 
@@ -112,8 +112,8 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
 
 class NavigationTableView(QTableView):
     set_new_groups = pyqtSignal()
-    group_clicked = pyqtSignal(str, str, list)
-    group_double_clicked = pyqtSignal(str, str, list)
+    group_clicked = pyqtSignal(list, str, str)
+    group_double_clicked = pyqtSignal(list, str, str)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -152,9 +152,9 @@ class NavigationTableView(QTableView):
         self.last_group_key = self.group_key
         self.last_group_title = self.groups[index.row()].title
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
-        self.group_clicked.emit(self.group_key, self.last_group_title, tracks)
+        self.group_clicked.emit(tracks, self.group_key, self.last_group_title)
 
-    def currentChanged(self, current: QtCore.QModelIndex, previous: QtCore.QModelIndex) -> None:
+    def currentChanged(self, current: QModelIndex, previous: QModelIndex) -> None:
         self.single_click_action(current)
         super().currentChanged(current, previous)
 
@@ -163,14 +163,14 @@ class NavigationTableView(QTableView):
         self.last_group_key = self.group_key
         self.last_group_title = self.groups[index.row()].title
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
-        self.group_double_clicked.emit(self.group_key, self.last_group_title, tracks)
+        self.group_double_clicked.emit(tracks, self.group_key, self.last_group_title)
 
-    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
+    def focusInEvent(self, event: QFocusEvent) -> None:
         if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
             self.clearSelection()
         return super().focusInEvent(event)
 
-    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+    def focusOutEvent(self, event: QFocusEvent) -> None:
         return super().focusOutEvent(event)
 
 
