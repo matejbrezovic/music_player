@@ -1,46 +1,10 @@
 import typing
-from typing import TYPE_CHECKING
 
-from PyQt6.QtCore import Qt, QRectF, QEvent, QPoint
-from PyQt6.QtGui import QPainter, QMouseEvent, QMoveEvent, QKeyEvent
-from PyQt6.QtWidgets import QProxyStyle, QToolTip, QStyleOptionComplex
+from PyQt6.QtCore import Qt, QEvent, QPoint, pyqtSignal
+from PyQt6.QtGui import QMouseEvent, QMoveEvent, QKeyEvent
+from PyQt6.QtWidgets import QToolTip
 
-from utils import format_player_position_to_seconds, format_seconds, ImprovedSlider
-
-if TYPE_CHECKING:
-    pass
-
-
-class Style(QProxyStyle):
-    def drawComplexControl(self, control, opt: QStyleOptionComplex, qp: QPainter, widget=None):
-        print("DRAWN", control)
-
-        if control == self.ComplexControl.CC_Slider:
-            # get the default rectangle of the groove
-            groove = self.subControlRect(control, opt, self.SubControl.SC_SliderGroove, widget)
-            print(groove, opt.orientation)
-            # create a small one
-            if opt.orientation == Qt.Orientation.Horizontal:
-                rect = QRectF(
-                    groove.x(), groove.center().y() - .5,
-                    groove.width(), 2)
-            else:
-                rect = QRectF(
-                    groove.center().x() - .5, groove.y(),
-                    2, groove.height())
-            qp.save()
-            qp.setBrush(opt.palette.base())
-            qp.setPen(opt.palette.dark().color())
-            qp.setRenderHints(qp.RenderHint.Antialiasing)
-            qp.drawRoundedRect(rect, 1, 1)
-            qp.restore()
-
-            # remove the groove flag from the subcontrol list
-
-            print(opt.subControls)
-            opt.subControls &= ~self.SubControl.SC_SliderGroove
-
-        super().drawComplexControl(control, opt, qp, widget)
+from utils import format_seconds, ImprovedSlider
 
 
 class SeekSlider(ImprovedSlider):
@@ -86,14 +50,15 @@ class SeekSlider(ImprovedSlider):
         }}
         """
 
-    def __init__(self, audio_controller, *args):
-        super().__init__(audio_controller, *args)
-        self.audio_controller = audio_controller  # TODO remove self.audio_controller
-        self.backup_volume = self.audio_controller.player.audio_output.volume()
-        self.backup_action = -1
+    slider_pressed = pyqtSignal(int)
+    slider_released = pyqtSignal(int)
+    slider_moved = pyqtSignal(int)
+
+    def __init__(self, *args):
+        super().__init__(*args)
         self.setFixedHeight(14)
         self.setStyleSheet(self.dark_stylesheet)
-        self.length_in_seconds = format_player_position_to_seconds(self.audio_controller.player.duration())
+        self.length_in_seconds = 0
         self.formatted_length_in_seconds = format_seconds(self.length_in_seconds)
 
         #     self.__can_update_tooltip = True
@@ -108,16 +73,22 @@ class SeekSlider(ImprovedSlider):
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if not self.length_in_seconds:
             return
+        self.slider_pressed.emit(event.pos().x() if self.orientation() == Qt.Orientation.Horizontal
+                                 else event.pos().y())
         super().mousePressEvent(event)
-        self.backup_action = self.audio_controller.user_action
-        self.audio_controller.player.setPosition(self.pixel_pos_to_range_value(event.pos()))
-        self.audio_controller.pause(fade=False)
-        self.audio_controller.player.current_volume = self.audio_controller.volume_slider.value() / 100
 
     def mouseMoveEvent(self, event: QMouseEvent) -> None:
         if not self.length_in_seconds:
             return
+        self.slider_moved.emit(event.pos().x() if self.orientation() == Qt.Orientation.Horizontal
+                               else event.pos().y())
         super().mouseMoveEvent(event)
+
+    def mouseReleaseEvent(self, event: QMouseEvent) -> None:
+        if not self.length_in_seconds:
+            return
+        self.slider_released.emit(event.pos().x() if self.orientation() == Qt.Orientation.Horizontal
+                                  else event.pos().y())
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         return
@@ -138,17 +109,6 @@ class SeekSlider(ImprovedSlider):
             # self._tooltip_timer.start(30)
             return True
         return super().event(event)
-
-    def mouseReleaseEvent(self, ev: QMouseEvent) -> None:
-        if not self.length_in_seconds:
-            return
-        # handles unmuting audio and updating player
-
-        self.audio_controller.set_player_position(self.sliderPosition())
-
-        if self.backup_action == 1:
-            # self.audio_controller.player.audio_output.current_volume = self.backup_volume
-            self.audio_controller.unpause(fade=False)
 
     def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
         if dark_mode_enabled:

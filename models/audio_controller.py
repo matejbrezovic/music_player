@@ -1,7 +1,7 @@
 from typing import List
 
 from PyQt6 import QtGui
-from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize
+from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont
 from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton, QFrame, QSpacerItem, QWidget)
 
@@ -46,6 +46,7 @@ class AudioController(QFrame):
         self._rounded_remaining_queue_time = 0  # doesn't update while track is playing
         self.remaining_queue_time = 0
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
+        self._backup_action = self.user_action
         self.is_playing = False
         self.is_muted = False
 
@@ -88,26 +89,25 @@ class AudioController(QFrame):
         self.volume_slider_position_backup = STARTING_AUDIO_VOLUME
         self.volume_slider.setSliderPosition(self.volume_slider_position)
         self.volume_slider.valueChanged.connect(self.volume_changed)
-        # self.volume_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.volume_button = HoverButton()
         self.volume_button.setIcon(self.volume_on_icon)
         self.volume_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.volume_button.clicked.connect(self.volume_button_clicked)
         self.volume_button.setStyleSheet("background-color: transparent;")
-        # self.volume_button.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self.seek_slider = SeekSlider(self)
-        self.seek_slider.setMinimum(0)
-        self.seek_slider.setMaximum(100)
+        # self.seek_slider.setMinimum(0)
+        # self.seek_slider.setMaximum(100)
         self.seek_slider.setOrientation(Qt.Orientation.Horizontal)
         self.seek_slider.setTracking(False)
         self.seek_slider.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
-        # self.seek_slider.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.seek_slider.slider_pressed.connect(self.seek_slider_pressed)
+        self.seek_slider.slider_released.connect(self.seek_slider_released)
+        self.seek_slider.slider_moved.connect(self.seek_slider_moved)
 
         self.star_widget = StarWidget(0, self)
         self.star_widget.setFixedWidth(90)
-        # self.star_widget.setStyleSheet("background-color: green;")
 
         """ DEPRECATED
         ########################################################################
@@ -259,7 +259,6 @@ class AudioController(QFrame):
         self.star_widget.set_star_color(color)
 
     def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
-        # start = time.time()
         pixmap = get_artwork_pixmap(track.file_path)
         if not pixmap or reset_to_default:
             self.background_pixmap = None
@@ -275,7 +274,6 @@ class AudioController(QFrame):
         self.background_pixmap = pixmap
         self.set_dark_mode_enabled(False)
         self.repaint()
-        # print("Audio controller background updated in:", time.time() - start)
 
     @pyqtSlot(list)
     def queue_next(self, tracks: List[Track]) -> None:
@@ -311,7 +309,6 @@ class AudioController(QFrame):
 
     @pyqtSlot(list)
     def set_playlist(self, playlist: List[Track]) -> None:
-        # print("New playlist:\n", "\n".join(str(t) for t in playlist))
         self.prev_button.setEnabled(True)
         self.next_button.setEnabled(True)
         self.playlist.set_playlist(playlist)
@@ -320,14 +317,11 @@ class AudioController(QFrame):
 
     @pyqtSlot(int)
     def set_playlist_index(self, index: int) -> None:
-        # print("New index:", index)
         self.playlist.set_playlist_index(index)
 
     @pyqtSlot()
     def play(self) -> None:
         playing_track = self.get_playing_track()
-
-        # print("Playing track:", playing_track)
 
         self.passed_time_label.setText(f"0:00/ {format_seconds(playing_track.length)}")
 
@@ -335,10 +329,8 @@ class AudioController(QFrame):
             self.track_title_label.setText(f"{playing_track.artist} - {playing_track.title}")
         else:
             self.track_title_label.setText(playing_track.title)
-        # print(format_seconds(playing_track.length))
 
         self.is_playing = playing_track.is_valid()
-        # print("Track is valid:", playing_track.is_valid())
 
         if playing_track.is_valid():
             self.user_action = 1
@@ -358,16 +350,14 @@ class AudioController(QFrame):
             self.seek_slider.setEnabled(False)
             self.player_stopped.emit()
             t = TrackNotFoundDialog(playing_track)
-            t.exec()  # must be exec, not show, because on the first 'show' dialog instantly closes
+            t.exec()  # must be 'exec', not show, because on the first 'show' dialog instantly closes
 
-    # @pyqtSlot(int)
+    @pyqtSlot('qint64')
     def player_duration_changed(self, duration: int) -> None:
         self.seek_slider.setRange(0, duration - 120)
-        # self.passed_time_label.setText(get_formatted_time(self.player.duration()))
         self.seek_slider.set_length_in_seconds(format_player_position_to_seconds(self.player.duration()))
-        # print(get_formatted_time(self.player.duration()))
 
-    # @pyqtSlot(int)
+    @pyqtSlot('qint64')
     def player_position_changed(self, position: int) -> None:
         if not self.player.duration():
             return
@@ -384,11 +374,26 @@ class AudioController(QFrame):
                 self.remaining_queue_time_changed.emit(self.remaining_queue_time -
                                                        format_player_position_to_seconds(self.player.position()))
 
-    def get_remaining_time_in_secs(self) -> int:
+    @pyqtSlot(int)
+    def seek_slider_pressed(self, pos: int) -> None:
+        self._backup_action = self.user_action
+        self.set_player_position(self.seek_slider.pixel_pos_to_range_value(QPoint(pos, 0)))
+        self.pause(fade=False)
+        self.player.current_volume = self.volume_slider.value() / 100
+
+    @pyqtSlot(int)
+    def seek_slider_moved(self, pos: int) -> None:
+        self.player.setPosition(self.seek_slider.pixel_pos_to_range_value(QPoint(pos, 0)))
+
+    @pyqtSlot(int)
+    def seek_slider_released(self) -> None:
+        if self._backup_action == 1:
+            self.unpause(fade=False)
+
+    def get_remaining_time_in_secs(self) -> int:  # TODO fully implement
         return self._rounded_remaining_queue_time - format_player_position_to_seconds(self.player.position())
 
     def pause(self, fade=True) -> None:
-        # print("Pause")
         self.play_button.setIcon(self.play_icon)
         self.is_playing = False
         self.user_action = 2
@@ -396,7 +401,6 @@ class AudioController(QFrame):
         self.paused.emit(self.get_playing_track())
 
     def unpause(self, fade=True) -> None:
-        # print("Unpause")
         self.play_button.setIcon(self.pause_icon)
         self.is_playing = True
         self.user_action = 1
@@ -445,7 +449,6 @@ class AudioController(QFrame):
 
     @pyqtSlot(int)
     def volume_changed(self, volume_value: int) -> None:
-        # print("volume changed:", volume_value)
         self.player.audio_output.setVolume(volume_value / 100)
         self.player.current_volume = volume_value / 100
         self.volume_slider.setSliderPosition(volume_value)
