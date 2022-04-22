@@ -20,7 +20,7 @@ if __name__ == "__main__":
     #     for key in EasyID3.valid_keys.keys():
     #         print(f"{key}:  {a.get(key)}")
     #     print("\n"*3)
-
-    for track in tracks:
-        print(f"{track.artist} ||| {track.title}")
+    #
+    # for track in tracks:
+    #     print(f"{track.artist} ||| {track.title}")
 

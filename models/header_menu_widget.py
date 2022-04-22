@@ -38,7 +38,8 @@ class HeaderMenuWidget(QWidget):
         self.information_panel_view_key_combo_box = TransparentComboBox(self)
         self.information_panel_view_key_combo_box.addItem("Playing Tracks")
         self.information_panel_view_key_combo_box.setFixedHeight(24)
-        self.information_panel_view_key_combo_box.currentIndexChanged.connect(self.information_panel_view_key_changed.emit)
+        self.information_panel_view_key_combo_box.currentIndexChanged.connect(
+            self.information_panel_view_key_changed.emit)
 
         self.navigation_panel_header_widget = QWidget(self)
         self.navigation_panel_header_widget.setStyleSheet("background-color: rgba(0, 0, 0, 0.2);")

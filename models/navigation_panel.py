@@ -1,14 +1,13 @@
 from typing import List
 
-from PyQt6 import QtWidgets
 from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtWidgets import QVBoxLayout
 
 from constants import *
 from data_models.navigation_group import NavigationGroup
 from data_models.track import Track
 from models.navigation_table_view import NavigationTableView
 from repositories.cached_tracks_repository import CachedTracksRepository
-from tag_manager import TagManager
 from utils import *
 
 
@@ -47,7 +46,7 @@ class NavigationPanel(QFrame):
         self.navigation_table_view.group_clicked.connect(self.group_clicked.emit)
         self.navigation_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
 
-        self.vertical_layout = QtWidgets.QVBoxLayout()
+        self.vertical_layout = QVBoxLayout()
         self.vertical_layout.setSpacing(0)
         self.vertical_layout.setContentsMargins(0, 0, 0, 0)
         self.vertical_layout.setAlignment(Qt.AlignmentFlag.AlignTop)

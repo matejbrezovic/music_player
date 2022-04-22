@@ -6,7 +6,7 @@ from typing import Optional, Union
 import mutagen
 from PIL import Image, ImageFilter
 from PIL.ImageQt import ImageQt
-from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QPointF, QModelIndex, QEvent
+from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QModelIndex, QEvent
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent, QResizeEvent, QMouseEvent, QImage
 from PyQt6.QtWidgets import *
 from mutagen import MutagenError

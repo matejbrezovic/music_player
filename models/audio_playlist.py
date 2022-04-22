@@ -8,6 +8,7 @@ from data_models.track import Track
 
 class AudioPlaylist(QObject):
     updated_playlist = pyqtSignal(list)
+    playlist_ended = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -15,7 +16,9 @@ class AudioPlaylist(QObject):
         self.ordered_playlist = []
         self.playing_track_index = 0
         self.already_played = []
-        self.mode = 1  # 1 ordered, 2 shuffle, 3 repeat one
+        # self.mode = 1  # 1 ordered, 2 shuffle, 3 repeat one
+        self._is_shuffled = False
+        self._repeat_mode = "repeat_off"
         self.playing_track: Optional[Track] = None
 
     def __bool__(self):
@@ -49,32 +52,62 @@ class AudioPlaylist(QObject):
     def index(self, track: Track) -> int:
         return self.ordered_playlist.index(track)
 
-    def set_mode(self, mode: int) -> None:
-        self.mode = mode
-        if mode == 1:
-            self.playing_track_index = self.ordered_playlist.index(self.playing_track)
-            self.playlist = self.ordered_playlist.copy()
-        elif mode == 2:
+    def set_shuffled(self) -> None:
+        shuffle(self.playlist)
+        while self.playlist[self.playing_track_index + 1] == self.ordered_playlist[self.playing_track_index]:
             shuffle(self.playlist)
-            while self.playlist[self.playing_track_index + 1] == self.ordered_playlist[self.playing_track_index]:
-                shuffle(self.playlist)
-        elif mode == 3:
-            pass  # self.playlist = [self.playlist[self.playlist_index]] * len(self.playlist)
-        else:
-            raise Exception(f"Incorrect playlist mode: {mode}")
+
+    def set_ordered(self) -> None:
+        self.playing_track_index = self.ordered_playlist.index(self.playing_track)
+        self.playlist = self.ordered_playlist.copy()
 
     def change_mode(self) -> None:
-        self.set_mode(self.mode + 1 if self.mode <= 2 else 1)
+        self._is_shuffled = not self._is_shuffled
+        if self._is_shuffled:
+            self.set_shuffled()
+        else:
+            self.set_ordered()
+
+    def set_repeat_on(self) -> None:
+        self._repeat_mode = "repeat_on"
+
+    def set_repeat_off(self) -> None:
+        self._repeat_mode = "repeat_off"
+
+    def set_repeat_one(self) -> None:
+        self._repeat_mode = "repeat_one"
 
     def set_next(self) -> None:
-        self.playing_track_index = self.playing_track_index if self.mode == 3 else \
-            self.playing_track_index + 1 if len(self.playlist) - 1 > self.playing_track_index else 0
-        self.update_currently_playing()
+        if self._repeat_mode == "repeat_off":
+            if len(self.playlist) - 1 > self.playing_track_index:
+                self.playing_track_index += 1
+                self.update_currently_playing()
+            else:
+                self.playlist_ended.emit()
+        elif self._repeat_mode == "repeat_on":
+            if len(self.playlist) - 1 > self.playing_track_index:
+                self.playing_track_index += 1
+            else:
+                self.playing_track_index = 0
+            self.update_currently_playing()
+        elif self._repeat_mode == "repeat_one":
+            self.update_currently_playing()
 
     def set_prev(self) -> None:
-        self.playing_track_index = self.playing_track_index if self.mode == 3 else \
-            self.playing_track_index - 1 if self.playing_track_index > 0 else len(self.playlist) - 1
-        self.update_currently_playing()
+        if self._repeat_mode == "repeat_off":
+            if self.playing_track_index > 0:
+                self.playing_track_index -= 1
+                self.update_currently_playing()
+            else:
+                self.playlist_ended.emit()
+        elif self._repeat_mode == "repeat_on":
+            if self.playing_track_index > 0:
+                self.playing_track_index -= 1
+            else:
+                self.playing_track_index = len(self.playlist) - 1
+            self.update_currently_playing()
+        elif self._repeat_mode == "repeat_one":
+            self.update_currently_playing()
 
     def update_currently_playing(self) -> None:
         self.playing_track = self.playlist[self.playing_track_index]

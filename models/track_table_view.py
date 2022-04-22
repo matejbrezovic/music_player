@@ -4,10 +4,9 @@ import sys
 import typing
 from typing import List, Optional, Any
 
-from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize
+from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize, QAbstractItemModel, QRect, QAbstractTableModel
 from PyQt6.QtGui import (QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut,
-                         QContextMenuEvent, QFocusEvent)
+                         QContextMenuEvent, QFocusEvent, QMouseEvent, QCursor)
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
                              QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame, QMainWindow,
@@ -18,7 +17,7 @@ from data_models.track import Track
 from models.star_delegate import StarDelegate
 from models.star_rating import StarRating
 from repositories.tracks_repository import TracksRepository
-from utils import get_artwork_pixmap, get_formatted_time_in_mins
+from utils import get_formatted_time_in_mins
 
 
 class TrackTableHeader(QHeaderView):
@@ -64,10 +63,10 @@ class TrackTableHeader(QHeaderView):
             self.moveSection(new_visual_index, old_visual_index)
 
     def text(self, section: int):
-        if isinstance(self.model(), QtCore.QAbstractItemModel):
+        if isinstance(self.model(), QAbstractItemModel):
             return self.section_text[section]
 
-    def paintSection(self, painter: QtGui.QPainter, rect: QtCore.QRect, logical_index: int) -> None:
+    def paintSection(self, painter: QPainter, rect: QRect, logical_index: int) -> None:
         elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logical_index),
                                                                 Qt.TextElideMode.ElideRight,
                                                                 self.sectionSize(logical_index) - self.padding)
@@ -90,7 +89,7 @@ class TrackTableHeader(QHeaderView):
             painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
 
 
-class TrackTableModel(QtCore.QAbstractTableModel):
+class TrackTableModel(QAbstractTableModel):
     def __init__(self, parent: TrackTableView = None):
         super().__init__(parent)
         self._table_view: TrackTableView = parent
@@ -120,10 +119,10 @@ class TrackTableModel(QtCore.QAbstractTableModel):
             if index.column() == 0:
                 track = self._tracks[index.row()]
                 artwork_pixmap = track.artwork_pixmap
-                if artwork_pixmap is None:
-                    new_pixmap = get_artwork_pixmap(track.file_path)
-                    track.artwork_pixmap = new_pixmap if new_pixmap else ""
-                    artwork_pixmap = track.artwork_pixmap
+                # if artwork_pixmap is None:
+                #     new_pixmap = get_artwork_pixmap(track.file_path)
+                #     track.artwork_pixmap = new_pixmap if new_pixmap else ""
+                #     artwork_pixmap = track.artwork_pixmap
                 if not artwork_pixmap:
                     return None
                 return artwork_pixmap.scaled(self._table_view.columnWidth(index.column()),
@@ -157,8 +156,8 @@ class TrackTableModel(QtCore.QAbstractTableModel):
     def columnCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(MAIN_PANEL_COLUMN_NAMES)
 
-    def headerData(self, section: int, orientation: QtCore.Qt.Orientation,
-                   role: QtCore.Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
+    def headerData(self, section: int, orientation: Qt.Orientation,
+                   role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if role == Qt.ItemDataRole.DisplayRole:
             if orientation == Qt.Orientation.Horizontal:
                 return MAIN_PANEL_COLUMN_NAMES[section]
@@ -352,7 +351,7 @@ class TrackTableView(QTableView):
 
         super().selectionChanged(selected, deselected)
 
-    def mousePressEvent(self, e: QtGui.QMouseEvent) -> None:
+    def mousePressEvent(self, e: QMouseEvent) -> None:
         super().mousePressEvent(e)
         index = self.indexAt(e.pos())
         if index.column() == self.rating_column and index not in self.selectedIndexes():
@@ -360,7 +359,7 @@ class TrackTableView(QTableView):
         self.prev_index = index
 
     def contextMenuEvent(self, e: QContextMenuEvent) -> None:
-        self.context_menu.popup(QtGui.QCursor.pos())
+        self.context_menu.popup(QCursor.pos())
 
     @pyqtSlot()
     def output_to_action_triggered(self) -> None:
@@ -418,7 +417,7 @@ class TrackTableView(QTableView):
 
     def focusInEvent(self, event: QFocusEvent) -> None:
         # It's important to clear selection for better visuals, but to do it before opening new editor
-        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
+        if QApplication.mouseButtons() & Qt.MouseButton.LeftButton:
             self.clearSelection()
         for index in self.selectedIndexes():
             if index.column() == self.rating_column:

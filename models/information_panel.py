@@ -2,7 +2,6 @@ import math
 from typing import List
 
 from PyQt6.QtCore import pyqtSlot
-from PyQt6.QtGui import QFont
 
 from constants import *
 from data_models.track import Track

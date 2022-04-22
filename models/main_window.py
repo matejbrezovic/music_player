@@ -1,6 +1,6 @@
-from PyQt6 import QtWidgets
 from PyQt6.QtCore import QObject
 from PyQt6.QtGui import QAction, QFocusEvent
+from PyQt6.QtWidgets import QMenuBar
 
 from data_models.track import Track
 from models.add_files_dialog import AddFilesDialog
@@ -14,7 +14,7 @@ from models.status_bar import StatusBar
 from repositories.cached_tracks_repository import CachedTracksRepository
 
 
-class MainWindowUi(QtWidgets.QMainWindow):
+class MainWindowUi(QMainWindow):
     def __init__(self):
         super().__init__()
         self.scan_folders_dialog = ScanFoldersDialog()
@@ -54,7 +54,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self._setup_menu_bar()
 
     def _setup_menu_bar(self) -> None:
-        self.menu_bar = QtWidgets.QMenuBar(self)
+        self.menu_bar = QMenuBar(self)
         self.setMenuBar(self.menu_bar)
 
         file_menu = QMenu("&File", self)
@@ -170,7 +170,7 @@ class MainWindowUi(QtWidgets.QMainWindow):
         self.scan_folders_dialog.added_tracks.connect(self._added_tracks_to_database)
         self.scan_folders_dialog.removed_tracks.connect(self._removed_tracks_from_database)
 
-    def _added_tracks_to_database(self, tracks: List[Track]) -> None:
+    def _added_tracks_to_database(self, _: List[Track] = None) -> None:
         tracks_from_last_selected_group = self.navigation_panel.get_last_selected_tracks()
         self.main_panel.display_tracks(tracks_from_last_selected_group)
         self.main_panel.set_playing_track(self.audio_controller.get_playing_track())

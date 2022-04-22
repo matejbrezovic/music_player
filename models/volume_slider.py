@@ -1,4 +1,3 @@
-
 from utils import ImprovedSlider
 
 
@@ -45,4 +44,3 @@ class VolumeSlider(ImprovedSlider):
             self.setStyleSheet(self.dark_stylesheet)
         else:
             self.setStyleSheet(self.light_stylesheet)
-

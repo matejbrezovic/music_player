@@ -1,9 +1,7 @@
-import time
 from typing import List, Optional
 
-from PyQt6 import QtWidgets
 from PyQt6.QtCore import pyqtSignal, pyqtSlot
-from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtWidgets import QVBoxLayout, QFrame
 
 from constants import *
 from data_models.track import Track
@@ -12,7 +10,7 @@ from repositories.cached_tracks_repository import CachedTracksRepository
 from tag_manager import TagManager
 
 
-class MainPanel(QtWidgets.QFrame):
+class MainPanel(QFrame):
     track_clicked = pyqtSignal(Track, int)
     track_double_clicked = pyqtSignal(Track, int)
     play_now_triggered = pyqtSignal(list)

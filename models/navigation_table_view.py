@@ -1,19 +1,17 @@
 from typing import List, Any, Union
 
-from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot
+from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QAbstractTableModel
 from PyQt6.QtGui import QPen, QBrush, QPainter, QFont, QFocusEvent
-from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QStyledItemDelegate, QStyle,
+from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QStyledItemDelegate, QStyle,
                              QStyleOptionViewItem, QApplication, QAbstractItemView)
 
 from constants import *
 from data_models.navigation_group import NavigationGroup
-from data_models.track import Track
 from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import ElidedLabel
 
 
-class NavigationTableModel(QtCore.QAbstractTableModel):
+class NavigationTableModel(QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self.table_view = parent
@@ -166,7 +164,7 @@ class NavigationTableView(QTableView):
         self.group_double_clicked.emit(tracks, self.group_key, self.last_group_title)
 
     def focusInEvent(self, event: QFocusEvent) -> None:
-        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
+        if QApplication.mouseButtons() & Qt.MouseButton.LeftButton:
             self.clearSelection()
         return super().focusInEvent(event)
 
@@ -194,7 +192,7 @@ class NavigationGroupWidget(QWidget):
         self.v_layout.addWidget(self.title_label)
         self.v_layout.addWidget(self.tracks_label)
 
-        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
     def set_text_colors(self, top: Union[QColor, Qt.GlobalColor, int, str],
                         bottom: Union[QColor, Qt.GlobalColor, int, str]) -> None:

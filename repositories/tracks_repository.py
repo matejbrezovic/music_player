@@ -1,6 +1,6 @@
 import os
 import sqlite3
-from typing import List, Union, Iterable, Tuple
+from typing import List, Union, Iterable, Tuple, Optional
 
 import mutagen.mp3
 from PyQt6.QtWidgets import QApplication
@@ -66,7 +66,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         conn.close()
         return track_counts
 
-    def get_tracks_by(self, key: str, value: Union[str, int]) -> List[Track]:
+    def get_tracks_by(self, key: str, value: Optional[Union[str, int]]) -> List[Track]:
         conn = self.get_connection()
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -97,7 +97,8 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 year=row["year"],
                 length=row["length"],
                 size=row["size"],
-                # artwork_pixmap=get_artwork_pixmap(row["file_path"])
+                rating=0,
+                artwork_pixmap=get_artwork_pixmap(row["file_path"])
             )
 
             tracks.append(track)
@@ -121,7 +122,9 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 genre=row["genre"],
                 year=row["year"],
                 length=row["length"],
-                size=row["size"]
+                size=row["size"],
+                rating=0,
+                artwork_pixmap=get_artwork_pixmap(row["file_path"])
                 )
             )
 
@@ -155,7 +158,9 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
             genre=row["genre"],
             year=row["year"],
             length=row["length"],
-            size=row["size"]
+            size=row["size"],
+            rating=0,
+            artwork_pixmap=get_artwork_pixmap(row["file_path"])
         )
 
         if QApplication.instance() is not None:
@@ -252,8 +257,9 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                     loaded_file["genre"].first,
                     int(loaded_file["year"]) if int(loaded_file["year"]) else None,
                     int(loaded_file["#length"].first),
-                    int(os.path.getsize(file_path))
-                    # get_artwork_pixmap(file_path, "album")
+                    int(os.path.getsize(file_path)),
+                    0,
+                    get_artwork_pixmap(file_path)
                 ))
             except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError) as e:
                 print(e)

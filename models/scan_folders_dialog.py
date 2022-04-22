@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import sys
-import typing
 from collections import defaultdict
 from typing import List, Tuple
 
@@ -154,6 +153,7 @@ class ScanFoldersDialog(QDialog):
         self.selected_folders_widget_grid_layout.addItem(QSpacerItem(1, 1, QSizePolicy.Policy.Minimum,
                                                                      QSizePolicy.Policy.Expanding))
 
+
 class SelectFoldersDialog(QDialog):
     folders_selected = pyqtSignal(list)
 
@@ -234,7 +234,7 @@ class SelectFoldersDialog(QDialog):
 
     def select_preselected_folders(self) -> None:
         def get_child_by_text(_item: QTreeWidgetItem, text: str) -> QTreeWidgetItem:
-            for child in [_item.child(i) for i in range(_item.childCount())]:
+            for child in [_item.child(c) for c in range(_item.childCount())]:
                 if child.text(0) == text:
                     return child
 
@@ -244,8 +244,8 @@ class SelectFoldersDialog(QDialog):
             # noinspection PyTypeChecker
             self.tree_item_changed(item)
 
-        for path in self.preselected_folders:
-            path_parts = path.split("/")
+        for folder_path in self.preselected_folders:
+            path_parts = folder_path.split("/")
             item = self.dir_tree_widget.invisibleRootItem()
             for path_part in path_parts[1:-1]:
                 self.load_immediate_directory_dir_tree_widget(item.full_path if isinstance(item, DirectoryItem)

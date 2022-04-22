@@ -1,8 +1,7 @@
 from typing import List, Any, Optional, Union
 
-from PyQt6 import QtCore, QtGui
-from PyQt6.QtCore import QModelIndex, pyqtSignal, QRect, QPoint, QTimer
-from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter
+from PyQt6.QtCore import QModelIndex, pyqtSignal, QRect, QPoint, QTimer, QAbstractTableModel
+from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QFocusEvent
 from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate,
                              QStyle, QStyleOptionViewItem, QApplication, QAbstractItemView)
 
@@ -11,7 +10,7 @@ from data_models.track import Track
 from utils import ElidedLabel, get_artwork_pixmap, get_formatted_time_in_mins
 
 
-class InformationTableModel(QtCore.QAbstractTableModel):
+class InformationTableModel(QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self.table_view = parent
@@ -213,12 +212,12 @@ class InformationTableView(QTableView):
     def stop_playing(self):
         self.set_currently_playing_track_index(None)
 
-    def focusInEvent(self, event: QtGui.QFocusEvent) -> None:
-        if QApplication.mouseButtons() & QtCore.Qt.MouseButton.LeftButton:
+    def focusInEvent(self, event: QFocusEvent) -> None:
+        if QApplication.mouseButtons() & Qt.MouseButton.LeftButton:
             self.clearSelection()
         return super().focusInEvent(event)
 
-    def focusOutEvent(self, event: QtGui.QFocusEvent) -> None:
+    def focusOutEvent(self, event: QFocusEvent) -> None:
         return super().focusOutEvent(event)
 
 
@@ -264,7 +263,7 @@ class TrackInfoWidget(QWidget):
         self.main_horizontal_layout.setContentsMargins(0, 0, 0, 0)
         self.main_horizontal_layout.addWidget(self.main_widget_part)
 
-        self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
 
     def set_text_colors(self, top: Union[QColor, Qt.GlobalColor, int, str],
                         bottom: Union[QColor, Qt.GlobalColor, int, str]) -> None:

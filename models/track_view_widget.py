@@ -1,10 +1,7 @@
 from typing import List
 
 from PyQt6 import QtWidgets
-
-# from auto_resizing_header_view_test import HeaderView
 from PyQt6.QtCore import pyqtSlot
-from PyQt6.QtGui import QFocusEvent
 
 from data_models.track import Track
 from models.track_table_view import TrackTableView
@@ -71,17 +68,6 @@ class TrackViewWidget(QWidget):
         self.table_view.horizontalHeader().setSectionResizeMode(7, QHeaderView.ResizeMode.Fixed)
 
         self.main_layout.addWidget(self.table_view)
-
-    # def hasFocus(self) -> bool:
-    #     return self.table_view.hasFocus()
-    #
-    # def focusOutEvent(self, e: QFocusEvent):
-    #     print("TRACK WIDGET FOCUS OUT")
-    #     super().focusOutEvent(e)
-    #
-    # def focusInEvent(self, e: QFocusEvent):
-    #     print("TRACK WIDGET FOCUS IN")
-    #     super().focusInEvent(e)
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:

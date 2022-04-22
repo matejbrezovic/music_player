@@ -2,7 +2,7 @@ import sys
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPaintEvent, QPainter, QPalette, QColor
-from PyQt6.QtWidgets import QWidget, QApplication, QMainWindow, QVBoxLayout, QPushButton, QFrame
+from PyQt6.QtWidgets import QWidget, QApplication, QMainWindow, QVBoxLayout, QPushButton
 
 from models.star_editor import StarEditor
 from models.star_rating import StarRating
