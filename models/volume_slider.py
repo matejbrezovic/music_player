@@ -1,3 +1,5 @@
+from PyQt6.QtGui import QWheelEvent
+
 from utils import ImprovedSlider
 
 
@@ -35,6 +37,7 @@ class VolumeSlider(ImprovedSlider):
 
         self.setStyleSheet(self.dark_stylesheet)
         self.value_changed.connect(self.slider_moved)
+        self.sliderMoved.connect(self.slider_moved)
 
     def slider_moved(self, value: int) -> None:
         self.setToolTip(f"{value}%")
@@ -44,3 +47,7 @@ class VolumeSlider(ImprovedSlider):
             self.setStyleSheet(self.dark_stylesheet)
         else:
             self.setStyleSheet(self.light_stylesheet)
+
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        super().wheelEvent(event)
+        self.value_changed.emit(self.value())
