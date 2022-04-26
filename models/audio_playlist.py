@@ -46,11 +46,12 @@ class AudioPlaylist(QObject):
         self.playing_track_index = 0
 
     def set_playlist_index(self, playlist_index: int) -> None:
-        self.playing_track = self.ordered_playlist[playlist_index]
+        self.playing_track = self.playlist[playlist_index]
         self.playing_track_index = playlist_index
 
     def index(self, track: Track) -> int:
-        return self.ordered_playlist.index(track)
+        print(self.playlist.index(track))
+        return self.playlist.index(track)
 
     def set_shuffled(self) -> None:
         shuffle(self.playlist)
@@ -111,3 +112,4 @@ class AudioPlaylist(QObject):
 
     def update_currently_playing(self) -> None:
         self.playing_track = self.playlist[self.playing_track_index]
+        print(self.playing_track)

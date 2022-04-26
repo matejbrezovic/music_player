@@ -18,7 +18,7 @@ from utils import (get_formatted_time, format_player_position_to_seconds, TrackN
 
 
 class AudioController(QFrame):
-    updated_playing_track = pyqtSignal(Track, int)
+    updated_playing_track = pyqtSignal(Track)
     updated_playlist = pyqtSignal(list)
     paused = pyqtSignal(Track)
     unpaused = pyqtSignal(Track)
@@ -69,8 +69,8 @@ class AudioController(QFrame):
 
         self.play_icon = QIcon(QPixmap(ROOT + "/icons/play.png"))
         self.pause_icon = QIcon(QPixmap(ROOT + "/icons/pause.png"))
-        self.prev_icon = QIcon(QPixmap(ROOT + "/icons/rewind.png"))
-        self.next_icon = QIcon(QPixmap(ROOT + "/icons/fast-forward.png"))
+        self.prev_icon = QIcon(QPixmap(ROOT + "/icons/prev.png"))
+        self.next_icon = QIcon(QPixmap(ROOT + "/icons/next.png"))
         self.volume_on_icon = QIcon(QPixmap(ROOT + "/icons/volume.png"))
         self.volume_off_icon = QIcon(QPixmap(ROOT + "/icons/mute.png"))
 
@@ -156,6 +156,8 @@ class AudioController(QFrame):
         self.audio_order_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
         self.audio_order_button.clicked.connect(self.change_audio_order)
 
+        self.ordered_icon = QIcon("")
+
         # self.repeat_mode_button_modes = ("Roff", "Ron", "Rone")
         self.repeat_mode_button = QPushButton("Roff")
         self.repeat_mode_button.clicked.connect(self.change_repeat_mode)
@@ -231,8 +233,8 @@ class AudioController(QFrame):
             painter.drawRect(self.rect())
 
     def wheelEvent(self, event: QWheelEvent) -> None:
-        print("WHEEL")
         self.volume_slider.wheelEvent(event)
+        super().wheelEvent(event)
 
     def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
         if self._is_dark_mode_enabled == dark_mode_enabled:
@@ -368,7 +370,8 @@ class AudioController(QFrame):
             self.play_button.setIcon(self.pause_icon)
             self.player.setSource(QUrl(playing_track.file_path))
             self.player.play()
-            self.updated_playing_track.emit(playing_track, self.playlist.playing_track_index)
+            # print(self.playlist.playing_track_index)
+            self.updated_playing_track.emit(playing_track)
         else:
             self.user_action = 0
             self.star_widget.setEnabled(False)
@@ -407,7 +410,7 @@ class AudioController(QFrame):
         self._backup_action = self.user_action
         self.set_player_position(self.seek_slider.pixel_pos_to_range_value(QPoint(pos, 0)))
         self.pause(fade=False)
-        self.player.current_volume = self.volume_slider.value() / 100
+        self.player.current_volume = 0
 
     @pyqtSlot(int)
     def seek_slider_moved(self, pos: int) -> None:
@@ -415,10 +418,12 @@ class AudioController(QFrame):
 
     @pyqtSlot(int)
     def seek_slider_released(self) -> None:
+        self.player.current_volume = self.volume_slider.value() / 100
         if self._backup_action == 1:
             self.unpause(fade=False)
+        # self.player.current_volume = self.volume_slider.value() / 100
 
-    def get_remaining_time_in_secs(self) -> int:  # TODO fully implement
+    def get_remaining_time_in_secs(self) -> int:  # TODO fully implement, not currently used
         return self._rounded_remaining_queue_time - format_player_position_to_seconds(self.player.position())
 
     def pause(self, fade=True) -> None:
@@ -509,7 +514,7 @@ class AudioController(QFrame):
         if track not in self.playlist.playlist:
             raise TrackNotInPlaylistError
 
-        self.set_playlist_index(self.playlist.playlist.index(track))
+        self.set_playlist_index(self.playlist.index(track))
         self.play()
 
     @pyqtSlot(str)

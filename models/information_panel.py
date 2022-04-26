@@ -147,12 +147,15 @@ class InformationPanel(QFrame):
         self.playing_track_image_label.setPixmap(artwork_pixmap)
 
         # print("Inf index:", track_index)
+        if track in self.playing_tracks:
+            track_index = self.playing_tracks.index(track)
+        else:
+            track_index = None
+
         if track_index is None:
             self.information_table_view.set_currently_playing_track_index(self.playing_tracks.index(track))
         else:
             self.information_table_view.set_currently_playing_track_index(track_index)
-
-    # def set_playing_track_index(self):
 
     def pause_playing_track(self) -> None:
         self.information_table_view.set_paused()

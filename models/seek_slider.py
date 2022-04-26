@@ -61,15 +61,6 @@ class SeekSlider(ImprovedSlider):
         self.length_in_seconds = 0
         self.formatted_length_in_seconds = format_seconds(self.length_in_seconds)
 
-        #     self.__can_update_tooltip = True
-        #     self._tooltip_timer = QTimer()
-        #     self._tooltip_timer.setTimerType(Qt.TimerType.PreciseTimer)
-        #     self._tooltip_timer.setSingleShot(True)
-        #     self._tooltip_timer.timeout.connect(self._tooltip_timer_timeout)
-        #
-        # def _tooltip_timer_timeout(self):
-        #     self.__can_update_tooltip = True
-
     def mousePressEvent(self, event: QMouseEvent) -> None:
         if not self.length_in_seconds:
             return
@@ -107,9 +98,6 @@ class SeekSlider(ImprovedSlider):
             tool_tip_str = f"{formatted_seconds}/{self.formatted_length_in_seconds}"
             QToolTip.showText(self.mapToGlobal(QPoint(event.oldPos().x(), self.y() - self.height())),
                               tool_tip_str, self)
-            # self.__can_update_tooltip = False
-
-            # self._tooltip_timer.start(30)
             return True
         return super().event(event)
 

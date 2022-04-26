@@ -156,8 +156,8 @@ class MainWindowUi(QMainWindow):
                                   self.audio_controller.play()))
 
         self.audio_controller.updated_playing_track.connect(
-            lambda track, index: (self.main_panel.set_playing_track(track),
-                                  self.information_panel.set_playing_track(track, index)))
+            lambda track: (self.main_panel.set_playing_track(track),
+                           self.information_panel.set_playing_track(track)))
 
         self.audio_controller.paused.connect(lambda: (self.main_panel.pause_playing_track(),
                                              self.information_panel.pause_playing_track()))
