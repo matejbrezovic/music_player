@@ -24,6 +24,9 @@ class AudioPlaylist(QObject):
     def __bool__(self):
         return bool(self.playlist)
 
+    def __len__(self):
+        return len(self.playlist)
+
     def has_valid_tracks(self) -> bool:
         return any(track.is_valid() for track in self.playlist)
 
@@ -50,11 +53,16 @@ class AudioPlaylist(QObject):
         self.playing_track_index = playlist_index
 
     def index(self, track: Track) -> int:
-        print(self.playlist.index(track))
         return self.playlist.index(track)
 
     def set_shuffled(self) -> None:
-        shuffle(self.playlist)
+        if len(self.playlist) <= 2:
+            self.playlist.reverse()
+            return
+
+        if self.playing_track_index == len(self.playlist) - 1:
+            shuffle(self.playlist)
+
         while self.playlist[self.playing_track_index + 1] == self.ordered_playlist[self.playing_track_index]:
             shuffle(self.playlist)
 
@@ -112,4 +120,3 @@ class AudioPlaylist(QObject):
 
     def update_currently_playing(self) -> None:
         self.playing_track = self.playlist[self.playing_track_index]
-        print(self.playing_track)

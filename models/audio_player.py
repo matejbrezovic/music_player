@@ -45,7 +45,6 @@ class AudioPlayer(QMediaPlayer):
             self.fade_in_anim.setEndValue(self.current_volume)
             self.fade_in_anim.start()
         else:
-            # print("current_volume:", self.current_volume)
             self.audioOutput().setVolume(self.current_volume)
         super().play()
 
@@ -56,6 +55,7 @@ class AudioPlayer(QMediaPlayer):
             self.fade_out_anim.setKeyValueAt(self.fade_out_anim_key_value, self.current_volume)
             self.fade_out_anim.start()
         else:
+            self.audio_output.setVolume(0)  # important to avoid noises when dragging seek slider
             super().pause()
 
     @pyqtSlot(str)

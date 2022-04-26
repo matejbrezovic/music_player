@@ -152,13 +152,18 @@ class AudioController(QFrame):
 
         self.audio_order_button_modes = ("O", "S")  # order, shuffle
         self.is_audio_order_shuffled = False
-        self.audio_order_button = QPushButton("O")
-        self.audio_order_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH)
+        self.audio_order_button = HoverButton(self)
+        self.audio_order_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT + 10, CONTROLLER_BUTTON_WIDTH + 10)
+        self.audio_order_button.setIconSize(QSize(CONTROLLER_BUTTON_HEIGHT + 10, CONTROLLER_BUTTON_WIDTH + 10))
         self.audio_order_button.clicked.connect(self.change_audio_order)
 
-        self.ordered_icon = QIcon("")
+        self.ordered_icon = QIcon(QPixmap(ROOT + "/icons/ordered.png"))
+        self.shuffled_icon = QIcon(QPixmap(ROOT + "/icons/shuffled.png"))
 
-        # self.repeat_mode_button_modes = ("Roff", "Ron", "Rone")
+        self.audio_order_button.setStyleSheet("background: transparent;")
+        self.audio_order_button.setIcon(self.ordered_icon)
+
+        self.repeat_mode_button_modes = ("Roff", "Ron", "Rone")
         self.repeat_mode_button = QPushButton("Roff")
         self.repeat_mode_button.clicked.connect(self.change_repeat_mode)
 
@@ -192,19 +197,20 @@ class AudioController(QFrame):
         self.middle_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
         self.middle_layout.addWidget(self.name_time_label_container)
         self.middle_layout.addWidget(self.seek_slider)
-        self.middle_layout.setContentsMargins(0, 0, 0, 0)
+        self.middle_layout.setContentsMargins(0, 6, 0, 4)
 
         self.right_layout = QHBoxLayout(self.right_part)
         self.right_layout.setContentsMargins(0, 0, 0, 0)
-        self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
+        self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.right_layout.addWidget(self.audio_order_button)
         # self.right_layout.addWidget(self.spectrum_equalizer_widget)
 
         self.right_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
+        # self.right_part.setStyleSheet("background-color: red;")
         self.right_part.setFixedSize(self.left_layout.sizeHint())
 
         self.main_layout = QHBoxLayout(self)
-        self.main_layout.setContentsMargins(4, 6, 4, 4)
+        self.main_layout.setContentsMargins(10, 0, 10, 0)
         self.main_layout.addWidget(self.left_part)
         self.main_layout.addWidget(self.middle_part)
         self.main_layout.addWidget(self.right_part)
@@ -250,10 +256,13 @@ class AudioController(QFrame):
 
         self.play_icon = change_icon_color(self.play_icon, color)
         self.pause_icon = change_icon_color(self.pause_icon, color)
-        self.prev_icon = change_icon_color(self.prev_icon, color)
+        self.prev_icon = change_icon_color(self.prev_icon, QColor("red"))
         self.next_icon = change_icon_color(self.next_icon, color)
         self.volume_on_icon = change_icon_color(self.volume_on_icon, color)
         self.volume_off_icon = change_icon_color(self.volume_off_icon, color)
+
+        self.ordered_icon = change_icon_color(self.ordered_icon, color)
+        self.shuffled_icon = change_icon_color(self.shuffled_icon, color)
 
         if self.is_playing:
             self.play_button.setIcon(self.pause_icon)
@@ -264,6 +273,12 @@ class AudioController(QFrame):
             self.volume_button.setIcon(self.volume_off_icon)
         else:
             self.volume_button.setIcon(self.volume_on_icon)
+
+        if self.is_audio_order_shuffled:
+            self.audio_order_button.setIcon(self.shuffled_icon)
+        else:
+            self.audio_order_button.setIcon(self.ordered_icon)
+
         self.prev_button.setIcon(self.prev_icon)
         self.next_button.setIcon(self.next_icon)
 
@@ -271,6 +286,8 @@ class AudioController(QFrame):
         self.volume_button.set_is_in_dark_mode(dark_mode_enabled)
         self.prev_button.set_is_in_dark_mode(dark_mode_enabled)
         self.next_button.set_is_in_dark_mode(dark_mode_enabled)
+
+        self.audio_order_button.set_is_in_dark_mode(dark_mode_enabled)
 
         self.star_widget.set_star_color(color)
 
@@ -314,7 +331,12 @@ class AudioController(QFrame):
     def change_audio_order(self) -> None:
         self.playlist.change_mode()
         self.is_audio_order_shuffled = not self.is_audio_order_shuffled
-        self.audio_order_button.setText(self.audio_order_button_modes[self.is_audio_order_shuffled])
+        if self.is_audio_order_shuffled:
+            self.audio_order_button.setIcon(self.shuffled_icon)
+        else:
+            self.audio_order_button.setIcon(self.ordered_icon)
+
+        # self.audio_order_button.setText(self.audio_order_button_modes[self.is_audio_order_shuffled])
 
         self.update_total_queue_time(sum(track.length for track in self.playlist.playlist))
 
@@ -359,6 +381,17 @@ class AudioController(QFrame):
             self.track_title_label.setText(f"{playing_track.artist} - {playing_track.title}")
         else:
             self.track_title_label.setText(playing_track.title)
+
+        if not self.playlist.index(playing_track):
+            print("Prev disabled.")
+            self.prev_button.setEnabled(False)
+        else:
+            self.prev_button.setEnabled(True)
+
+        if self.playlist.index(playing_track) == len(self.playlist) - 1:
+            self.next_button.setEnabled(False)
+        else:
+            self.next_button.setEnabled(True)
 
         self.is_playing = playing_track.is_valid()
 
@@ -410,7 +443,7 @@ class AudioController(QFrame):
         self._backup_action = self.user_action
         self.set_player_position(self.seek_slider.pixel_pos_to_range_value(QPoint(pos, 0)))
         self.pause(fade=False)
-        self.player.current_volume = 0
+        # self.player.current_volume = 0
 
     @pyqtSlot(int)
     def seek_slider_moved(self, pos: int) -> None:
@@ -418,7 +451,7 @@ class AudioController(QFrame):
 
     @pyqtSlot(int)
     def seek_slider_released(self) -> None:
-        self.player.current_volume = self.volume_slider.value() / 100
+        # self.player.current_volume = self.volume_slider.value() / 100
         if self._backup_action == 1:
             self.unpause(fade=False)
         # self.player.current_volume = self.volume_slider.value() / 100

@@ -397,6 +397,7 @@ class HoverButton(QPushButton):
             super().setIcon(self.hover_icon)
 
     def setIcon(self, icon: QIcon) -> None:
+        print("set icon")
         self.normal_icon = icon
         self.hover_icon = get_hover_icon(icon, self.is_in_dark_mode)
         super().setIcon(icon)
