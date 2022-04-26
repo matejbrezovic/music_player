@@ -1,7 +1,7 @@
 from typing import List
 
 from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint
-from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont, QPaintEvent
+from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont, QPaintEvent, QWheelEvent
 from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton, QFrame, QSpacerItem, QWidget)
 
 from constants import *
@@ -229,6 +229,10 @@ class AudioController(QFrame):
             painter.setBrush(brush)
             painter.setCompositionMode(QPainter.CompositionMode.CompositionMode_DestinationIn)
             painter.drawRect(self.rect())
+
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        print("WHEEL")
+        self.volume_slider.wheelEvent(event)
 
     def set_dark_mode_enabled(self, dark_mode_enabled: bool) -> None:
         if self._is_dark_mode_enabled == dark_mode_enabled:

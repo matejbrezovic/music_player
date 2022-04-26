@@ -1,7 +1,7 @@
 import typing
 
 from PyQt6.QtCore import Qt, QEvent, QPoint, pyqtSignal
-from PyQt6.QtGui import QMouseEvent, QMoveEvent, QKeyEvent
+from PyQt6.QtGui import QMouseEvent, QMoveEvent, QKeyEvent, QWheelEvent
 from PyQt6.QtWidgets import QToolTip
 
 from utils import format_seconds, ImprovedSlider
@@ -92,6 +92,9 @@ class SeekSlider(ImprovedSlider):
 
     def keyPressEvent(self, event: QKeyEvent) -> None:
         return
+
+    def wheelEvent(self, event: QWheelEvent) -> None:
+        self.parent().wheelEvent(event)
 
     def event(self, event: QEvent):  # TODO fix fast refreshing when hovering near widget edge
         if event.type() == QEvent.Type.HoverMove:
