@@ -72,7 +72,7 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         self.playing_pixmap = QPixmap("icons/speaker-playing.png").scaled(self.pixmap_width, self.pixmap_height,
                                                                           Qt.AspectRatioMode.IgnoreAspectRatio,
                                                                           Qt.TransformationMode.SmoothTransformation)
-        self.paused_pixmap = QPixmap("icons/speaker-muted.png").scaled(self.pixmap_width, self.pixmap_height,
+        self.paused_pixmap = QPixmap("icons/speaker-not-playing.png").scaled(self.pixmap_width, self.pixmap_height,
                                                                        Qt.AspectRatioMode.IgnoreAspectRatio,
                                                                        Qt.TransformationMode.SmoothTransformation)
 

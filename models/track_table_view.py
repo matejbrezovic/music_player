@@ -98,7 +98,7 @@ class TrackTableModel(QAbstractTableModel):
         self.playing_track_index: Optional[int] = None
 
         self.playing_speaker_pixmap = QPixmap("icons/speaker-playing.png")
-        self.muted_speaker_pixmap = QPixmap("icons/speaker-muted.png")
+        self.muted_speaker_pixmap = QPixmap("icons/speaker-not-playing.png")
 
         self.general_flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
 

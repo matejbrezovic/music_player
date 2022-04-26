@@ -71,8 +71,8 @@ class AudioController(QFrame):
         self.pause_icon = QIcon(QPixmap(ROOT + "/icons/pause.png"))
         self.prev_icon = QIcon(QPixmap(ROOT + "/icons/prev.png"))
         self.next_icon = QIcon(QPixmap(ROOT + "/icons/next.png"))
-        self.volume_on_icon = QIcon(QPixmap(ROOT + "/icons/volume.png"))
-        self.volume_off_icon = QIcon(QPixmap(ROOT + "/icons/mute.png"))
+        self.volume_on_icon = QIcon(QPixmap(ROOT + "/icons/speaker-playing.png"))
+        self.volume_off_icon = QIcon(QPixmap(ROOT + "/icons/speaker-muted.png"))
 
         self.play_button.setIcon(self.play_icon)
         self.prev_button.setIcon(self.prev_icon)

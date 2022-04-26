@@ -22,7 +22,7 @@ class Example(QWidget):
         sld.valueChanged.connect(self.changeValue)
 
         self.label = QLabel(self)
-        self.label.setPixmap(QPixmap('mute.png'))
+        self.label.setPixmap(QPixmap('speaker-muted.png'))
 
         hbox.addWidget(sld)
         hbox.addSpacing(15)
