@@ -382,12 +382,10 @@ def is_pixmap_valid(pixmap: QPixmap) -> bool:
         buffer = QBuffer()
         buffer.open(QBuffer.OpenModeFlag.ReadWrite)
         img.save(buffer, "JPG")
-        pil_im = Image.open(io.BytesIO(buffer.data()))
+        Image.open(io.BytesIO(buffer.data()))
     except UnidentifiedImageError:
         return False
     return True
-
-
 
 
 class HoverButton(QPushButton):
