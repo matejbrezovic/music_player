@@ -10,6 +10,9 @@ class AudioPlaylist(QObject):
     updated_playlist = pyqtSignal(list)
     playlist_ended = pyqtSignal()
 
+    last_track_playing = pyqtSignal()
+    first_track_playing = pyqtSignal()
+
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.playlist = []
@@ -60,11 +63,18 @@ class AudioPlaylist(QObject):
             self.playlist.reverse()
             return
 
-        if self.playing_track_index == len(self.playlist) - 1:
-            shuffle(self.playlist)
+        self.playing_track_index = 0
+        shuffle(self.playlist)
 
-        while self.playlist[self.playing_track_index + 1] == self.ordered_playlist[self.playing_track_index]:
-            shuffle(self.playlist)
+        self.playlist.remove(self.playing_track)
+
+        self.playlist.insert(0, self.playing_track)
+
+        # if self.playing_track_index == len(self.playlist) - 1:
+        #     shuffle(self.playlist)
+        #
+        # while self.playlist[self.playing_track_index + 1] == self.ordered_playlist[self.playing_track_index]:
+        #     shuffle(self.playlist)
 
     def set_ordered(self) -> None:
         self.playing_track_index = self.ordered_playlist.index(self.playing_track)
@@ -88,7 +98,9 @@ class AudioPlaylist(QObject):
 
     def set_next(self) -> None:
         if self._repeat_mode == "repeat_off":
-            if len(self.playlist) - 1 > self.playing_track_index:
+            if self.playing_track_index == len(self.playlist) - 1:
+                self.last_track_playing.emit()
+            elif len(self.playlist) - 1 > self.playing_track_index:
                 self.playing_track_index += 1
                 self.update_currently_playing()
             else:
@@ -104,7 +116,9 @@ class AudioPlaylist(QObject):
 
     def set_prev(self) -> None:
         if self._repeat_mode == "repeat_off":
-            if self.playing_track_index > 0:
+            if self.playing_track_index == 0:
+                self.last_track_playing.emit()
+            elif self.playing_track_index > 0:
                 self.playing_track_index -= 1
                 self.update_currently_playing()
             else:

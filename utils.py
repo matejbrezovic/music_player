@@ -4,7 +4,7 @@ from os import path
 from typing import Optional, Union
 
 import mutagen
-from PIL import Image, ImageFilter
+from PIL import Image, ImageFilter, UnidentifiedImageError
 from PIL.ImageQt import ImageQt
 from PyQt6.QtCore import Qt, pyqtSignal, QSize, QPoint, QBuffer, QModelIndex, QEvent
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent, QResizeEvent, QMouseEvent, QImage
@@ -374,6 +374,20 @@ def get_blurred_pixmap(pixmap: QPixmap) -> QPixmap:
     qim = QImage(data, blur_img.size[0], blur_img.size[1], QImage.Format.Format_ARGB32)
 
     return QPixmap.fromImage(qim)
+
+
+def is_pixmap_valid(pixmap: QPixmap) -> bool:
+    try:
+        img = pixmap.toImage()
+        buffer = QBuffer()
+        buffer.open(QBuffer.OpenModeFlag.ReadWrite)
+        img.save(buffer, "JPG")
+        pil_im = Image.open(io.BytesIO(buffer.data()))
+    except UnidentifiedImageError:
+        return False
+    return True
+
+
 
 
 class HoverButton(QPushButton):

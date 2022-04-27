@@ -14,7 +14,8 @@ from models.star_widget import StarWidget
 from models.track_not_found_dialog import TrackNotFoundDialog
 from models.volume_slider import VolumeSlider
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
-                   get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds)
+                   get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds,
+                   is_pixmap_valid)
 
 
 class AudioController(QFrame):
@@ -81,6 +82,9 @@ class AudioController(QFrame):
         self.play_button.clicked.connect(self.play_pause_button_clicked)
         self.next_button.clicked.connect(self.next_button_clicked)
         self.prev_button.clicked.connect(self.prev_button_clicked)
+
+        # self.playlist.first_track_playing.connect(lambda: self.prev_button.setEnabled(False))
+        # self.playlist.last_track_playing.connect(lambda: self.next_button.setEnabled(False))
 
         self.volume_slider = VolumeSlider(Qt.Orientation.Horizontal)
         self.volume_slider.setMaximumWidth(100)
@@ -150,7 +154,7 @@ class AudioController(QFrame):
                                                                  QSizePolicy.Policy.Expanding))
         self.name_time_label_container.setFixedHeight(self.track_title_label.sizeHint().height())
 
-        self.audio_order_button_modes = ("O", "S")  # order, shuffle
+        # self.audio_order_button_modes = ("O", "S")  # order, shuffle
         self.is_audio_order_shuffled = False
         self.audio_order_button = HoverButton(self)
         self.audio_order_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT + 10, CONTROLLER_BUTTON_WIDTH + 10)
@@ -256,7 +260,7 @@ class AudioController(QFrame):
 
         self.play_icon = change_icon_color(self.play_icon, color)
         self.pause_icon = change_icon_color(self.pause_icon, color)
-        self.prev_icon = change_icon_color(self.prev_icon, QColor("red"))
+        self.prev_icon = change_icon_color(self.prev_icon, color)
         self.next_icon = change_icon_color(self.next_icon, color)
         self.volume_on_icon = change_icon_color(self.volume_on_icon, color)
         self.volume_off_icon = change_icon_color(self.volume_off_icon, color)
@@ -293,7 +297,7 @@ class AudioController(QFrame):
 
     def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
         pixmap = get_artwork_pixmap(track.file_path)
-        if not pixmap or reset_to_default:
+        if not pixmap or reset_to_default or not is_pixmap_valid(pixmap):
             self.background_pixmap = None
             self.set_dark_mode_enabled(True)
             self.repaint()
