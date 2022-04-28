@@ -77,10 +77,11 @@ class AudioPlaylist(QObject):
         #     shuffle(self.playlist)
 
     def set_ordered(self) -> None:
-        self.playing_track_index = self.ordered_playlist.index(self.playing_track)
+        if self.playing_track:
+            self.playing_track_index = self.ordered_playlist.index(self.playing_track)
         self.playlist = self.ordered_playlist.copy()
 
-    def change_mode(self) -> None:
+    def change_audio_order(self) -> None:
         self._is_shuffled = not self._is_shuffled
         if self._is_shuffled:
             self.set_shuffled()

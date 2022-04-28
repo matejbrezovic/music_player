@@ -2,7 +2,7 @@ from typing import List
 
 from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont, QPaintEvent, QWheelEvent
-from PyQt6.QtWidgets import (QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QPushButton, QFrame, QSpacerItem, QWidget)
+from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QFrame, QSpacerItem, QWidget
 
 from constants import *
 from data_models.track import Track
@@ -74,6 +74,10 @@ class AudioController(QFrame):
         self.next_icon = QIcon(QPixmap(ROOT + "/icons/next.png"))
         self.volume_on_icon = QIcon(QPixmap(ROOT + "/icons/speaker-playing.png"))
         self.volume_off_icon = QIcon(QPixmap(ROOT + "/icons/speaker-muted.png"))
+
+        self.repeat_off_icon = QIcon(QPixmap(ROOT + "/icons/repeat-off.png"))
+        self.repeat_on_icon = QIcon(QPixmap(ROOT + "/icons/repeat-on.png"))
+        self.repeat_one_icon = QIcon(QPixmap(ROOT + "/icons/repeat-one.png"))
 
         self.play_button.setIcon(self.play_icon)
         self.prev_button.setIcon(self.prev_icon)
@@ -167,9 +171,13 @@ class AudioController(QFrame):
         self.audio_order_button.setStyleSheet("background: transparent;")
         self.audio_order_button.setIcon(self.ordered_icon)
 
-        self.repeat_mode_button_modes = ("Roff", "Ron", "Rone")
-        self.repeat_mode_button = QPushButton("Roff")
+        # self.repeat_mode_button_modes = ("Roff", "Ron", "Rone")
+        self.repeat_mode_button = HoverButton(self)
+        self.repeat_mode_button.setFixedSize(CONTROLLER_BUTTON_HEIGHT + 10, CONTROLLER_BUTTON_WIDTH + 10)
+        self.repeat_mode_button.setIconSize(QSize(CONTROLLER_BUTTON_HEIGHT + 10, CONTROLLER_BUTTON_WIDTH + 10))
+        self.repeat_mode_button.setIcon(self.repeat_off_icon)
         self.repeat_mode_button.clicked.connect(self.change_repeat_mode)
+        self.repeat_mode_button.setStyleSheet("background: transparent;")
 
         # self.repeat_button = QPushButton(self)
 
@@ -269,6 +277,10 @@ class AudioController(QFrame):
         self.ordered_icon = change_icon_color(self.ordered_icon, color)
         self.shuffled_icon = change_icon_color(self.shuffled_icon, color)
 
+        self.repeat_off_icon = change_icon_color(self.repeat_off_icon, color)
+        self.repeat_on_icon = change_icon_color(self.repeat_on_icon, color)
+        self.repeat_one_icon = change_icon_color(self.repeat_one_icon, color)
+
         if self.is_playing:
             self.play_button.setIcon(self.pause_icon)
         else:
@@ -284,6 +296,13 @@ class AudioController(QFrame):
         else:
             self.audio_order_button.setIcon(self.ordered_icon)
 
+        if self._repeat_mode == "repeat_off":
+            self.repeat_mode_button.setIcon(self.repeat_off_icon)
+        elif self._repeat_mode == "repeat_on":
+            self.repeat_mode_button.setIcon(self.repeat_on_icon)
+        else:
+            self.repeat_mode_button.setIcon(self.repeat_one_icon)
+
         self.prev_button.setIcon(self.prev_icon)
         self.next_button.setIcon(self.next_icon)
 
@@ -293,6 +312,7 @@ class AudioController(QFrame):
         self.next_button.set_is_in_dark_mode(dark_mode_enabled)
 
         self.audio_order_button.set_is_in_dark_mode(dark_mode_enabled)
+        self.repeat_mode_button.set_is_in_dark_mode(dark_mode_enabled)
 
         self.star_widget.set_star_color(color)
 
@@ -334,31 +354,38 @@ class AudioController(QFrame):
 
     @pyqtSlot()
     def change_audio_order(self) -> None:
-        self.playlist.change_mode()
+        self.playlist.change_audio_order()
         self.is_audio_order_shuffled = not self.is_audio_order_shuffled
         if self.is_audio_order_shuffled:
             self.audio_order_button.setIcon(self.shuffled_icon)
         else:
             self.audio_order_button.setIcon(self.ordered_icon)
 
-        # self.audio_order_button.setText(self.audio_order_button_modes[self.is_audio_order_shuffled])
-
         self.update_total_queue_time(sum(track.length for track in self.playlist.playlist))
 
     @pyqtSlot()
     def change_repeat_mode(self) -> None:
+        # repeat_off -> repeat_on -> repeat_one -> repeat_off ...
+
         if self._repeat_mode == "repeat_off":
             self._repeat_mode = "repeat_on"
-            self.repeat_mode_button.setText("Ron")
+            self.repeat_mode_button.setIcon(self.repeat_on_icon)
             self.playlist.set_repeat_on()
+            self.prev_button.setEnabled(True)
+            self.next_button.setEnabled(True)
         elif self._repeat_mode == "repeat_on":
             self._repeat_mode = "repeat_one"
-            self.repeat_mode_button.setText("Roff")
+            self.repeat_mode_button.setIcon(self.repeat_one_icon)
             self.playlist.set_repeat_one()
         elif self._repeat_mode == "repeat_one":
             self._repeat_mode = "repeat_off"
-            self.repeat_mode_button.setText("Rone")
+            self.repeat_mode_button.setIcon(self.repeat_off_icon)
             self.playlist.set_repeat_off()
+
+            if self.get_playing_track() and self.playlist.index(self.get_playing_track()) == len(self.playlist) - 1:
+                self.next_button.setEnabled(False)
+            else:
+                self.next_button.setEnabled(True)
 
     @pyqtSlot(int)
     def set_player_position(self, position: int) -> None:
@@ -387,13 +414,13 @@ class AudioController(QFrame):
         else:
             self.track_title_label.setText(playing_track.title)
 
-        if not self.playlist.index(playing_track):
+        if not self.playlist.index(playing_track) and self._repeat_mode == "repeat_off":
             # print("Prev disabled.")
             self.prev_button.setEnabled(False)
         else:
             self.prev_button.setEnabled(True)
 
-        if self.playlist.index(playing_track) == len(self.playlist) - 1:
+        if self.playlist.index(playing_track) == len(self.playlist) - 1 and self._repeat_mode == "repeat_off":
             self.next_button.setEnabled(False)
         else:
             self.next_button.setEnabled(True)
