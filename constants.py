@@ -6,7 +6,7 @@ from PyQt6.QtGui import QColor, QPalette
 import utils
 
 APPLICATION_NAME = "Music Player"
-APPLICATION_VERSION = "0.0.17"
+APPLICATION_VERSION = "0.0.18"
 
 
 SUPPORTED_AUDIO_FORMATS = {".mp3", ".m4a"}
@@ -27,8 +27,6 @@ CONTROLLER_BUTTON_HEIGHT = 25
 CONTROLLER_BUTTON_WIDTH = 25
 
 STARTING_AUDIO_VOLUME = 1
-
-DEFAULT_AUDIO_PATH = "/home/matey/Music"
 
 # Table views constants
 

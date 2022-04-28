@@ -141,10 +141,10 @@ class MainWindowUi(QMainWindow):
         self.main_panel.output_to_triggered.connect(self.audio_controller.set_audio_output)
 
         self.navigation_panel.group_clicked.connect(
-            lambda tracks, key, value: (self.main_panel.display_tracks(tracks, key, value)))
+            lambda tracks, key_value_tuple: (self.main_panel.display_tracks(tracks, key_value_tuple)))
 
         self.navigation_panel.group_double_clicked.connect(
-            lambda tracks, key, value: (self.main_panel.display_tracks(tracks, key, value),
+            lambda tracks, key_value_tuple: (self.main_panel.display_tracks(tracks, key_value_tuple),
                                         self.status_bar.update_info(tracks),
                                         self.audio_controller.set_playlist(tracks),
                                         self.audio_controller.play()))

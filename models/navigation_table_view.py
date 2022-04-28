@@ -110,8 +110,8 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
 
 class NavigationTableView(QTableView):
     set_new_groups = pyqtSignal()
-    group_clicked = pyqtSignal(list, str, str)
-    group_double_clicked = pyqtSignal(list, str, str)
+    group_clicked = pyqtSignal(list, tuple)
+    group_double_clicked = pyqtSignal(list, tuple)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -150,7 +150,8 @@ class NavigationTableView(QTableView):
         self.last_group_key = self.group_key
         self.last_group_title = self.groups[index.row()].title
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
-        self.group_clicked.emit(tracks, self.group_key, self.last_group_title)
+
+        self.group_clicked.emit(tracks, (self.group_key, self.last_group_title))
 
     def currentChanged(self, current: QModelIndex, previous: QModelIndex) -> None:
         self.single_click_action(current)

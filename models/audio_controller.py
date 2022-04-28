@@ -206,6 +206,7 @@ class AudioController(QFrame):
         self.right_layout = QHBoxLayout(self.right_part)
         self.right_layout.setContentsMargins(0, 0, 0, 0)
         self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self.right_layout.addWidget(self.repeat_mode_button)
         self.right_layout.addWidget(self.audio_order_button)
         # self.right_layout.addWidget(self.spectrum_equalizer_widget)
 

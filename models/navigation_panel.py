@@ -12,8 +12,8 @@ from utils import *
 
 
 class NavigationPanel(QFrame):
-    group_clicked = pyqtSignal(list, str, str)
-    group_double_clicked = pyqtSignal(list, str, str)
+    group_clicked = pyqtSignal(list, tuple)
+    group_double_clicked = pyqtSignal(list, tuple)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -56,9 +56,16 @@ class NavigationPanel(QFrame):
         self.view_key = 0
         self.group_key_changed(0)
 
-    # def _group_clicked(self, key: str, value: str):
-    #     # self._last_selected_tracks = group_tracks
-    #     self.group_clicked.emit(key, value)
+    # @pyqtSlot(list, str, str)
+    # @pyqtSlot(list, str, int)
+    # def _group_clicked(self, tracks: List[Track], key: str, value: Union[int, str]) -> None:
+    #     self.group_clicked.emit(tracks, key, value)
+    #     print("EMIT")
+    #
+    # @pyqtSlot(list, str, str)
+    # @pyqtSlot(list, str, int)
+    # def _group_double_clicked(self, tracks: List[Track], key: str, value: Union[int, str]) -> None:
+    #     self.group_clicked.emit(tracks, key, value)
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:

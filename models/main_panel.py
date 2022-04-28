@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 from PyQt6.QtCore import pyqtSignal, pyqtSlot
 from PyQt6.QtWidgets import QVBoxLayout, QFrame
@@ -46,10 +46,10 @@ class MainPanel(QFrame):
         ...
 
     @pyqtSlot(list)
-    def display_tracks(self, tracks: List[Track], key: Optional[str] = None, value: Optional[str] = None, ) -> None:
-        if (self._display_key, self._display_value) == (key, value):
+    def display_tracks(self, tracks: List[Track], key_value_tuple: Tuple[Optional[str], Optional[str]] = None) -> None:
+        if (self._display_key, self._display_value) == key_value_tuple:
             return
-        self._display_key, self._display_value = key, value
+        self._display_key, self._display_value = key_value_tuple
         self.track_view_widget.set_tracks(tracks)
         self.displayed_tracks = tracks
 
