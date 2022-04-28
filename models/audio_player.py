@@ -12,24 +12,23 @@ class AudioPlayer(QMediaPlayer):
 
     def __init__(self, *args):
         super().__init__(*args)
-        # self.__audio_output = QAudioOutput()
-        self.audio_output = QAudioOutput(self)
+        self._audio_output = QAudioOutput(self)
 
         # print([d.description() for d in self.audio_outputs])
 
         # self.audio_output.volumeChanged.connect(lambda: print("Changed volume:", self.audio_output.volume()))
-        self.setAudioOutput(self.audio_output)
+        self.setAudioOutput(self._audio_output)
         self.audioOutput().setVolume(STARTING_AUDIO_VOLUME / 100)
         self.current_volume = STARTING_AUDIO_VOLUME / 100
 
-        self.fade_in_anim = QPropertyAnimation(self.audio_output, b"volume")
-        self.fade_in_anim.setDuration(1200)
+        self.fade_in_anim = QPropertyAnimation(self._audio_output, b"volume")
+        self.fade_in_anim.setDuration(800)
 
         self.fade_in_anim.setEndValue(self.current_volume)
         self.fade_in_anim.setStartValue(0.05)
         self.fade_in_anim.setEasingCurve(QEasingCurve.Type.Linear)
 
-        self.fade_out_anim = QPropertyAnimation(self.audio_output, b"volume")
+        self.fade_out_anim = QPropertyAnimation(self._audio_output, b"volume")
         self.fade_out_anim.setDuration(600)
         self.fade_out_anim.setEndValue(self.fade_out_anim_end_value)
         self.fade_out_anim.setEasingCurve(QEasingCurve.Type.Linear)
@@ -50,13 +49,13 @@ class AudioPlayer(QMediaPlayer):
 
     def pause(self, fade: bool = True) -> None:
         if self.fade_in_anim.state() != QAbstractAnimation.State.Running:
-            self.current_volume = self.audio_output.volume()
+            self.current_volume = self._audio_output.volume()
         if self.position() and fade:
-            self.fade_out_anim.setStartValue(self.audio_output.volume())
+            self.fade_out_anim.setStartValue(self._audio_output.volume())
             self.fade_out_anim.setKeyValueAt(self.fade_out_anim_key_value, self.current_volume)
             self.fade_out_anim.start()
         else:
-            self.audio_output.setVolume(0)  # important to avoid noises when dragging seek slider
+            self._audio_output.setVolume(0)  # important to avoid noises when dragging seek slider
             super().pause()
 
     @pyqtSlot(str)
@@ -66,6 +65,6 @@ class AudioPlayer(QMediaPlayer):
             index = 0
         else:
             index = [d.description() for d in audio_output_devices].index(audio_output_name)
-        self.audio_output.setDevice(audio_output_devices[index])
-        self.setAudioOutput(self.audio_output)
+        self._audio_output.setDevice(audio_output_devices[index])
+        self.setAudioOutput(self._audio_output)
 

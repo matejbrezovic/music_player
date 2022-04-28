@@ -43,7 +43,7 @@ class AudioController(QFrame):
         self.playlist.updated_playlist.connect(self.updated_playlist)
 
         self.total_queue_time = 0
-        self._rounded_remaining_queue_time = 0  # doesn't update while track is playing
+        self._rounded_remaining_queue_time = 0  # shouldn't update while track is playing
         self.remaining_queue_time = 0
         self.user_action = -1  # 0 - stopped, 1 - playing, 2 - paused
         self._repeat_mode = "repeat_off"
@@ -142,7 +142,7 @@ class AudioController(QFrame):
         self.passed_time_label.setFixedWidth(90)
         self.track_title_label = MarqueeLabel(self)
         self.track_title_label.setFont(QFont(self.track_title_label.font().family(), 9))
-        self.track_title_label.setText("---")
+        self.track_title_label.setText("~~~")
         self.passed_time_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.track_title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
@@ -551,7 +551,7 @@ class AudioController(QFrame):
 
     @pyqtSlot(int)
     def volume_changed(self, volume_value: int) -> None:
-        self.player.audio_output.setVolume(volume_value / 100)
+        self.player.audioOutput().setVolume(volume_value / 100)
         self.player.current_volume = volume_value / 100
         self.volume_slider.setSliderPosition(volume_value)
         self.volume_slider_position = volume_value
@@ -564,15 +564,15 @@ class AudioController(QFrame):
 
     @pyqtSlot()
     def volume_button_clicked(self) -> None:
-        if self.player.audio_output.volume():
+        if self.player.audioOutput().volume():
             self.volume_slider_position_backup = self.volume_slider_position
             self.volume_slider.setSliderPosition(0)
-            self.player.current_volume = self.player.audio_output.volume()
+            self.player.current_volume = self.player.audioOutput().volume()
             self.is_muted = True
         else:
             self.volume_slider_position = self.volume_slider_position_backup
             self.volume_slider.setSliderPosition(self.volume_slider_position)
-            self.player.current_volume = self.player.audio_output.volume()
+            self.player.current_volume = self.player.audioOutput().volume()
             self.is_muted = False
 
     def get_playing_track(self) -> Track:

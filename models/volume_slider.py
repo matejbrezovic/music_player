@@ -2,6 +2,7 @@ from PyQt6.QtCore import QPoint
 from PyQt6.QtGui import QWheelEvent
 from PyQt6.QtWidgets import QToolTip
 
+from constants import STARTING_AUDIO_VOLUME
 from utils import ImprovedSlider
 
 
@@ -40,7 +41,7 @@ class VolumeSlider(ImprovedSlider):
         self.setStyleSheet(self.dark_stylesheet)
         self.value_changed.connect(self.slider_moved)
         self.sliderMoved.connect(self.slider_moved)
-        self.setToolTip(f"{self.value()}%")
+        self.setToolTip(f"{STARTING_AUDIO_VOLUME}%")
 
     def slider_moved(self, value: int) -> None:
         self.setToolTip(f"{value}%")
