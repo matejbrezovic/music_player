@@ -1,7 +1,7 @@
 from typing import List, Any, Optional, Union
 
-from PyQt6.QtCore import QModelIndex, pyqtSignal, QRect, QPoint, QTimer, QAbstractTableModel
-from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QFocusEvent
+from PyQt6.QtCore import QModelIndex, pyqtSignal, QRect, QPoint, QTimer, QAbstractTableModel, Qt
+from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QFocusEvent, QPalette
 from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate,
                              QStyle, QStyleOptionViewItem, QApplication, QAbstractItemView)
 
@@ -73,8 +73,8 @@ class InformationTableItemDelegate(QStyledItemDelegate):
                                                                           Qt.AspectRatioMode.IgnoreAspectRatio,
                                                                           Qt.TransformationMode.SmoothTransformation)
         self.paused_pixmap = QPixmap("icons/speaker-not-playing.png").scaled(self.pixmap_width, self.pixmap_height,
-                                                                       Qt.AspectRatioMode.IgnoreAspectRatio,
-                                                                       Qt.TransformationMode.SmoothTransformation)
+                                                                             Qt.AspectRatioMode.IgnoreAspectRatio,
+                                                                             Qt.TransformationMode.SmoothTransformation)
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         painter.setPen(QPen(Qt.PenStyle.NoPen))
@@ -151,8 +151,8 @@ class InformationTableItemDelegate(QStyledItemDelegate):
 
 class InformationTableView(QTableView):
     set_new_tracks = pyqtSignal()
-    track_clicked = pyqtSignal(Track, int)
-    track_double_clicked = pyqtSignal(Track, int)
+    track_clicked = pyqtSignal(Track)
+    track_double_clicked = pyqtSignal(Track)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -167,8 +167,8 @@ class InformationTableView(QTableView):
         palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.BrightText, QColor(79, 180, 242))
         self.setPalette(palette)
 
-        self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()], index.row()))
-        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()], index.row()))
+        self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()]))
+        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()]))
 
         self._viewport_fix_timer = QTimer(self)
         self._viewport_fix_timer.setTimerType(Qt.TimerType.PreciseTimer)

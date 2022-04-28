@@ -1,4 +1,4 @@
-from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, pyqtSlot
+from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, pyqtSlot, QAbstractAnimation
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
 
 from constants import *
@@ -20,10 +20,10 @@ class AudioPlayer(QMediaPlayer):
         # self.audio_output.volumeChanged.connect(lambda: print("Changed volume:", self.audio_output.volume()))
         self.setAudioOutput(self.audio_output)
         self.audioOutput().setVolume(STARTING_AUDIO_VOLUME / 100)
-        self.current_volume = self.audio_output.volume()
+        self.current_volume = STARTING_AUDIO_VOLUME / 100
 
         self.fade_in_anim = QPropertyAnimation(self.audio_output, b"volume")
-        self.fade_in_anim.setDuration(1400)
+        self.fade_in_anim.setDuration(1200)
 
         self.fade_in_anim.setEndValue(self.current_volume)
         self.fade_in_anim.setStartValue(0.05)
@@ -49,9 +49,10 @@ class AudioPlayer(QMediaPlayer):
         super().play()
 
     def pause(self, fade: bool = True) -> None:
-        self.current_volume = self.audio_output.volume()
+        if self.fade_in_anim.state() != QAbstractAnimation.State.Running:
+            self.current_volume = self.audio_output.volume()
         if self.position() and fade:
-            self.fade_out_anim.setStartValue(self.current_volume)
+            self.fade_out_anim.setStartValue(self.audio_output.volume())
             self.fade_out_anim.setKeyValueAt(self.fade_out_anim_key_value, self.current_volume)
             self.fade_out_anim.start()
         else:

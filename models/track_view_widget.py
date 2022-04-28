@@ -82,7 +82,6 @@ class TrackViewWidget(QWidget):
     def set_playing_track(self, track: Track) -> None:
         self.playing_track = track
         if track not in self.displayed_tracks:
-            print("Track not in displayed tracks!")
             self.table_view.set_playing_track_index(None)
             return
         self.table_view.set_playing_track_index(self.displayed_tracks.index(track))

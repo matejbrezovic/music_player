@@ -1,7 +1,7 @@
 from typing import List
 
 from PIL import UnidentifiedImageError
-from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint
+from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint, Qt
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont, QPaintEvent, QWheelEvent
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QFrame, QSpacerItem, QWidget
 
@@ -15,8 +15,7 @@ from models.star_widget import StarWidget
 from models.track_not_found_dialog import TrackNotFoundDialog
 from models.volume_slider import VolumeSlider
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
-                   get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds,
-                   is_pixmap_valid)
+                   get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds)
 
 
 class AudioController(QFrame):
@@ -483,7 +482,6 @@ class AudioController(QFrame):
         self._backup_action = self.user_action
         self.set_player_position(self.seek_slider.pixel_pos_to_range_value(QPoint(pos, 0)))
         self.pause(fade=False)
-        # self.player.current_volume = 0
 
     @pyqtSlot(int)
     def seek_slider_moved(self, pos: int) -> None:
@@ -491,10 +489,8 @@ class AudioController(QFrame):
 
     @pyqtSlot(int)
     def seek_slider_released(self) -> None:
-        # self.player.current_volume = self.volume_slider.value() / 100
         if self._backup_action == 1:
             self.unpause(fade=False)
-        # self.player.current_volume = self.volume_slider.value() / 100
 
     def get_remaining_time_in_secs(self) -> int:  # TODO fully implement, not currently used
         return self._rounded_remaining_queue_time - format_player_position_to_seconds(self.player.position())

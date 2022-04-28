@@ -1,6 +1,7 @@
 {
 	"preselected_folders": [
-		"/home/matey/test",
-		"/home/matey/Music"
+		"/home/matey/Music",
+		"/home/matey/port",
+		"/home/matey/test"
 	]
 }

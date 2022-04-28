@@ -230,7 +230,13 @@ class SelectFoldersDialog(QDialog):
         super().exec()
 
     def set_preselected_folders(self, preselected_folders: Tuple[str]) -> None:
-        self.preselected_folders = preselected_folders
+        valid_folders = []
+
+        for folder in preselected_folders:
+            if os.path.isdir(folder):
+                valid_folders.append(folder)
+
+        self.preselected_folders = valid_folders
 
     def select_preselected_folders(self) -> None:
         def get_child_by_text(_item: QTreeWidgetItem, text: str) -> QTreeWidgetItem:

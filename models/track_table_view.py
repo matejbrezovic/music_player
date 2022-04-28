@@ -4,7 +4,7 @@ import sys
 import typing
 from typing import List, Optional, Any
 
-from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize, QAbstractItemModel, QRect, QAbstractTableModel
+from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize, QAbstractItemModel, QRect, QAbstractTableModel, Qt
 from PyQt6.QtGui import (QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut,
                          QContextMenuEvent, QFocusEvent, QMouseEvent, QCursor)
 from PyQt6.QtMultimedia import QMediaDevices

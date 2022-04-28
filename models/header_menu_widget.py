@@ -1,6 +1,6 @@
 from typing import List
 
-from PyQt6.QtCore import pyqtSignal, pyqtSlot
+from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt6.QtWidgets import QWidget, QSplitter, QVBoxLayout, QHBoxLayout
 
 from constants import *

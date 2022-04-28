@@ -123,7 +123,7 @@ class MainWindowUi(QMainWindow):
         self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
         self.add_files_dialog.finished.connect(self.navigation_panel.refresh_groups)
 
-        # self.main_panel.track_clicked.connect(lambda: ...)  # TODO
+        # self.main_panel.track_clicked.connect(lambda: ...)
 
         self.header_menu.navigation_panel_group_key_changed.connect(self.navigation_panel.group_key_changed)
         self.header_menu.main_panel_view_key_changed.connect(self.main_panel.view_key_changed)
@@ -145,14 +145,14 @@ class MainWindowUi(QMainWindow):
 
         self.navigation_panel.group_double_clicked.connect(
             lambda tracks, key_value_tuple: (self.main_panel.display_tracks(tracks, key_value_tuple),
-                                        self.status_bar.update_info(tracks),
-                                        self.audio_controller.set_playlist(tracks),
-                                        self.audio_controller.play()))
+                                             self.status_bar.update_info(tracks),
+                                             self.audio_controller.set_playlist(tracks),
+                                             self.audio_controller.play()))
 
         # self.information_panel.track_clicked.connect(lambda: ...)
 
         self.information_panel.track_double_clicked.connect(
-            lambda track, index: (self.audio_controller.set_playlist_index(index),
+            lambda track: (self.audio_controller.set_playing_track(track),
                                   self.audio_controller.play()))
 
         self.audio_controller.updated_playing_track.connect(

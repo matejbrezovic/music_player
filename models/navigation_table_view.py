@@ -1,7 +1,7 @@
 from typing import List, Any, Union
 
-from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QAbstractTableModel
-from PyQt6.QtGui import QPen, QBrush, QPainter, QFont, QFocusEvent
+from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QAbstractTableModel, Qt
+from PyQt6.QtGui import QPen, QBrush, QPainter, QFont, QFocusEvent, QPalette
 from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QStyledItemDelegate, QStyle,
                              QStyleOptionViewItem, QApplication, QAbstractItemView)
 

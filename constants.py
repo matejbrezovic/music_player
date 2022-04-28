@@ -1,7 +1,6 @@
 import os
 
-from PyQt6.QtCore import Qt
-from PyQt6.QtGui import QColor, QPalette
+from PyQt6.QtGui import QColor
 
 import utils
 
@@ -26,7 +25,7 @@ AUDIO_CONTROLLER_HEIGHT = 40
 CONTROLLER_BUTTON_HEIGHT = 25
 CONTROLLER_BUTTON_WIDTH = 25
 
-STARTING_AUDIO_VOLUME = 1
+STARTING_AUDIO_VOLUME = 30
 
 # Table views constants
 

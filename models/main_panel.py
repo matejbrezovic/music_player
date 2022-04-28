@@ -1,6 +1,6 @@
 from typing import List, Optional, Tuple
 
-from PyQt6.QtCore import pyqtSignal, pyqtSlot
+from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt6.QtWidgets import QVBoxLayout, QFrame
 
 from constants import *
@@ -46,7 +46,8 @@ class MainPanel(QFrame):
         ...
 
     @pyqtSlot(list)
-    def display_tracks(self, tracks: List[Track], key_value_tuple: Tuple[Optional[str], Optional[str]] = None) -> None:
+    def display_tracks(self, tracks: List[Track],
+                       key_value_tuple: Tuple[Optional[str], Optional[str]] = (None, None)) -> None:
         if (self._display_key, self._display_value) == key_value_tuple:
             return
         self._display_key, self._display_value = key_value_tuple

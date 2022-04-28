@@ -1,4 +1,6 @@
+from PyQt6.QtCore import QPoint
 from PyQt6.QtGui import QWheelEvent
+from PyQt6.QtWidgets import QToolTip
 
 from utils import ImprovedSlider
 
@@ -38,6 +40,7 @@ class VolumeSlider(ImprovedSlider):
         self.setStyleSheet(self.dark_stylesheet)
         self.value_changed.connect(self.slider_moved)
         self.sliderMoved.connect(self.slider_moved)
+        self.setToolTip(f"{self.value()}%")
 
     def slider_moved(self, value: int) -> None:
         self.setToolTip(f"{value}%")
@@ -51,3 +54,12 @@ class VolumeSlider(ImprovedSlider):
     def wheelEvent(self, event: QWheelEvent) -> None:
         super().wheelEvent(event)
         self.value_changed.emit(self.value())
+
+        x = self.value() / self.maximum() * self.width()
+        QToolTip.showText(self.mapToGlobal(QPoint(x, self.y())), self.toolTip())
+
+    # def mouseMoveEvent(self, event: QMouseEvent) -> None:
+    #     super().mouseMoveEvent(event)
+    #
+    #     x = self.value() / self.maximum() * self.width()
+    #     QToolTip.showText(self.mapToGlobal(QPoint(x, self.y())), self.toolTip())

@@ -11,8 +11,8 @@ from utils import *
 
 
 class InformationPanel(QFrame):
-    track_clicked = pyqtSignal(Track, int)
-    track_double_clicked = pyqtSignal(Track, int)
+    track_clicked = pyqtSignal(Track)
+    track_double_clicked = pyqtSignal(Track)
 
     def __init__(self, *args):
         super().__init__(*args)
