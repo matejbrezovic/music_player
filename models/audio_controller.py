@@ -1,5 +1,6 @@
 from typing import List
 
+from PIL import UnidentifiedImageError
 from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont, QPaintEvent, QWheelEvent
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QFrame, QSpacerItem, QWidget
@@ -317,21 +318,28 @@ class AudioController(QFrame):
         self.star_widget.set_star_color(color)
 
     def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
-        pixmap = get_artwork_pixmap(track.file_path)
-        if not pixmap or reset_to_default or not is_pixmap_valid(pixmap):
+        def set_to_default():
             self.background_pixmap = None
             self.set_dark_mode_enabled(True)
             self.repaint()
             return None
-        pixmap = get_blurred_pixmap(pixmap)
 
-        start_y = pixmap.height() // 1.5
-        new_height = 60
+        pixmap = get_artwork_pixmap(track.file_path)
+        if not pixmap or reset_to_default:
+            set_to_default()
+        else:
+            try:
+                pixmap = get_blurred_pixmap(pixmap)
+                start_y = pixmap.height() // 1.5
+                new_height = 60
 
-        pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
-        self.background_pixmap = pixmap
-        self.set_dark_mode_enabled(False)
-        self.repaint()
+                pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
+                self.background_pixmap = pixmap
+                self.set_dark_mode_enabled(False)
+                self.repaint()
+
+            except UnidentifiedImageError:
+                set_to_default()
 
     @pyqtSlot(list)
     def queue_next(self, tracks: List[Track]) -> None:

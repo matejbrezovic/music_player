@@ -118,12 +118,12 @@ class TrackTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DecorationRole:
             if index.column() == 0:
                 track = self._tracks[index.row()]
-                artwork_pixmap = track.artwork_pixmap
+                artwork_pixmap: Optional[QPixmap] = track.artwork_pixmap
                 # if artwork_pixmap is None:
                 #     new_pixmap = get_artwork_pixmap(track.file_path)
                 #     track.artwork_pixmap = new_pixmap if new_pixmap else ""
                 #     artwork_pixmap = track.artwork_pixmap
-                if not artwork_pixmap:
+                if not artwork_pixmap or artwork_pixmap.isNull():
                     return None
                 return artwork_pixmap.scaled(self._table_view.columnWidth(index.column()),
                                              self._table_view.columnWidth(index.column()),
@@ -216,8 +216,8 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 
-        display_role = index.data(Qt.ItemDataRole.DisplayRole)
-        decoration_role = index.data(Qt.ItemDataRole.DecorationRole)
+        display_role: str = index.data(Qt.ItemDataRole.DisplayRole)
+        decoration_role: QPixmap = index.data(Qt.ItemDataRole.DecorationRole)
         if display_role:
             if option.state & QStyle.StateFlag.State_Selected and self._table_view.hasFocus():
                 painter.setPen(QColor(option.palette.highlightedText()))
@@ -239,7 +239,7 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
                 option.rect.setRight(option.rect.right() - self.padding)
                 painter.drawText(option.rect, alignment, elided_text)
 
-        if decoration_role:
+        if decoration_role and not decoration_role.isNull():
             pixmap = decoration_role
             rect = option.rect
             rect.setRect(rect.left() + 1, rect.top() + 1,

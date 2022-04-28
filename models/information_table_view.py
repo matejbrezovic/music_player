@@ -31,7 +31,7 @@ class InformationTableModel(QAbstractTableModel):
             if not index.column():
                 if index.row() not in self.loaded_pixmap_mapping:
                     artwork_pixmap = get_artwork_pixmap(self._tracks[index.row()].file_path)
-                    if not artwork_pixmap:
+                    if not artwork_pixmap or artwork_pixmap.isNull():
                         artwork_pixmap = QPixmap(f"icons/album.png")
                     self.loaded_pixmap_mapping[index.row()] = artwork_pixmap
                 else:
