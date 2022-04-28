@@ -388,7 +388,7 @@ class AudioController(QFrame):
             self.track_title_label.setText(playing_track.title)
 
         if not self.playlist.index(playing_track):
-            print("Prev disabled.")
+            # print("Prev disabled.")
             self.prev_button.setEnabled(False)
         else:
             self.prev_button.setEnabled(True)

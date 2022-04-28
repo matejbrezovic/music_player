@@ -162,7 +162,7 @@ class NavigationTableView(QTableView):
         self.last_group_key = self.group_key
         self.last_group_title = self.groups[index.row()].title
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
-        self.group_double_clicked.emit(tracks, self.group_key, self.last_group_title)
+        self.group_double_clicked.emit(tracks, (self.group_key, self.last_group_title))
 
     def focusInEvent(self, event: QFocusEvent) -> None:
         if QApplication.mouseButtons() & Qt.MouseButton.LeftButton:
