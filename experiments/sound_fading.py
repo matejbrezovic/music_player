@@ -4,7 +4,7 @@ from PyQt6 import QtWidgets
 from PyQt6.QtCore import QUrl
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QStyle
 
-from models.audio_player import AudioPlayer
+from gui.audio.audio_player import AudioPlayer
 
 
 class MainWindowUi(QtWidgets.QMainWindow):

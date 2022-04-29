@@ -7,7 +7,7 @@ from PIL import Image
 
 class ImageManager:
     def __init__(self):
-        self.artwork_dir = "../artwork"
+        self.artwork_dir = "artwork"
 
     def store_image(self, group: str) -> None:
         ...

@@ -3,8 +3,8 @@ import pstats
 import sys
 import time
 
-from models.app import App
-from models.main_window import MainWindowUi
+from gui.app import App
+from gui.main_window import MainWindowUi
 
 if __name__ == '__main__':
     start = time.time()
