@@ -8,8 +8,6 @@ from data_models.track import Track
 
 class AudioPlaylist(QObject):
     updated_playlist = pyqtSignal(list)
-    playlist_ended = pyqtSignal()
-
     last_track_playing = pyqtSignal()
     first_track_playing = pyqtSignal()
 
@@ -19,9 +17,9 @@ class AudioPlaylist(QObject):
         self.ordered_playlist = []
         self.playing_track_index = 0
         self.already_played = []
-        # self.mode = 1  # 1 ordered, 2 shuffle, 3 repeat one
         self._is_shuffled = False
         self._repeat_mode = "repeat_off"
+        self._playlist_ended = False
         self.playing_track: Optional[Track] = None
 
     def __bool__(self):
@@ -32,17 +30,6 @@ class AudioPlaylist(QObject):
 
     def has_valid_tracks(self) -> bool:
         return any(track.is_valid() for track in self.playlist)
-
-    @pyqtSlot(list)
-    def queue_next(self, tracks: List[Track]) -> None:
-        insert_index = self.playing_track_index + 1
-        self.playlist[insert_index:insert_index] = tracks
-        self.updated_playlist.emit(self.playlist)
-
-    @pyqtSlot(list)
-    def queue_last(self, tracks: List[Track]) -> None:
-        self.playlist.extend(tracks)
-        self.updated_playlist.emit(self.playlist)
 
     def set_playlist(self, playlist: List[Track]) -> None:
         if playlist != self.playlist:
@@ -67,14 +54,7 @@ class AudioPlaylist(QObject):
         shuffle(self.playlist)
 
         self.playlist.remove(self.playing_track)
-
         self.playlist.insert(0, self.playing_track)
-
-        # if self.playing_track_index == len(self.playlist) - 1:
-        #     shuffle(self.playlist)
-        #
-        # while self.playlist[self.playing_track_index + 1] == self.ordered_playlist[self.playing_track_index]:
-        #     shuffle(self.playlist)
 
     def set_ordered(self) -> None:
         if self.playing_track:
@@ -99,39 +79,54 @@ class AudioPlaylist(QObject):
 
     def set_next(self) -> None:
         if self._repeat_mode == "repeat_off":
-            if self.playing_track_index == len(self.playlist) - 1:
-                self.last_track_playing.emit()
-            elif len(self.playlist) - 1 > self.playing_track_index:
-                self.playing_track_index += 1
+            if len(self.playlist) - 1 > self.playing_track_index:
+                if self.has_ended():
+                    self.playing_track_index = 0
+                else:
+                    self.playing_track_index += 1
+                self._playlist_ended = False
+                if self.playing_track_index == len(self.playlist) - 1:
+                    self.last_track_playing.emit()
                 self.update_currently_playing()
             else:
-                self.playlist_ended.emit()
+                self._playlist_ended = True
         elif self._repeat_mode == "repeat_on":
+            self._playlist_ended = False
             if len(self.playlist) - 1 > self.playing_track_index:
                 self.playing_track_index += 1
             else:
                 self.playing_track_index = 0
             self.update_currently_playing()
         elif self._repeat_mode == "repeat_one":
+            self._playlist_ended = False
             self.update_currently_playing()
 
     def set_prev(self) -> None:
         if self._repeat_mode == "repeat_off":
-            if self.playing_track_index == 0:
-                self.last_track_playing.emit()
-            elif self.playing_track_index > 0:
-                self.playing_track_index -= 1
+            if self.playing_track_index > 0:
+                if self.has_ended():
+                    self.playing_track_index = len(self.playlist) - 1
+                else:
+                    self.playing_track_index -= 1
+                self._playlist_ended = False
+                if self.playing_track_index == 0:
+                    self.last_track_playing.emit()
                 self.update_currently_playing()
             else:
-                self.playlist_ended.emit()
+                self._playlist_ended = True
         elif self._repeat_mode == "repeat_on":
+            self._playlist_ended = False
             if self.playing_track_index > 0:
                 self.playing_track_index -= 1
             else:
                 self.playing_track_index = len(self.playlist) - 1
             self.update_currently_playing()
         elif self._repeat_mode == "repeat_one":
+            self._playlist_ended = False
             self.update_currently_playing()
 
     def update_currently_playing(self) -> None:
         self.playing_track = self.playlist[self.playing_track_index]
+
+    def has_ended(self) -> bool:
+        return self._playlist_ended

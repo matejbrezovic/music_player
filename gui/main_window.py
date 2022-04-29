@@ -1,20 +1,19 @@
-from PyQt6.QtCore import QObject
-from PyQt6.QtGui import QAction, QFocusEvent
+from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMenuBar
 
 from data_models.track import Track
-from gui.dialogs.add_files_dialog import AddFilesDialog
 from gui.audio.audio_controller import AudioController
-from gui.widgets.header_menu_widget import HeaderMenuWidget
+from gui.dialogs.add_files_dialog import AddFilesDialog
+from gui.dialogs.scan_folders_dialog import *
 from gui.panels.information_panel import InformationPanel
 from gui.panels.main_panel import MainPanel
 from gui.panels.navigation_panel import NavigationPanel
-from gui.dialogs.scan_folders_dialog import *
+from gui.widgets.header_menu_widget import HeaderMenuWidget
 from gui.widgets.status_bar import StatusBar
 from repositories.cached_tracks_repository import CachedTracksRepository
 
 
-class MainWindowUi(QMainWindow):
+class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.scan_folders_dialog = ScanFoldersDialog()
@@ -26,13 +25,6 @@ class MainWindowUi(QMainWindow):
 
         self.setWindowTitle(APPLICATION_NAME)
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
-        # self.setMinimumSize(MAIN_PANEL_MIN_WIDTH + 2 * PANEL_MIN_WIDTH + 550, 600)
-
-        # self.setWindowOpacity(0.8)
-        # self.setAttribute(Qt.WidgetAttribute.WA_NoSystemBackground, True)
-        # self.setWindowFlags(Qt.WindowType.FramelessWindowHint)
-
-        # self.setAttribute(QtCore.Qt.WidgetAttribute.WA_TranslucentBackground)
 
     def __post__(self):
         self._setup_signals()
@@ -99,17 +91,6 @@ class MainWindowUi(QMainWindow):
 
         self.audio_controller.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
-        # self.main_panel.installEventFilter(self)
-
-    def eventFilter(self, obj: QObject, e: QEvent) -> bool:
-        # print(obj, e)
-        if isinstance(obj, MainPanel):
-            if isinstance(e, QFocusEvent) and e.lostFocus():
-                print("Focus Out MAIN WINDOW")
-                return True
-
-        return False
-
     def _setup_signals(self) -> None:
         def play_now_triggered(tracks: List[Track]) -> None:
             if len(tracks) == 1:
@@ -153,7 +134,7 @@ class MainWindowUi(QMainWindow):
 
         self.information_panel.track_double_clicked.connect(
             lambda track: (self.audio_controller.set_playing_track(track),
-                                  self.audio_controller.play()))
+                           self.audio_controller.play()))
 
         self.audio_controller.updated_playing_track.connect(
             lambda track: (self.main_panel.set_playing_track(track),

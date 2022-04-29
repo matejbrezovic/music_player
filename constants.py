@@ -5,7 +5,7 @@ from PyQt6.QtGui import QColor
 import utils
 
 APPLICATION_NAME = "Music Player"
-APPLICATION_VERSION = "0.0.18"
+APPLICATION_VERSION = "0.0.19"
 
 
 SUPPORTED_AUDIO_FORMATS = {".mp3", ".m4a"}

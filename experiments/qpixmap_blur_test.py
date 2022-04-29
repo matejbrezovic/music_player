@@ -92,7 +92,6 @@ class BlurWindowPixmapUi(QMainWindow):
         qim = qim.copy(0, start_y, qim.width(), new_height)
         qim = qim.scaled(400, qim.height(), Qt.AspectRatioMode.IgnoreAspectRatio, Qt.TransformationMode.FastTransformation)
 
-
         blurred_pixmap = QtGui.QPixmap.fromImage(qim)
 
         print("Blurred in", time.time() - start)
@@ -117,7 +116,6 @@ class BlurWindowPixmapUi(QMainWindow):
 
         # self.central_widget_layout.addWidget(self.blurred_label)
         # self.central_widget.setLayout(self.central_widget_layout)
-
 
     # def blur_pixmap(self, pix: QPixmap) -> QPixmap:
     #     # image = pix.toImage()
