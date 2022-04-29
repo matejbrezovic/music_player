@@ -402,7 +402,7 @@ class AudioController(QFrame):
 
     @pyqtSlot()
     def play(self) -> None:
-        if self.playlist.has_ended():
+        if self.playlist.has_ended() or not self.get_playing_track():
             return
 
         playing_track = self.get_playing_track()

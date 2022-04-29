@@ -1,6 +1,5 @@
 {
 	"preselected_folders": [
-		"/Documents and Settings",
-		"/My Files"
+		"/home"
 	]
 }
