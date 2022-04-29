@@ -119,6 +119,10 @@ class ScanFoldersDialog(QDialog):
         self.added_tracks.emit(tracks_added)
         self.removed_tracks.emit(tracks_removed)
 
+        config = Config()
+        config.load(DEFAULT_CONFIG_PATH)
+        self.update_selected_folders(config.get_setting("preselected_folders"))
+
         self.done(0)
 
     def checkbox_state_changed(self, is_checked: bool, checkbox_path: str) -> None:

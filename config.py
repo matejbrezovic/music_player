@@ -13,14 +13,15 @@ class Config:
         return self.__settings[key] if key in self.__settings else None
 
     def save(self, file_path: str) -> None:
-        with open(file_path, 'w') as f:
+        with open(file_path, 'w', encoding="utf-8") as f:
             json.dump(self.__settings, f,
                       sort_keys=True,
                       indent='\t',
-                      separators=(',', ': '))
+                      separators=(',', ': '),
+                      ensure_ascii=False)
 
     def load(self, file_path: str) -> Dict[str, Any]:
-        with open(file_path, 'r') as f:
+        with open(file_path, 'r', encoding="utf-8") as f:
             try:
                 self.__settings = json.load(f)
                 return self.__settings
