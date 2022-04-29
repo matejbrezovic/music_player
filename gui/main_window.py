@@ -117,8 +117,8 @@ class MainWindow(QMainWindow):
                                   self.audio_controller.play(),
                                   ))
         self.main_panel.play_now_triggered.connect(play_now_triggered)
-        self.main_panel.queue_next_triggered.connect(self.audio_controller.queue_next)  # TODO update status bar
-        self.main_panel.queue_last_triggered.connect(self.audio_controller.queue_last)
+        self.main_panel.queue_next_triggered.connect(self.queue_next)
+        self.main_panel.queue_last_triggered.connect(self.queue_last)
         self.main_panel.output_to_triggered.connect(self.audio_controller.set_audio_output)
 
         self.navigation_panel.group_clicked.connect(
@@ -136,7 +136,7 @@ class MainWindow(QMainWindow):
             lambda track: (self.audio_controller.set_playing_track(track),
                            self.audio_controller.play()))
 
-        self.audio_controller.updated_playing_track.connect(
+        self.audio_controller.playing_track_updated.connect(
             lambda track: (self.main_panel.set_playing_track(track),
                            self.information_panel.set_playing_track(track)))
 
@@ -144,12 +144,20 @@ class MainWindow(QMainWindow):
                                              self.information_panel.pause_playing_track()))
         self.audio_controller.unpaused.connect(lambda: (self.main_panel.unpause_playing_track(),
                                                self.information_panel.unpause_playing_track()))
-        self.audio_controller.updated_playlist.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
+        self.audio_controller.playlist_updated.connect(lambda tracks: self.information_panel.set_playing_tracks(tracks))
         self.audio_controller.remaining_queue_time_changed.connect(self.status_bar.update_remaining_queue_time)
         self.audio_controller.player_stopped.connect(self._player_stopped)
 
         self.scan_folders_dialog.added_tracks.connect(self._added_tracks_to_database)
         self.scan_folders_dialog.removed_tracks.connect(self._removed_tracks_from_database)
+
+    def queue_next(self, tracks_to_queue: List[Track]) -> None:
+        self.audio_controller.queue_next(tracks_to_queue)
+        self.status_bar.update_info(self.audio_controller.get_tracks())
+
+    def queue_last(self, tracks_to_queue: List[Track]) -> None:
+        self.audio_controller.queue_last(tracks_to_queue)
+        self.status_bar.update_info(self.audio_controller.get_tracks())
 
     def _added_tracks_to_database(self, _: List[Track] = None) -> None:
         tracks_from_last_selected_group = self.navigation_panel.get_last_selected_tracks()

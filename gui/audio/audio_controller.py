@@ -19,8 +19,8 @@ from utils import (get_formatted_time, format_player_position_to_seconds, TrackN
 
 
 class AudioController(QFrame):
-    updated_playing_track = pyqtSignal(Track)
-    updated_playlist = pyqtSignal(list)
+    playing_track_updated = pyqtSignal(Track)
+    playlist_updated = pyqtSignal(list)
     paused = pyqtSignal(Track)
     unpaused = pyqtSignal(Track)
     remaining_queue_time_changed = pyqtSignal(int)
@@ -40,7 +40,7 @@ class AudioController(QFrame):
         self._is_dark_mode_enabled = None
 
         self.playlist = AudioPlaylist()
-        self.playlist.updated_playlist.connect(self.updated_playlist)
+        self.playlist.updated_playlist.connect(self.playlist_updated)
 
         self.total_queue_time = 0
         self._rounded_remaining_queue_time = 0  # shouldn't update while track is playing
@@ -393,7 +393,7 @@ class AudioController(QFrame):
         self.prev_button.setEnabled(True)
         self.next_button.setEnabled(True)
         self.playlist.set_playlist(playlist)
-        self.updated_playlist.emit(playlist)
+        self.playlist_updated.emit(playlist)
         self.update_total_queue_time(sum(track.length for track in playlist))
 
     @pyqtSlot(int)
@@ -435,7 +435,7 @@ class AudioController(QFrame):
             self.player.setSource(QUrl(playing_track.file_path))
             self.player.play()
             # print(self.playlist.playing_track_index)
-            self.updated_playing_track.emit(playing_track)
+            self.playing_track_updated.emit(playing_track)
         else:
             self.user_action = 0
             self.star_widget.setEnabled(False)
@@ -582,6 +582,9 @@ class AudioController(QFrame):
 
     def get_playing_track(self) -> Track:
         return self.playlist.playing_track
+
+    def get_tracks(self) -> List[Track]:
+        return self.playlist.playlist
 
     @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:

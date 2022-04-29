@@ -49,7 +49,7 @@ ROOT = utils.get_project_root(__file__)
 
 # Database constants
 
-DATABASE_PATH = os.path.join(ROOT, "database/test.db")
+DATABASE_PATH = os.path.join(ROOT, "database/tracks_database.db")
 
 # Settings constants
 

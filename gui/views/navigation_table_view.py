@@ -55,7 +55,6 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
         self._groups: List[NavigationGroup] = []
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
-        # super().paint(painter, option, index)
         # painter.save()
         # set background color
         painter.setPen(QPen(Qt.PenStyle.NoPen))
