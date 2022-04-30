@@ -17,6 +17,7 @@ class MainPanel(QFrame):
     output_to_triggered = pyqtSignal(str)
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
+    tracks_deleted = pyqtSignal(list)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -32,6 +33,7 @@ class MainPanel(QFrame):
         self.track_view_widget.queue_next_triggered.connect(self.queue_next_triggered.emit)
         self.track_view_widget.queue_last_triggered.connect(self.queue_last_triggered.emit)
         self.track_view_widget.output_to_triggered.connect(self.output_to_triggered.emit)
+        self.track_view_widget.tracks_deleted.connect(self.tracks_deleted.emit)
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setSpacing(0)
@@ -73,3 +75,7 @@ class MainPanel(QFrame):
     @pyqtSlot()
     def stop_playing(self) -> None:
         self.track_view_widget.stop_playing()
+
+    # def tracks_deleted(self, deleted_tracks: List[Track]) -> None:
+    #     self.cached_tracks_repository.drop_tracks(deleted_tracks)
+        # self.cached_tracks_repository.cached_counts[(self._display_key, self._display_value)] -= len(deleted_tracks)

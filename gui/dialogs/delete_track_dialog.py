@@ -62,7 +62,7 @@ class DeleteTracksDialog(QDialog):
         self.no_button = QPushButton('No', self)
         self.no_button.setMaximumWidth(80)
         self.no_button.setAutoDefault(False)
-        self.no_button.clicked.connect(lambda: self.done(0))
+        self.no_button.clicked.connect(lambda: self.reject())
 
         self.bottom_button_layout.addWidget(self.yes_button)
         self.bottom_button_layout.addWidget(self.no_button)
@@ -82,6 +82,8 @@ class DeleteTracksDialog(QDialog):
                 self.cached_tracks_repository.drop_track_by("file_path", track.file_path)
                 if os.path.isfile(track.file_path):
                     os.remove(track.file_path)
+
+        self.accept()
 
 
 if __name__ == '__main__':

@@ -82,7 +82,6 @@ class InformationPanel(QFrame):
         # self.currently_playing_track_title.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.currently_playing_track_info = ElidedLabel("No Info")
         self.currently_playing_track_info.setContentsMargins(4, 0, 4, 0)
-        # self.currently_playing_track_info.setStyleSheet("background-color: red")
 
         artwork_pixmap = get_artwork_pixmap("")
         if not artwork_pixmap:
@@ -114,19 +113,14 @@ class InformationPanel(QFrame):
         self.vertical_splitter.setSizes([1, 1])
         self.main_layout.addWidget(self.vertical_splitter)
         self.artwork_pixmap = QPixmap(f"icons/album.png")
-        # self.main_layout.setSpacing(0)
-        # self.set_currently_playing_track(TracksRepository().get_tracks())
 
     def view_key_changed(self, key: int) -> None:
         ...
 
     def set_playing_tracks(self, tracks: List[Track]) -> None:
-        # global_timer.timer_init()
-        # global_timer.start()
         self.playing_tracks = tracks
         self.information_table_view.clearSelection()
         self.information_table_view.set_tracks(tracks)
-        # global_timer.stop()
 
     @pyqtSlot(Track, int)
     def set_playing_track(self, track: Track, track_index: int = None) -> None:
@@ -146,7 +140,6 @@ class InformationPanel(QFrame):
         self.playing_track_image_label.pixmap = artwork_pixmap
         self.playing_track_image_label.setPixmap(artwork_pixmap)
 
-        # print("Inf index:", track_index)
         if track in self.playing_tracks:
             track_index = self.playing_tracks.index(track)
         else:

@@ -15,6 +15,7 @@ class TrackViewWidget(QWidget):
     output_to_triggered = pyqtSignal(str)
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
+    tracks_deleted = pyqtSignal(list)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -55,6 +56,7 @@ class TrackViewWidget(QWidget):
         self.table_view.queue_next_triggered.connect(self.queue_next_triggered.emit)
         self.table_view.queue_last_triggered.connect(self.queue_last_triggered.emit)
         self.table_view.output_to_triggered.connect(self.output_to_triggered.emit)
+        self.table_view.tracks_deleted.connect(self.tracks_deleted.emit)
 
         first_col_width = 26
         second_col_width = 20

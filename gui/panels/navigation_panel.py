@@ -20,7 +20,6 @@ class NavigationPanel(QFrame):
         self.setStyleSheet("NavigationPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
-        # self.tag_manager = TagManager()
         self.cached_tracks_repository = CachedTracksRepository()
 
         self._last_group_key = None
@@ -55,17 +54,6 @@ class NavigationPanel(QFrame):
 
         self.view_key = 0
         self.group_key_changed(0)
-
-    # @pyqtSlot(list, str, str)
-    # @pyqtSlot(list, str, int)
-    # def _group_clicked(self, tracks: List[Track], key: str, value: Union[int, str]) -> None:
-    #     self.group_clicked.emit(tracks, key, value)
-    #     print("EMIT")
-    #
-    # @pyqtSlot(list, str, str)
-    # @pyqtSlot(list, str, int)
-    # def _group_double_clicked(self, tracks: List[Track], key: str, value: Union[int, str]) -> None:
-    #     self.group_clicked.emit(tracks, key, value)
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:

@@ -37,6 +37,7 @@ class AudioPlaylist(QObject):
             self.ordered_playlist = playlist.copy()
         self.playing_track = self.ordered_playlist[0] if self.ordered_playlist else None
         self.playing_track_index = 0
+        self._playlist_ended = False
 
     def set_playlist_index(self, playlist_index: int) -> None:
         self.playing_track = self.playlist[playlist_index]

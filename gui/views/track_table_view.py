@@ -10,7 +10,7 @@ from PyQt6.QtGui import (QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction,
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
                              QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame, QMainWindow,
-                             QAbstractScrollArea)
+                             QAbstractScrollArea, QDialog)
 
 from constants import *
 from data_models.track import Track
@@ -193,6 +193,12 @@ class TrackTableModel(QAbstractTableModel):
         self.playing_track_index = index
         self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
 
+    def delete_tracks(self, tracks: List[Track]) -> None:
+        for track in self._tracks.copy():
+            if track in tracks:
+                self._tracks.remove(track)
+        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount(), self.columnCount()))
+
 
 class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawing speed
     def __init__(self, parent: TrackTableView = None):
@@ -264,6 +270,7 @@ class TrackTableView(QTableView):
     output_to_triggered = pyqtSignal(str)
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
+    tracks_deleted = pyqtSignal(list)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -297,17 +304,17 @@ class TrackTableView(QTableView):
 
         self.play_now_action = QAction("Play Now", self)
         self.play_now_action.setShortcut(QKeySequence("Alt+Enter"))
-        self.play_now_action.triggered.connect(lambda event: self.play_now_action_triggered(event))
+        self.play_now_action.triggered.connect(self.play_now_action_triggered)
         self.context_menu.addAction(self.play_now_action)
 
         self.queue_next_action = QAction("Queue Next", self)
         self.queue_next_action.setShortcut(QKeySequence("Ctrl+Shift+Enter"))
-        self.queue_next_action.triggered.connect(lambda event: self.queue_next_action_triggered(event))
+        self.queue_next_action.triggered.connect(self.queue_next_action_triggered)
         self.context_menu.addAction(self.queue_next_action)
 
         self.queue_last_action = QAction("Queue Last", self)
         self.queue_last_action.setShortcut(QKeySequence("Ctrl+Enter"))
-        self.queue_last_action.triggered.connect(lambda event: self.queue_last_action_triggered(event))
+        self.queue_last_action.triggered.connect(self.queue_last_action_triggered)
         self.context_menu.addAction(self.queue_last_action)
 
         self.play_more_menu = self.context_menu.addMenu("Play More...")
@@ -377,31 +384,35 @@ class TrackTableView(QTableView):
         audio_output = self.sender().text()
         self.output_to_triggered.emit(audio_output)
 
-    def play_now_action_triggered(self, _=None) -> None:
+    def play_now_action_triggered(self) -> None:
         if not self._tracks:
             return
 
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.play_now_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
-    def queue_next_action_triggered(self, _=None) -> None:
+    def queue_next_action_triggered(self) -> None:
         if not self._tracks:
             return
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.queue_next_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
-    def queue_last_action_triggered(self, _=None) -> None:
+    def queue_last_action_triggered(self) -> None:
         if not self._tracks:
             return
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.queue_last_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
     def delete_action_triggered(self) -> None:
-        print("DDD")
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         selected_tracks = [self._tracks[i] for i in selected_track_indexes]
         d = DeleteTracksDialog(selected_tracks)
-        d.exec()
+        code = d.exec()
+        if code == QDialog.DialogCode.Accepted:
+            self._table_model.delete_tracks(selected_tracks)
+            self.tracks_deleted.emit(selected_tracks)
+
+        self.selectRow(sorted(selected_track_indexes)[0])
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:

@@ -19,7 +19,8 @@ class MainWindow(QMainWindow):
         self.scan_folders_dialog = ScanFoldersDialog()
         self.add_files_dialog = AddFilesDialog()
 
-        CachedTracksRepository().cache_tracks()
+        self.cached_tracks_repository = CachedTracksRepository()
+        self.cached_tracks_repository.cache_tracks()
 
         self._setup_ui()
 
@@ -120,6 +121,7 @@ class MainWindow(QMainWindow):
         self.main_panel.queue_next_triggered.connect(self.queue_next)
         self.main_panel.queue_last_triggered.connect(self.queue_last)
         self.main_panel.output_to_triggered.connect(self.audio_controller.set_audio_output)
+        self.main_panel.tracks_deleted.connect(self.tracks_deleted)
 
         self.navigation_panel.group_clicked.connect(
             lambda tracks, key_value_tuple: (self.main_panel.display_tracks(tracks, key_value_tuple)))
@@ -163,6 +165,10 @@ class MainWindow(QMainWindow):
         tracks_from_last_selected_group = self.navigation_panel.get_last_selected_tracks()
         self.main_panel.display_tracks(tracks_from_last_selected_group)
         self.main_panel.set_playing_track(self.audio_controller.get_playing_track())
+
+    def tracks_deleted(self, deleted_tracks: List[Track]) -> None:
+        self.cached_tracks_repository.drop_tracks(deleted_tracks)
+        self.navigation_panel.refresh_groups()
 
     def _removed_tracks_from_database(self, tracks: List[Track]) -> None:
         ...
