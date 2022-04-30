@@ -29,9 +29,20 @@ class Track:
         return self.file_path == other.file_path
 
     @property
-    def format(self):
+    def format(self) -> str:
         return os.path.splitext(self.file_path)[-1]
 
-    def is_valid(self):
+    @property
+    def display_name(self) -> str:
+        if self.artist and self.title:
+            return f"{self.artist} - {self.title}"
+        elif self.artist:
+            return f"{self.artist} - Unknown Title"
+        elif self.title:
+            return self.title
+        else:
+            return os.path.splitext(self.file_path)[0].rsplit("/", 1)[-1]
+
+    def is_valid(self) -> bool:
         return os.path.exists(self.file_path)
 

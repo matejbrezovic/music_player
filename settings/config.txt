@@ -1,0 +1,5 @@
+{
+	"preselected_folders": [
+		"/home"
+	]
+}

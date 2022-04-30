@@ -14,6 +14,7 @@ from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeade
 
 from constants import *
 from data_models.track import Track
+from gui.dialogs.delete_track_dialog import DeleteTracksDialog
 from gui.star.star_delegate import StarDelegate
 from gui.star.star_rating import StarRating
 from repositories.tracks_repository import TracksRepository
@@ -283,7 +284,6 @@ class TrackTableView(QTableView):
         self.setItemDelegateForColumn(7, self._star_delegate)
         self.setHorizontalHeader(self._table_header)
         self.setTextElideMode(Qt.TextElideMode.ElideRight)
-        # self.setMouseTracking(True)
 
         self.verticalHeader().setDefaultSectionSize(22)
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
@@ -319,6 +319,13 @@ class TrackTableView(QTableView):
             action.triggered.connect(lambda _: self.output_to_action_triggered())
             self.output_to_menu.addAction(action)
 
+        self.context_menu.addSeparator()
+
+        self.delete_action = QAction("Delete", self)
+        self.delete_action.setShortcut(QKeySequence("Del"))
+        self.delete_action.triggered.connect(self.delete_action_triggered)
+        self.context_menu.addAction(self.delete_action)
+
     def _setup_shortcuts(self):
         self.play_now_shortcut_enter = QShortcut(QKeySequence("Alt+Enter"), self)
         self.play_now_shortcut_enter.activated.connect(self.play_now_action_triggered)
@@ -340,6 +347,10 @@ class TrackTableView(QTableView):
         self.queue_last_shortcut_return = QShortcut(QKeySequence("Ctrl+Return"), self)
         self.queue_last_shortcut_return.activated.connect(self.queue_last_action_triggered)
         self.queue_last_shortcut_return.setContext(Qt.ShortcutContext.WidgetShortcut)
+
+        self.delete_shortcut = QShortcut(QKeySequence("Del"), self)
+        self.delete_shortcut.activated.connect(self.delete_action_triggered)
+        self.delete_shortcut.setContext(Qt.ShortcutContext.WidgetShortcut)
 
     def selectionChanged(self, selected, deselected) -> None:
         for index in deselected.indexes():
@@ -366,24 +377,31 @@ class TrackTableView(QTableView):
         audio_output = self.sender().text()
         self.output_to_triggered.emit(audio_output)
 
-    def play_now_action_triggered(self, _=None):
+    def play_now_action_triggered(self, _=None) -> None:
         if not self._tracks:
             return
 
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.play_now_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
-    def queue_next_action_triggered(self, _=None):
+    def queue_next_action_triggered(self, _=None) -> None:
         if not self._tracks:
             return
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.queue_next_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
-    def queue_last_action_triggered(self, _=None):
+    def queue_last_action_triggered(self, _=None) -> None:
         if not self._tracks:
             return
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
         self.queue_last_triggered.emit([self._tracks[i] for i in selected_track_indexes])
+
+    def delete_action_triggered(self) -> None:
+        print("DDD")
+        selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
+        selected_tracks = [self._tracks[i] for i in selected_track_indexes]
+        d = DeleteTracksDialog(selected_tracks)
+        d.exec()
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:

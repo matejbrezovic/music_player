@@ -1,7 +1,7 @@
 from random import shuffle
 from typing import List, Optional
 
-from PyQt6.QtCore import pyqtSlot, pyqtSignal, QObject
+from PyQt6.QtCore import pyqtSignal, QObject
 
 from data_models.track import Track
 

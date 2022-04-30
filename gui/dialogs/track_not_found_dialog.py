@@ -16,6 +16,9 @@ class TrackNotFoundDialog(QDialog):
         self.setWindowFlag(Qt.WindowType.WindowSystemMenuHint, False)
         self.setWindowModality(Qt.WindowModality.ApplicationModal)
 
+        self.setWindowTitle("Error")
+        self.setFixedSize(450, 150)
+
         self.dialog_layout = QVBoxLayout(self)
         self.dialog_layout.setContentsMargins(3, 3, 3, 3)
 
@@ -52,9 +55,6 @@ class TrackNotFoundDialog(QDialog):
         self.main_frame_layout.setAlignment(self.ok_button, Qt.AlignmentFlag.AlignCenter)
 
         self.dialog_layout.addWidget(self.main_frame)
-
-        self.setWindowTitle("Error")
-        self.setFixedSize(450, 150)
 
 
 if __name__ == '__main__':

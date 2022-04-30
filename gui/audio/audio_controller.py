@@ -9,10 +9,10 @@ from constants import *
 from data_models.track import Track
 from gui.audio.audio_player import AudioPlayer
 from gui.audio.audio_playlist import AudioPlaylist
+from gui.dialogs.track_not_found_dialog import TrackNotFoundDialog
+from gui.star.star_widget import StarWidget
 from gui.widgets.marquee_label import MarqueeLabel
 from gui.widgets.seek_slider import SeekSlider
-from gui.star.star_widget import StarWidget
-from gui.dialogs.track_not_found_dialog import TrackNotFoundDialog
 from gui.widgets.volume_slider import VolumeSlider
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
                    get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds)
@@ -34,7 +34,6 @@ class AudioController(QFrame):
         self.setObjectName("audio_controller")
         self.setStyleSheet(self.default_stylesheet)
         self.setFixedHeight(AUDIO_CONTROLLER_HEIGHT)
-
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self._is_dark_mode_enabled = None
@@ -409,10 +408,7 @@ class AudioController(QFrame):
 
         self.passed_time_label.setText(f"0:00/ {format_seconds(playing_track.length)}")
 
-        if playing_track.artist:
-            self.track_title_label.setText(f"{playing_track.artist} - {playing_track.title}")
-        else:
-            self.track_title_label.setText(playing_track.title)
+        self.track_title_label.setText(playing_track.display_name)
 
         if not self.playlist.index(playing_track) and self._repeat_mode == "repeat_off":
             self.prev_button.setEnabled(False)
