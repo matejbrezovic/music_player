@@ -1,16 +1,21 @@
-from PyQt6.QtGui import QAction
-from PyQt6.QtWidgets import QMenuBar
+from typing import List
 
+from PyQt6.QtCore import Qt
+from PyQt6.QtGui import QAction
+from PyQt6.QtWidgets import QMenuBar, QWidget, QMenu, QMainWindow, QVBoxLayout
+
+from constants import *
 from data_models.track import Track
 from gui.audio.audio_controller import AudioController
 from gui.dialogs.add_files_dialog import AddFilesDialog
-from gui.dialogs.scan_folders_dialog import *
+from gui.dialogs.scan_folders_dialog import ScanFoldersDialog
 from gui.panels.information_panel import InformationPanel
 from gui.panels.main_panel import MainPanel
 from gui.panels.navigation_panel import NavigationPanel
 from gui.widgets.header_menu_widget import HeaderMenuWidget
 from gui.widgets.status_bar import StatusBar
 from repositories.cached_tracks_repository import CachedTracksRepository
+from utils import FixedHorizontalSplitter
 
 
 class MainWindow(QMainWindow):
@@ -115,8 +120,7 @@ class MainWindow(QMainWindow):
             lambda track, index: (self.status_bar.update_info(self.main_panel.displayed_tracks),
                                   self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
                                   self.audio_controller.set_playlist_index(index),
-                                  self.audio_controller.play(),
-                                  ))
+                                  self.audio_controller.play()))
         self.main_panel.play_now_triggered.connect(play_now_triggered)
         self.main_panel.queue_next_triggered.connect(self.queue_next)
         self.main_panel.queue_last_triggered.connect(self.queue_last)
