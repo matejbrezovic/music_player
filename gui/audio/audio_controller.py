@@ -45,7 +45,7 @@ class AudioController(QFrame):
         self.total_queue_time = 0
         self._rounded_remaining_queue_time = 0  # shouldn't update while track is playing
         self.remaining_queue_time = 0
-        self.user_action = UserAction.Stopped  # 0 - stopped, 1 - playing, 2 - paused
+        self.user_action = UserAction.Stopped
         self._repeat_mode = RepeatMode.RepeatOff
         self._backup_action = self.user_action
         self.is_playing = False
@@ -478,7 +478,7 @@ class AudioController(QFrame):
 
     @pyqtSlot(int)
     def seek_slider_released(self) -> None:
-        if self._backup_action == 1:
+        if self._backup_action == UserAction.Playing:
             self.unpause(fade=False)
 
     def get_remaining_time_in_secs(self) -> int:  # TODO fully implement, not currently used
@@ -494,7 +494,7 @@ class AudioController(QFrame):
     def unpause(self, fade=True) -> None:
         self.play_button.setIcon(self.pause_icon)
         self.is_playing = True
-        self.user_action = 1
+        self.user_action = UserAction.Playing
         self.player.play(fade=fade)
         self.unpaused.emit(self.get_playing_track())
 

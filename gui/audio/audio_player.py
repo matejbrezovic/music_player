@@ -13,10 +13,6 @@ class AudioPlayer(QMediaPlayer):
     def __init__(self, *args):
         super().__init__(*args)
         self._audio_output = QAudioOutput(self)
-
-        # print([d.description() for d in self.audio_outputs])
-
-        # self.audio_output.volumeChanged.connect(lambda: print("Changed volume:", self.audio_output.volume()))
         self.setAudioOutput(self._audio_output)
         self.audioOutput().setVolume(STARTING_AUDIO_VOLUME / 100)
         self.current_volume = STARTING_AUDIO_VOLUME / 100
