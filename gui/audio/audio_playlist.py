@@ -4,6 +4,7 @@ from typing import List, Optional
 from PyQt6.QtCore import pyqtSignal, QObject
 
 from data_models.track import Track
+from gui.audio.enums import *
 
 
 class AudioPlaylist(QObject):
@@ -18,7 +19,7 @@ class AudioPlaylist(QObject):
         self.playing_track_index = 0
         self.already_played = []
         self._is_shuffled = False
-        self._repeat_mode = "repeat_off"
+        self._repeat_mode = RepeatMode.RepeatOff
         self._playlist_ended = False
         self.playing_track: Optional[Track] = None
 
@@ -70,16 +71,16 @@ class AudioPlaylist(QObject):
             self.set_ordered()
 
     def set_repeat_on(self) -> None:
-        self._repeat_mode = "repeat_on"
+        self._repeat_mode = RepeatMode.RepeatOn
 
     def set_repeat_off(self) -> None:
-        self._repeat_mode = "repeat_off"
+        self._repeat_mode = RepeatMode.RepeatOff
 
     def set_repeat_one(self) -> None:
-        self._repeat_mode = "repeat_one"
+        self._repeat_mode = RepeatMode.RepeatOne
 
     def set_next(self) -> None:
-        if self._repeat_mode == "repeat_off":
+        if self._repeat_mode == RepeatMode.RepeatOff:
             if len(self.playlist) - 1 > self.playing_track_index:
                 if self.has_ended():
                     self.playing_track_index = 0
@@ -91,19 +92,19 @@ class AudioPlaylist(QObject):
                 self.update_currently_playing()
             else:
                 self._playlist_ended = True
-        elif self._repeat_mode == "repeat_on":
+        elif self._repeat_mode == RepeatMode.RepeatOn:
             self._playlist_ended = False
             if len(self.playlist) - 1 > self.playing_track_index:
                 self.playing_track_index += 1
             else:
                 self.playing_track_index = 0
             self.update_currently_playing()
-        elif self._repeat_mode == "repeat_one":
+        elif self._repeat_mode == RepeatMode.RepeatOne:
             self._playlist_ended = False
             self.update_currently_playing()
 
     def set_prev(self) -> None:
-        if self._repeat_mode == "repeat_off":
+        if self._repeat_mode == RepeatMode.RepeatOff:
             if self.playing_track_index > 0:
                 if self.has_ended():
                     self.playing_track_index = len(self.playlist) - 1
@@ -115,14 +116,14 @@ class AudioPlaylist(QObject):
                 self.update_currently_playing()
             else:
                 self._playlist_ended = True
-        elif self._repeat_mode == "repeat_on":
+        elif self._repeat_mode == RepeatMode.RepeatOn:
             self._playlist_ended = False
             if self.playing_track_index > 0:
                 self.playing_track_index -= 1
             else:
                 self.playing_track_index = len(self.playlist) - 1
             self.update_currently_playing()
-        elif self._repeat_mode == "repeat_one":
+        elif self._repeat_mode == RepeatMode.RepeatOne:
             self._playlist_ended = False
             self.update_currently_playing()
 

@@ -67,4 +67,3 @@ class AudioPlayer(QMediaPlayer):
             index = [d.description() for d in audio_output_devices].index(audio_output_name)
         self._audio_output.setDevice(audio_output_devices[index])
         self.setAudioOutput(self._audio_output)
-
