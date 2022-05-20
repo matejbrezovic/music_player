@@ -58,7 +58,7 @@ class NavigationPanel(QFrame):
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:
             tracks = self.cached_tracks_repository.get_tracks_by(group_key, group_title)  # TODO should be optimized
-            artwork_pixmap = get_artwork_pixmap(tracks[0].file_path)
+            artwork_pixmap = get_embedded_artwork_pixmap(tracks[0].file_path)
 
             if not artwork_pixmap:
                 if group_key in ("artist", "composer"):

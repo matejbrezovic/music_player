@@ -8,7 +8,7 @@ from PyQt6.QtWidgets import QApplication
 from data_models.track import Track
 from repositories.base_repository import BaseRepository
 from tag_manager import TagManager
-from utils import get_artwork_pixmap, Singleton
+from utils import get_embedded_artwork_pixmap, Singleton
 
 
 class TracksRepository(BaseRepository, metaclass=Singleton):
@@ -98,7 +98,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 length=row["length"],
                 size=row["size"],
                 rating=0,
-                artwork_pixmap=get_artwork_pixmap(row["file_path"])
+                artwork_pixmap=get_embedded_artwork_pixmap(row["file_path"])
             )
 
             tracks.append(track)
@@ -124,13 +124,13 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 length=row["length"],
                 size=row["size"],
                 rating=0,
-                artwork_pixmap=get_artwork_pixmap(row["file_path"])
+                artwork_pixmap=get_embedded_artwork_pixmap(row["file_path"])
                 )
             )
 
         if QApplication.instance() is not None:
             for track in tracks:
-                track.artwork_pixmap = get_artwork_pixmap(track.file_path)
+                track.artwork_pixmap = get_embedded_artwork_pixmap(track.file_path)
 
         return tracks
 
@@ -160,11 +160,11 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
             length=row["length"],
             size=row["size"],
             rating=0,
-            artwork_pixmap=get_artwork_pixmap(row["file_path"])
+            artwork_pixmap=get_embedded_artwork_pixmap(row["file_path"])
         )
 
         if QApplication.instance() is not None:
-            track.artwork_pixmap = get_artwork_pixmap(track.file_path)
+            track.artwork_pixmap = get_embedded_artwork_pixmap(track.file_path)
 
         return track
 
@@ -259,7 +259,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                     int(loaded_file["#length"].first),
                     int(os.path.getsize(file_path)),
                     0,
-                    get_artwork_pixmap(file_path)
+                    get_embedded_artwork_pixmap(file_path)
                 ))
             except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError) as e:
                 print(e)

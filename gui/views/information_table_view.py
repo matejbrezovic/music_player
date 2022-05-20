@@ -7,7 +7,7 @@ from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLab
 
 from constants import *
 from data_models.track import Track
-from utils import ElidedLabel, get_artwork_pixmap, get_formatted_time_in_mins
+from utils import ElidedLabel, get_embedded_artwork_pixmap, get_formatted_time_in_mins
 
 
 class InformationTableModel(QAbstractTableModel):
@@ -30,7 +30,7 @@ class InformationTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DecorationRole:
             if not index.column():
                 if index.row() not in self.loaded_pixmap_mapping:
-                    artwork_pixmap = get_artwork_pixmap(self._tracks[index.row()].file_path)
+                    artwork_pixmap = get_embedded_artwork_pixmap(self._tracks[index.row()].file_path)
                     if not artwork_pixmap or artwork_pixmap.isNull():
                         artwork_pixmap = QPixmap(f"icons/album.png")
                     self.loaded_pixmap_mapping[index.row()] = artwork_pixmap

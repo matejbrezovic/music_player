@@ -1,8 +1,7 @@
 import json
-import urllib.error
-import urllib.parse
-import urllib.request
 from io import BytesIO
+from time import sleep
+from typing import Optional
 
 import requests as requests
 from PIL import Image
@@ -11,46 +10,39 @@ from bs4 import BeautifulSoup
 
 class ImageDownloader:
 
-    # @staticmethod
-    # def get_image(search_str: str):
-    #     # search_url = f"https://www.google.fr/search?q={'+'.join(search_str.split())}&source=lnms&tbm=isch"
-    #     search_url = f"https://www.bing.com/images/search?q={'+'.join(search_str.split())}" \
-    #                  f"&form=HDRSC2&first=1&tsc=ImageHoverTitle"
-    #     print(search_url)
-    #     html = requests.get(search_url)
-    #
-    #     soup = BeautifulSoup(html.content, features="html.parser")
-    #
-    #     print(soup)
-    #
-    #     href = soup.find_all("a", class_="iusc")
-    #
-    #     for h in href:
-    #         print(h["href"])
-
     @staticmethod
     def _bing_image_search(query: str) -> str:
         query = query.split()
         query = '+'.join(query)
         url = "https://www.bing.com/images/search?q=" + query + "&form=HDRSC2&first=1&tsc=ImageHoverTitle"
 
-        soup = BeautifulSoup(urllib.request.urlopen(urllib.request.Request(url)), 'html.parser')
+        response = requests.get(url).content
+        soup = BeautifulSoup(response, 'html.parser', from_encoding="utf-8")
         image_result_raw = soup.find("a", {"class": "iusc"})
 
         m = json.loads(image_result_raw["m"])
         murl = m["murl"]
         return murl
 
-    def get_image(self, query: str) -> Image.Image:
-        url = self._bing_image_search(query)
+    def get_image(self, query: str) -> Optional[Image.Image]:
+        try:
+            url = self._bing_image_search(query)
+        except Exception as e:
+            return
 
-        image_data = requests.get(url).content
-        img = Image.open(BytesIO(image_data))
-        print(img.width, img.height)
-        img = img.crop((0, 0, img.width, img.width))
-        print(img.width, img.height)
-        img.show()
+        for _ in range(10):
+            response = requests.get(url)
+            print(response)
+            if not response:
+                print("repeat")
+                sleep(0.5)
+                continue
 
+            image_data = response.content
+            img = Image.open(BytesIO(image_data))
+            img = img.crop((0, 0, img.width, img.width))
+            img.show()
+            return img
 
 
 if __name__ == "__main__":

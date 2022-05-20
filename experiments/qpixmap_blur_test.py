@@ -8,7 +8,7 @@ from PyQt6.QtCore import Qt, QBuffer
 from PyQt6.QtGui import QPixmap, QPalette, QBrush
 from PyQt6.QtWidgets import *
 
-from utils import get_artwork_pixmap
+from utils import get_embedded_artwork_pixmap
 
 
 class TestImageLabel(QLabel):
@@ -60,7 +60,7 @@ class BlurWindowPixmapUi(QMainWindow):
                  "04 Sound of Silence (Subnautica_ Below Zero).mp3",
                  "03 Ice in My Veins.mp3"]
 
-        self.pixmap = get_artwork_pixmap(f"C:/home/matey/Music/{names[4]}").scaled(
+        self.pixmap = get_embedded_artwork_pixmap(f"C:/home/matey/Music/{names[4]}").scaled(
                                       200, 200,
                                       Qt.AspectRatioMode.KeepAspectRatio,
                                       Qt.TransformationMode.SmoothTransformation)

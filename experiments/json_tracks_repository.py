@@ -20,7 +20,7 @@ class JsonTracksRepository:
                 tracks = [self._decode_track(t) for t in loaded_json]
                 if QtWidgets.QApplication.instance() is not None:
                     for track in tracks:
-                        track.artwork_pixmap = get_artwork_pixmap(track.file_path)
+                        track.artwork_pixmap = get_embedded_artwork_pixmap(track.file_path)
 
                 tracks = tracks * 100
                 # for i, track in enumerate(tracks):

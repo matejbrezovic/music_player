@@ -83,7 +83,7 @@ class InformationPanel(QFrame):
         self.currently_playing_track_info = ElidedLabel("No Info")
         self.currently_playing_track_info.setContentsMargins(4, 0, 4, 0)
 
-        artwork_pixmap = get_artwork_pixmap("")
+        artwork_pixmap = get_embedded_artwork_pixmap("")
         if not artwork_pixmap:
             artwork_pixmap = get_default_artwork_pixmap("album")
         self.playing_track_image_label = SpecificImageLabel(artwork_pixmap)
@@ -134,7 +134,7 @@ class InformationPanel(QFrame):
 
         self.playing_track_title_label.setText(str(track.title))
         self.currently_playing_track_info.setText(get_track_info(track))
-        artwork_pixmap = get_artwork_pixmap(track.file_path)
+        artwork_pixmap = get_embedded_artwork_pixmap(track.file_path)
         if not artwork_pixmap:
             artwork_pixmap = self.artwork_pixmap
         self.playing_track_image_label.pixmap = artwork_pixmap

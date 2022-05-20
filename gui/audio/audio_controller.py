@@ -16,7 +16,8 @@ from gui.widgets.marquee_label import MarqueeLabel
 from gui.widgets.seek_slider import SeekSlider
 from gui.widgets.volume_slider import VolumeSlider
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
-                   get_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds)
+                   get_embedded_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds,
+                   WebImageScraperThread)
 
 
 class AudioController(QFrame):
@@ -38,6 +39,8 @@ class AudioController(QFrame):
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self._is_dark_mode_enabled = None
+        self._image_scraper = WebImageScraperThread()
+        self._image_scraper.pixmap_downloaded.connect(self._set_custom_background_pixmap)
 
         self.playlist = AudioPlaylist()
         self.playlist.updated_playlist.connect(self.playlist_updated)
@@ -301,29 +304,53 @@ class AudioController(QFrame):
 
         self.star_widget.set_star_color(color)
 
-    def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
-        def set_to_default():
-            self.background_pixmap = None
-            self.set_dark_mode_enabled(True)
+    def _set_to_default(self) -> None:
+        self.background_pixmap = None
+        self.set_dark_mode_enabled(True)
+        self.repaint()
+
+    # def _set_custom_pixmap(self, pixmap: QPixmap) -> None:
+    #     print("SET CUSTOM")
+    #     try:
+    #         pixmap = get_blurred_pixmap(pixmap)
+    #         start_y = pixmap.height() // 1.5
+    #         new_height = 60
+    #
+    #         pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
+    #         self.background_pixmap = pixmap
+    #         self.set_dark_mode_enabled(False)
+    #         self.repaint()
+    #
+    #     except UnidentifiedImageError:
+    #         self._set_to_default()
+
+    def _set_custom_background_pixmap(self, pixmap: QPixmap) -> None:
+        print("SET CUSTOM BACKGROUND")
+        try:
+            pixmap = get_blurred_pixmap(pixmap)
+            start_y = pixmap.height() // 1.5
+            new_height = 60
+
+            pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
+            self.background_pixmap = pixmap
+            self.set_dark_mode_enabled(False)
             self.repaint()
-            return None
 
-        pixmap = get_artwork_pixmap(track.file_path)
-        if not pixmap or reset_to_default:
-            set_to_default()
+        except UnidentifiedImageError:
+            self._set_to_default()
+
+    def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
+        if reset_to_default or not (track.artist and track.title):
+            self._set_to_default()
+            return
+
+        pixmap = get_embedded_artwork_pixmap(track.file_path)
+        if not pixmap:
+            self._set_to_default()
+            self._image_scraper.set_track(track)
+            self._image_scraper.start()
         else:
-            try:
-                pixmap = get_blurred_pixmap(pixmap)
-                start_y = pixmap.height() // 1.5
-                new_height = 60
-
-                pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
-                self.background_pixmap = pixmap
-                self.set_dark_mode_enabled(False)
-                self.repaint()
-
-            except UnidentifiedImageError:
-                set_to_default()
+            self._set_custom_background_pixmap(pixmap)
 
     @pyqtSlot()
     def playlist_ended(self):
