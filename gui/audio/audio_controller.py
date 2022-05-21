@@ -43,6 +43,7 @@ class AudioController(QFrame):
         self._is_dark_mode_enabled = None
         self._image_scraper = WebImageScraperThread()
         self._image_scraper.pixmap_downloaded.connect(self._set_custom_background_pixmap)
+        # self._image_scraper.finished.connect(lambda: print("Thread finished"))
 
         self.playlist = AudioPlaylist()
         self.playlist.updated_playlist.connect(self.playlist_updated)
@@ -296,10 +297,10 @@ class AudioController(QFrame):
         if pixmap.isNull():
             self._set_to_default()
         print("1")
-        # self.background_pixmap_updated.emit(pixmap)
+        self.background_pixmap_updated.emit(pixmap)
         print("2")
 
-        # pixmap = get_blurred_pixmap(pixmap)
+        pixmap = get_blurred_pixmap(pixmap)
         start_y = int(pixmap.height() // 1.5)
         new_height = 60
         print("3")
@@ -323,7 +324,7 @@ class AudioController(QFrame):
         if not pixmap:
             self._set_to_default()
             self._image_scraper.set_track(track)
-            self._image_scraper.start()
+            self._image_scraper.run()
         else:
             self._set_custom_background_pixmap(pixmap)
 

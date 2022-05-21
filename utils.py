@@ -8,7 +8,7 @@ import mutagen
 from PIL import Image, ImageFilter, UnidentifiedImageError
 from PIL.ImageQt import ImageQt
 from PyQt6.QtCore import (Qt, pyqtSignal, QSize, QPoint, QBuffer, QModelIndex, QEvent, QThread,
-                          pyqtSlot)
+                          pyqtSlot, QRunnable, QObject)
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent, QResizeEvent, QMouseEvent, QImage
 from PyQt6.QtWidgets import *
 from mutagen import MutagenError
@@ -356,22 +356,15 @@ def get_embedded_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
     return pixmap
 
 
-def get_artwork_pixmap_from_web(track: Track) -> Optional[QPixmap]:
-    if track.title and track.artist:
-        img = ImageDownloader().get_image(f"{track.artist} {track.title}")
-        if img:
-            qim = ImageQt(img)
-            pixmap = QPixmap.fromImage(qim)
-            return pixmap
-    return None
-
-
 class WebImageScraperThread(QThread):
     pixmap_downloaded = pyqtSignal(object)
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.track = None
+        self.image_downloader = ImageDownloader()
+        self.image_downloader.image_downloaded.connect(self.image_downloaded)
+        # self.setAutoDelete(False)
 
     def set_track(self, track: Track) -> None:
         self.track = track
@@ -381,10 +374,14 @@ class WebImageScraperThread(QThread):
         if not self.track:
             return
 
-        pixmap = get_artwork_pixmap_from_web(self.track)
-        if pixmap:
+        self.image_downloader.get_image(f"{self.track.artist} {self.track.title}")
+
+    def image_downloaded(self, image: QImage) -> None:
+        print(image)
+        if image:
+            pixmap = QPixmap.fromImage(image)
+            print(pixmap)
             self.pixmap_downloaded.emit(pixmap)
-        # print("FINISHED", self.track)
 
 
 def get_default_artwork_pixmap(default_type: str) -> QPixmap:
