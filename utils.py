@@ -6,7 +6,7 @@ from typing import Optional, Union
 import mutagen
 from PIL import Image, ImageFilter, UnidentifiedImageError
 from PIL.ImageQt import ImageQt
-from PyQt6.QtCore import (Qt, pyqtSignal, QSize, QPoint, QBuffer, QModelIndex, QEvent, QRunnable, QObject, QThread,
+from PyQt6.QtCore import (Qt, pyqtSignal, QSize, QPoint, QBuffer, QModelIndex, QEvent, QThread,
                           pyqtSlot)
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent, QResizeEvent, QMouseEvent, QImage
 from PyQt6.QtWidgets import *

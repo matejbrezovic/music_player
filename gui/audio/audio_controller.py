@@ -1,15 +1,15 @@
 from typing import List
 
-from PIL import UnidentifiedImageError
 from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint, Qt
-from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont, QPaintEvent, QWheelEvent
+from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont, QPaintEvent, QWheelEvent, QColor
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QFrame, QSpacerItem, QWidget
 
-from constants import *
+from constants import (AUDIO_CONTROLLER_HEIGHT, ROOT, CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH,
+                       STARTING_AUDIO_VOLUME, DARK_AUDIO_CONTROLLER_COLOR, LIGHT_AUDIO_CONTROLLER_COLOR)
 from data_models.track import Track
 from gui.audio.audio_player import AudioPlayer
 from gui.audio.audio_playlist import AudioPlaylist
-from gui.audio.enums import *
+from gui.audio.enums import UserAction, RepeatMode
 from gui.dialogs.track_not_found_dialog import TrackNotFoundDialog
 from gui.star.star_widget import StarWidget
 from gui.widgets.marquee_label import MarqueeLabel
@@ -17,7 +17,7 @@ from gui.widgets.seek_slider import SeekSlider
 from gui.widgets.volume_slider import VolumeSlider
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
                    get_embedded_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds,
-                   WebImageScraperThread)
+                   WebImageScraperThread, get_default_artwork_pixmap)
 
 
 class AudioController(QFrame):
@@ -28,6 +28,7 @@ class AudioController(QFrame):
     remaining_queue_time_changed = pyqtSignal(int)
     playback_error_encountered = pyqtSignal(Track)
     player_stopped = pyqtSignal()
+    background_pixmap_updated = pyqtSignal(QPixmap)
 
     default_stylesheet = "QFrame#audio_controller {background-color: rgba(0, 0, 0, 0.2)}"
 
@@ -44,6 +45,7 @@ class AudioController(QFrame):
 
         self.playlist = AudioPlaylist()
         self.playlist.updated_playlist.connect(self.playlist_updated)
+        self._playing_track = None
 
         self.total_queue_time = 0
         self._rounded_remaining_queue_time = 0  # shouldn't update while track is playing
@@ -114,27 +116,6 @@ class AudioController(QFrame):
 
         self.star_widget = StarWidget(0, self)
         self.star_widget.setFixedWidth(90)
-
-        """ DEPRECATED
-        ########################################################################
-        
-        def set_amplitudes(amps):
-            amps = np.array(amps)
-            amps = amps.tolist()
-            print(amps)
-
-        self.fft_analyser = FFTAnalyser(self.player)
-        self.fft_analyser.calculated_visual.connect(set_amplitudes)
-        self.fft_analyser.start()
-
-        self.spectrum_equalizer_widget = SpectrumEqualizerWidget(5, 10)
-        self.spectrum_equalizer_widget.setFixedSize(40, 30)
-        self.paused.connect(self.spectrum_equalizer_widget.stop)
-        self.unpaused.connect(self.spectrum_equalizer_widget.start)
-        self.updated_playing_track.connect(self.spectrum_equalizer_widget.start)
-
-        ########################################################################
-        """
 
         self.passed_time_label = QLabel("0:00/ 0:00")
         self.passed_time_label.setFixedWidth(90)
@@ -307,37 +288,23 @@ class AudioController(QFrame):
     def _set_to_default(self) -> None:
         self.background_pixmap = None
         self.set_dark_mode_enabled(True)
+        self.background_pixmap_updated.emit(get_default_artwork_pixmap("album"))
         self.repaint()
 
-    # def _set_custom_pixmap(self, pixmap: QPixmap) -> None:
-    #     print("SET CUSTOM")
-    #     try:
-    #         pixmap = get_blurred_pixmap(pixmap)
-    #         start_y = pixmap.height() // 1.5
-    #         new_height = 60
-    #
-    #         pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
-    #         self.background_pixmap = pixmap
-    #         self.set_dark_mode_enabled(False)
-    #         self.repaint()
-    #
-    #     except UnidentifiedImageError:
-    #         self._set_to_default()
-
     def _set_custom_background_pixmap(self, pixmap: QPixmap) -> None:
-        print("SET CUSTOM BACKGROUND")
-        try:
-            pixmap = get_blurred_pixmap(pixmap)
-            start_y = pixmap.height() // 1.5
-            new_height = 60
-
-            pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
-            self.background_pixmap = pixmap
-            self.set_dark_mode_enabled(False)
-            self.repaint()
-
-        except UnidentifiedImageError:
+        if pixmap.isNull():
             self._set_to_default()
+
+        self.background_pixmap_updated.emit(pixmap)
+
+        pixmap = get_blurred_pixmap(pixmap)
+        start_y = int(pixmap.height() // 1.5)
+        new_height = 60
+
+        pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
+        self.background_pixmap = pixmap
+        self.set_dark_mode_enabled(False)
+        self.repaint()
 
     def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
         if reset_to_default or not (track.artist and track.title):
@@ -363,7 +330,6 @@ class AudioController(QFrame):
         insert_index = self.playlist.playing_track_index + 1
         new_playlist = self.playlist.playlist[:insert_index] + tracks + self.playlist.playlist[insert_index:]
         self.set_playlist(new_playlist)
-        # self.current_playlist.queue_next(tracks)
 
     @pyqtSlot(list)
     def queue_last(self, tracks: List[Track]) -> None:
@@ -432,43 +398,46 @@ class AudioController(QFrame):
         if self.playlist.has_ended() or not self.get_playing_track():
             return
 
-        playing_track = self.get_playing_track()
+        new_playing_track = self.get_playing_track()
 
-        self.passed_time_label.setText(f"0:00/ {format_seconds(playing_track.length)}")
+        self.passed_time_label.setText(f"0:00/ {format_seconds(new_playing_track.length)}")
 
-        self.track_title_label.setText(playing_track.display_name)
+        self.track_title_label.setText(new_playing_track.display_name)
 
-        if not self.playlist.index(playing_track) and self._repeat_mode == RepeatMode.RepeatOff:
+        if not self.playlist.index(new_playing_track) and self._repeat_mode == RepeatMode.RepeatOff:
             self.prev_button.setEnabled(False)
         else:
             self.prev_button.setEnabled(True)
 
-        if self.playlist.index(playing_track) == len(self.playlist) - 1 and self._repeat_mode == RepeatMode.RepeatOff:
+        if self.playlist.index(new_playing_track) == len(self.playlist) - 1 and self._repeat_mode == RepeatMode.RepeatOff:
             self.next_button.setEnabled(False)
         else:
             self.next_button.setEnabled(True)
 
-        self.is_playing = playing_track.is_valid()
+        self.is_playing = new_playing_track.is_valid()
 
-        if playing_track.is_valid():
+        if new_playing_track.is_valid():
             self.user_action = UserAction.Playing
             self.star_widget.setEnabled(True)
             self.seek_slider.setEnabled(True)
-            self.update_background_pixmap(playing_track)
+
             self.play_button.setIcon(self.pause_icon)
-            self.player.setSource(QUrl(playing_track.file_path))
+            self.player.setSource(QUrl(new_playing_track.file_path))
             self.player.play()
-            # print(self.playlist.playing_track_index)
-            self.playing_track_updated.emit(playing_track)
+            self.playing_track_updated.emit(new_playing_track)
+            if self._playing_track != new_playing_track:
+                self._playing_track = new_playing_track
+                self.update_background_pixmap(new_playing_track)
+
         else:
             self.user_action = UserAction.Stopped
             self.star_widget.setEnabled(False)
-            self.update_background_pixmap(playing_track, reset_to_default=True)
+            self.update_background_pixmap(new_playing_track, reset_to_default=True)
             self.play_button.setIcon(self.play_icon)
             self.player.stop()
             self.seek_slider.setEnabled(False)
             self.player_stopped.emit()
-            t = TrackNotFoundDialog(playing_track)
+            t = TrackNotFoundDialog(new_playing_track)
             t.exec()  # must be 'exec', not show, because on the first 'show' dialog instantly closes
 
     @pyqtSlot('qint64')

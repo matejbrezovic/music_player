@@ -6,13 +6,13 @@ from typing import List, Optional, Any
 
 from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize, QAbstractItemModel, QRect, QAbstractTableModel, Qt
 from PyQt6.QtGui import (QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut,
-                         QContextMenuEvent, QFocusEvent, QMouseEvent, QCursor)
+                         QContextMenuEvent, QFocusEvent, QMouseEvent, QCursor, QColor)
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
                              QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame, QMainWindow,
                              QAbstractScrollArea, QDialog)
 
-from constants import *
+from constants import MAIN_PANEL_COLUMN_NAMES, SELECTION_QCOLOR, LOST_FOCUS_QCOLOR
 from data_models.track import Track
 from gui.dialogs.delete_track_dialog import DeleteTracksDialog
 from gui.star.star_delegate import StarDelegate
@@ -256,7 +256,7 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
                 height = rect.height()
                 width = rect.width()
                 rect.setHeight(width)
-                rect.translate(0, (height - width) / 2)
+                rect.translate(0, (height - width) // 2)
 
                 pixmap = pixmap.scaled(width, width,
                                        Qt.AspectRatioMode.KeepAspectRatio,

@@ -1,34 +1,21 @@
-import json
 from io import BytesIO
 from time import sleep
 from typing import Optional
 
 import requests as requests
 from PIL import Image
-from bs4 import BeautifulSoup
+from bing_image_urls import bing_image_urls
 
 
 class ImageDownloader:
 
     @staticmethod
     def _bing_image_search(query: str) -> str:
-        query = query.split()
-        query = '+'.join(query)
-        url = "https://www.bing.com/images/search?q=" + query + "&form=HDRSC2&first=1&tsc=ImageHoverTitle"
-
-        response = requests.get(url).content
-        soup = BeautifulSoup(response, 'html.parser', from_encoding="utf-8")
-        image_result_raw = soup.find("a", {"class": "iusc"})
-
-        m = json.loads(image_result_raw["m"])
-        murl = m["murl"]
-        return murl
+        img_url = bing_image_urls(query, limit=1, adult_filter_off=False)[0]
+        return img_url
 
     def get_image(self, query: str) -> Optional[Image.Image]:
-        try:
-            url = self._bing_image_search(query)
-        except Exception as e:
-            return
+        url = self._bing_image_search(query)
 
         for _ in range(10):
             response = requests.get(url)
@@ -40,11 +27,14 @@ class ImageDownloader:
 
             image_data = response.content
             img = Image.open(BytesIO(image_data))
-            img = img.crop((0, 0, img.width, img.width))
+            if img.height > img.width:
+                img = img.crop((0, 0, img.width, img.width))
+            else:
+                img = img.crop((img.width // 2 - img.height // 2, 0, img.width // 2 + img.height // 2, img.height))
             img.show()
             return img
 
 
 if __name__ == "__main__":
     i = ImageDownloader()
-    i.get_image("Dragon ball super ost")
+    i.get_image("Alan Walker Long Road")

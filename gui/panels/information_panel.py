@@ -1,13 +1,17 @@
 import math
 from typing import List
 
-from PyQt6.QtCore import pyqtSlot
+from PyQt6.QtCore import pyqtSlot, pyqtSignal, Qt, QSize
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import (QFrame, QVBoxLayout, QSplitter, QWidget, QHeaderView, QAbstractItemView, QScrollArea,
+                             QHBoxLayout, QSpacerItem)
 
-from constants import *
+from constants import PANEL_MIN_WIDTH
 from data_models.track import Track
 from gui.views.information_table_view import InformationTableView
 from tag_manager import TagManager
-from utils import *
+from utils import (ElidedLabel, get_embedded_artwork_pixmap, SpecificImageLabel, get_default_artwork_pixmap,
+                   TransparentComboBox, format_seconds)
 
 
 class InformationPanel(QFrame):
@@ -16,7 +20,6 @@ class InformationPanel(QFrame):
 
     def __init__(self, *args):
         super().__init__(*args)
-        # self.setObjectName("information_panel")
         # self.setStyleSheet("InformationPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
@@ -122,8 +125,8 @@ class InformationPanel(QFrame):
         self.information_table_view.clearSelection()
         self.information_table_view.set_tracks(tracks)
 
-    @pyqtSlot(Track, int)
-    def set_playing_track(self, track: Track, track_index: int = None) -> None:
+    @pyqtSlot(Track)
+    def set_playing_track(self, track: Track) -> None:
         def get_track_info(t: Track) -> str:
             f = TagManager().load_file(t.file_path)
             extension = t.file_path.split(".")[-1].upper()
@@ -142,13 +145,13 @@ class InformationPanel(QFrame):
 
         if track in self.playing_tracks:
             track_index = self.playing_tracks.index(track)
-        else:
-            track_index = None
-
-        if track_index is None:
-            self.information_table_view.set_currently_playing_track_index(self.playing_tracks.index(track))
-        else:
             self.information_table_view.set_currently_playing_track_index(track_index)
+        else:
+            self.information_table_view.set_currently_playing_track_index(self.playing_tracks.index(track))
+
+    def set_track_pixmap(self, pixmap: QPixmap) -> None:
+        self.playing_track_image_label.pixmap = pixmap
+        self.playing_track_image_label.setPixmap(pixmap)
 
     def pause_playing_track(self) -> None:
         self.information_table_view.set_paused()
