@@ -1,3 +1,4 @@
+import threading
 from typing import List
 
 from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint, Qt
@@ -294,22 +295,29 @@ class AudioController(QFrame):
     def _set_custom_background_pixmap(self, pixmap: QPixmap) -> None:
         if pixmap.isNull():
             self._set_to_default()
+        print("1")
+        # self.background_pixmap_updated.emit(pixmap)
+        print("2")
 
-        self.background_pixmap_updated.emit(pixmap)
-
-        pixmap = get_blurred_pixmap(pixmap)
+        # pixmap = get_blurred_pixmap(pixmap)
         start_y = int(pixmap.height() // 1.5)
         new_height = 60
+        print("3")
 
         pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
+        print("4")
         self.background_pixmap = pixmap
         self.set_dark_mode_enabled(False)
+        print("5")
         self.repaint()
+        print("6")
 
     def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
         if reset_to_default or not (track.artist and track.title):
             self._set_to_default()
             return
+
+        print("Current thread 3:", threading.get_ident())
 
         pixmap = get_embedded_artwork_pixmap(track.file_path)
         if not pixmap:
@@ -409,7 +417,8 @@ class AudioController(QFrame):
         else:
             self.prev_button.setEnabled(True)
 
-        if self.playlist.index(new_playing_track) == len(self.playlist) - 1 and self._repeat_mode == RepeatMode.RepeatOff:
+        if self.playlist.index(new_playing_track) == len(self.playlist) - 1 and \
+                self._repeat_mode == RepeatMode.RepeatOff:
             self.next_button.setEnabled(False)
         else:
             self.next_button.setEnabled(True)

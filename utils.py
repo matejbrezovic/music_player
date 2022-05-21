@@ -1,5 +1,6 @@
 import datetime
 import io
+import threading
 from os import path
 from typing import Optional, Union
 
@@ -383,7 +384,7 @@ class WebImageScraperThread(QThread):
         pixmap = get_artwork_pixmap_from_web(self.track)
         if pixmap:
             self.pixmap_downloaded.emit(pixmap)
-        print("FINISHED", self.track)
+        # print("FINISHED", self.track)
 
 
 def get_default_artwork_pixmap(default_type: str) -> QPixmap:

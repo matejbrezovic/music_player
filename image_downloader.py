@@ -18,7 +18,11 @@ class ImageDownloader:
         url = self._bing_image_search(query)
 
         for _ in range(10):
-            response = requests.get(url)
+            try:
+                response = requests.get(url)
+            except requests.exceptions.ConnectionError:
+                sleep(1)
+                continue
             print(response)
             if not response:
                 print("repeat")
@@ -31,7 +35,7 @@ class ImageDownloader:
                 img = img.crop((0, 0, img.width, img.width))
             else:
                 img = img.crop((img.width // 2 - img.height // 2, 0, img.width // 2 + img.height // 2, img.height))
-            img.show()
+            # img.show()
             return img
 
 
