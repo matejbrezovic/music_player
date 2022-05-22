@@ -1,11 +1,11 @@
 from typing import List, Any, Optional, Union
 
 from PyQt6.QtCore import QModelIndex, pyqtSignal, QRect, QPoint, QTimer, QAbstractTableModel, Qt
-from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QFocusEvent, QPalette
+from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QFocusEvent, QPalette, QColor
 from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate,
                              QStyle, QStyleOptionViewItem, QApplication, QAbstractItemView)
 
-from constants import *
+from constants import SELECTION_QCOLOR, LOST_FOCUS_QCOLOR
 from data_models.track import Track
 from utils import ElidedLabel, get_embedded_artwork_pixmap, get_formatted_time_in_mins
 
@@ -81,16 +81,10 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():
                 fill_color = SELECTION_QCOLOR
-                # border_color = SELECTION_QCOLOR_BORDER
             else:
                 fill_color = LOST_FOCUS_QCOLOR
-                # border_color = LOST_FOCUS_QCOLOR_BORDER
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
-            # painter.setPen(QPen(QBrush(border_color), 1))
-            # painter.drawLine(option.rect.topLeft(), option.rect.topRight())
-            # if index.row() == self._table_view.selectedIndexes()[-1].row():  # might be ruining performance
-            #     painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
 
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))

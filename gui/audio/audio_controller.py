@@ -1,4 +1,3 @@
-import time
 from typing import List
 
 from PIL import UnidentifiedImageError
@@ -17,10 +16,10 @@ from gui.star.star_widget import StarWidget
 from gui.widgets.marquee_label import MarqueeLabel
 from gui.widgets.seek_slider import SeekSlider
 from gui.widgets.volume_slider import VolumeSlider
-from image_downloader import ImageDownloader
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
                    get_embedded_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds,
-                   ImageDownloaderThread, get_default_artwork_pixmap)
+                   get_default_artwork_pixmap)
+from utils.image_downloader import ImageDownloader
 
 
 class AudioController(QFrame):

@@ -4,7 +4,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMenuBar, QWidget, QMenu, QMainWindow, QVBoxLayout
 
-from constants import *
+from constants import (APPLICATION_NAME, MAIN_WINDOW_Y, MAIN_PANEL_MIN_WIDTH, PANEL_MIN_WIDTH, MAIN_WINDOW_X,
+                       MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
 from data_models.track import Track
 from gui.audio.audio_controller import AudioController
 from gui.dialogs.add_files_dialog import AddFilesDialog

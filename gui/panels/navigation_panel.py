@@ -1,14 +1,15 @@
-from typing import List
+from typing import List, Optional
 
-from PyQt6.QtCore import pyqtSlot
-from PyQt6.QtWidgets import QVBoxLayout
+from PyQt6.QtCore import pyqtSlot, pyqtSignal, Qt, QSize
+from PyQt6.QtGui import QPixmap
+from PyQt6.QtWidgets import QVBoxLayout, QFrame, QHeaderView, QAbstractItemView
 
-from constants import *
+from constants import PANEL_MIN_WIDTH, GROUP_OPTIONS
 from data_models.navigation_group import NavigationGroup
 from data_models.track import Track
 from gui.views.navigation_table_view import NavigationTableView
 from repositories.cached_tracks_repository import CachedTracksRepository
-from utils import *
+from utils import get_embedded_artwork_pixmap, get_default_artwork_pixmap
 
 
 class NavigationPanel(QFrame):
@@ -109,14 +110,10 @@ class NavigationPanel(QFrame):
     @pyqtSlot(list)
     def added_tracks(self) -> None:
         return
-        # self._last_selected_tracks = self.navigation_table_view.get_tracks_from_selected_group()
 
     @pyqtSlot(list)
     def removed_tracks(self) -> None:
         ...
-
-    # def get_tracks_from_selected_group(self) -> List[Track]:
-    #     return self.navigation_table_view.get_tracks_from_selected_group()
 
     def get_last_selected_tracks(self) -> List[Track]:
         if not self.navigation_table_view.last_group_key or not self.navigation_table_view.last_group_title:
@@ -125,5 +122,3 @@ class NavigationPanel(QFrame):
         tracks = self.cached_tracks_repository.get_tracks_by(self.navigation_table_view.last_group_key,
                                                              self.navigation_table_view.last_group_title)
         return tracks
-
-

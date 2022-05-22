@@ -1,11 +1,11 @@
 from typing import List, Any, Union
 
 from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QAbstractTableModel, Qt
-from PyQt6.QtGui import QPen, QBrush, QPainter, QFont, QFocusEvent, QPalette
+from PyQt6.QtGui import QPen, QBrush, QPainter, QFont, QFocusEvent, QPalette, QColor
 from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QStyledItemDelegate, QStyle,
                              QStyleOptionViewItem, QApplication, QAbstractItemView)
 
-from constants import *
+from constants import SELECTION_QCOLOR, LOST_FOCUS_QCOLOR
 from data_models.navigation_group import NavigationGroup
 from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import ElidedLabel
@@ -55,22 +55,15 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
         self._groups: List[NavigationGroup] = []
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
-        # painter.save()
         # set background color
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():
                 fill_color = SELECTION_QCOLOR
-                border_color = SELECTION_QCOLOR_BORDER
             else:
                 fill_color = LOST_FOCUS_QCOLOR
-                border_color = LOST_FOCUS_QCOLOR_BORDER
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
-            painter.setPen(QPen(QBrush(border_color), 1))
-            # painter.drawLine(option.rect.topLeft(), option.rect.topRight())
-            # if index.row() == self._table_view.selectedIndexes()[-1].row():  # might be ruining performance
-            #     painter.drawLine(option.rect.bottomLeft(), option.rect.bottomRight())
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 

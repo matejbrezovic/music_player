@@ -212,14 +212,10 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():
                 fill_color = SELECTION_QCOLOR
-                # border_color = SELECTION_QCOLOR_BORDER
             else:
                 fill_color = LOST_FOCUS_QCOLOR
-                # border_color = LOST_FOCUS_QCOLOR_BORDER
             painter.setBrush(fill_color)
             painter.drawRect(option.rect)
-            # painter.setPen(QPen(QBrush(border_color), 1))
-            # painter.drawLine(option.rect.topLeft(), option.rect.topRight())
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 

@@ -2,13 +2,10 @@ import sqlite3
 from sqlite3 import Connection
 from typing import List, Any
 
-from constants import *
+from constants import DATABASE_PATH
 
 
 class BaseRepository:
-    def __init__(self):
-        ...
-        # print(DATABASE_PATH)
 
     @staticmethod
     def get_connection() -> Connection:
@@ -63,8 +60,3 @@ class BaseRepository:
 
         conn.commit()
         conn.close()
-
-
-if __name__ == "__main__":
-    b = BaseRepository()
-    b.reset_table("tracks")

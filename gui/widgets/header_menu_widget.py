@@ -3,7 +3,7 @@ from typing import List
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt6.QtWidgets import QWidget, QSplitter, QVBoxLayout, QHBoxLayout
 
-from constants import *
+from constants import MAIN_PANEL_VIEW_OPTIONS, GROUP_OPTIONS
 from utils import TransparentComboBox
 
 

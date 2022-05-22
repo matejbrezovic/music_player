@@ -1,7 +1,7 @@
 from PyQt6.QtCore import QPropertyAnimation, QEasingCurve, pyqtSlot, QAbstractAnimation
 from PyQt6.QtMultimedia import QMediaPlayer, QAudioOutput, QMediaDevices
 
-from constants import *
+from constants import STARTING_AUDIO_VOLUME
 
 
 class AudioPlayer(QMediaPlayer):

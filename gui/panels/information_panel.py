@@ -9,9 +9,9 @@ from PyQt6.QtWidgets import (QFrame, QVBoxLayout, QSplitter, QWidget, QHeaderVie
 from constants import PANEL_MIN_WIDTH
 from data_models.track import Track
 from gui.views.information_table_view import InformationTableView
-from tag_manager import TagManager
-from utils import (ElidedLabel, get_embedded_artwork_pixmap, SpecificImageLabel, get_default_artwork_pixmap,
+from utils import (ElidedLabel, get_embedded_artwork_pixmap, SquareImageLabel, get_default_artwork_pixmap,
                    TransparentComboBox, format_seconds)
+from utils.tag_manager import TagManager
 
 
 class InformationPanel(QFrame):
@@ -89,7 +89,7 @@ class InformationPanel(QFrame):
         artwork_pixmap = get_embedded_artwork_pixmap("")
         if not artwork_pixmap:
             artwork_pixmap = get_default_artwork_pixmap("album")
-        self.playing_track_image_label = SpecificImageLabel(artwork_pixmap)
+        self.playing_track_image_label = SquareImageLabel(artwork_pixmap)
         self.playing_track_image_label.setUpdatesEnabled(True)
         self.playing_track_image_label.setAlignment(Qt.AlignmentFlag.AlignTop)
 

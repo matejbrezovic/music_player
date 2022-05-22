@@ -1,6 +1,6 @@
 from PyQt6.QtWidgets import QFileDialog
 
-from constants import *
+from constants import SUPPORTED_AUDIO_FORMATS
 from repositories.cached_tracks_repository import CachedTracksRepository
 from repositories.tracks_repository import TracksRepository
 

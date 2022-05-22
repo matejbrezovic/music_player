@@ -1,5 +1,5 @@
 {
 	"preselected_folders": [
-		"/home"
+		"/home/matey/port"
 	]
 }

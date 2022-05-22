@@ -3,11 +3,11 @@ from typing import List, Optional, Tuple
 from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt6.QtWidgets import QVBoxLayout, QFrame
 
-from constants import *
+from constants import MAIN_PANEL_MIN_WIDTH
 from data_models.track import Track
 from gui.widgets.track_view_widget import TrackViewWidget
 from repositories.cached_tracks_repository import CachedTracksRepository
-from tag_manager import TagManager
+from utils.tag_manager import TagManager
 
 
 class MainPanel(QFrame):
@@ -75,7 +75,3 @@ class MainPanel(QFrame):
     @pyqtSlot()
     def stop_playing(self) -> None:
         self.track_view_widget.stop_playing()
-
-    # def tracks_deleted(self, deleted_tracks: List[Track]) -> None:
-    #     self.cached_tracks_repository.drop_tracks(deleted_tracks)
-        # self.cached_tracks_repository.cached_counts[(self._display_key, self._display_value)] -= len(deleted_tracks)

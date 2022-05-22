@@ -1,16 +1,18 @@
 from __future__ import annotations
 
+import os
 import sys
 from collections import defaultdict
-from typing import List, Tuple
+from typing import List, Tuple, Union
 
+from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout,
-                             QVBoxLayout)
+                             QVBoxLayout, QDialog, QFrame, QGridLayout, QWidget, QLabel, QSizePolicy, QApplication)
 
-from config import Config
-from constants import *
+from constants import DEFAULT_CONFIG_PATH, SUPPORTED_AUDIO_FORMATS
 from repositories.cached_tracks_repository import CachedTracksRepository
-from utils import *
+from utils import delete_grid_layout_items, PathCheckbox, QHLine
+from utils.config import Config
 
 
 class ScanFoldersDialog(QDialog):
