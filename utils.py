@@ -1,14 +1,12 @@
 import datetime
 import io
-import threading
 from os import path
 from typing import Optional, Union
 
 import mutagen
 from PIL import Image, ImageFilter, UnidentifiedImageError
 from PIL.ImageQt import ImageQt
-from PyQt6.QtCore import (Qt, pyqtSignal, QSize, QPoint, QBuffer, QModelIndex, QEvent, QThread,
-                          pyqtSlot, QRunnable, QObject)
+from PyQt6.QtCore import (Qt, pyqtSignal, QSize, QPoint, QBuffer, QModelIndex, QEvent, QThread)
 from PyQt6.QtGui import QFontMetrics, QPainter, QPixmap, QColor, QIcon, QEnterEvent, QResizeEvent, QMouseEvent, QImage
 from PyQt6.QtWidgets import *
 from mutagen import MutagenError
@@ -16,8 +14,6 @@ from mutagen.id3 import ID3
 from mutagen.mp4 import MP4
 
 import constants
-from data_models.track import Track
-from image_downloader import ImageDownloader
 
 
 def classify(module):
@@ -356,32 +352,17 @@ def get_embedded_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
     return pixmap
 
 
-class WebImageScraperThread(QThread):
-    pixmap_downloaded = pyqtSignal(object)
-
+class ImageDownloaderThread(QThread):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.track = None
-        self.image_downloader = ImageDownloader()
-        self.image_downloader.image_downloaded.connect(self.image_downloaded)
-        # self.setAutoDelete(False)
+        self.started.connect(self.s)
+        self.finished.connect(self.f)
 
-    def set_track(self, track: Track) -> None:
-        self.track = track
+    def s(self):
+        print("STARTED", self.thread())
 
-    @pyqtSlot()
-    def run(self):
-        if not self.track:
-            return
-
-        self.image_downloader.get_image(f"{self.track.artist} {self.track.title}")
-
-    def image_downloaded(self, image: QImage) -> None:
-        print(image)
-        if image:
-            pixmap = QPixmap.fromImage(image)
-            print(pixmap)
-            self.pixmap_downloaded.emit(pixmap)
+    def f(self):
+        print("FINISHED", self.thread())
 
 
 def get_default_artwork_pixmap(default_type: str) -> QPixmap:

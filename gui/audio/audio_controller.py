@@ -1,8 +1,9 @@
-import threading
+import time
 from typing import List
 
-from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint, Qt
-from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont, QPaintEvent, QWheelEvent, QColor
+from PIL import UnidentifiedImageError
+from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint, Qt, QThread, QTimer
+from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont, QPaintEvent, QWheelEvent, QColor, QImage
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QFrame, QSpacerItem, QWidget
 
 from constants import (AUDIO_CONTROLLER_HEIGHT, ROOT, CONTROLLER_BUTTON_HEIGHT, CONTROLLER_BUTTON_WIDTH,
@@ -16,9 +17,10 @@ from gui.star.star_widget import StarWidget
 from gui.widgets.marquee_label import MarqueeLabel
 from gui.widgets.seek_slider import SeekSlider
 from gui.widgets.volume_slider import VolumeSlider
+from image_downloader import ImageDownloader
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
                    get_embedded_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds,
-                   WebImageScraperThread, get_default_artwork_pixmap)
+                   ImageDownloaderThread, get_default_artwork_pixmap)
 
 
 class AudioController(QFrame):
@@ -41,9 +43,15 @@ class AudioController(QFrame):
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self._is_dark_mode_enabled = None
-        self._image_scraper = WebImageScraperThread()
-        self._image_scraper.pixmap_downloaded.connect(self._set_custom_background_pixmap)
-        # self._image_scraper.finished.connect(lambda: print("Thread finished"))
+        self._image_downloader_thread = QThread()
+        self.image_downloader = ImageDownloader()
+        self.image_downloader.image_downloaded.connect(self._image_downloaded)
+        self.image_downloader.image_downloaded.connect(self._image_downloader_thread.quit)
+        self.image_downloader.moveToThread(self._image_downloader_thread)
+        self._image_downloader_thread.started.connect(self.image_downloader.get_image)
+        self._background_pixmap_update_timer = QTimer()
+        self._background_pixmap_update_timer.setTimerType(Qt.TimerType.PreciseTimer)
+        self._background_pixmap_update_timer.setSingleShot(True)
 
         self.playlist = AudioPlaylist()
         self.playlist.updated_playlist.connect(self.playlist_updated)
@@ -296,35 +304,55 @@ class AudioController(QFrame):
     def _set_custom_background_pixmap(self, pixmap: QPixmap) -> None:
         if pixmap.isNull():
             self._set_to_default()
-        print("1")
+
         self.background_pixmap_updated.emit(pixmap)
-        print("2")
 
         pixmap = get_blurred_pixmap(pixmap)
         start_y = int(pixmap.height() // 1.5)
         new_height = 60
-        print("3")
-
         pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
-        print("4")
+
         self.background_pixmap = pixmap
         self.set_dark_mode_enabled(False)
-        print("5")
         self.repaint()
-        print("6")
+
+    def _image_downloaded(self, qimage: QImage, track: Track = None) -> None:
+        # print(track.title)
+        # print("QIMAGE RECEIVED")
+        if track == self.get_playing_track():
+            # print("QIMAGE SET")
+            pixmap = QPixmap.fromImage(qimage)
+            try:
+                self._set_custom_background_pixmap(pixmap)
+            except UnidentifiedImageError:
+                self.update_background_pixmap(track)
+        # print()
 
     def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
         if reset_to_default or not (track.artist and track.title):
             self._set_to_default()
             return
 
-        print("Current thread 3:", threading.get_ident())
-
         pixmap = get_embedded_artwork_pixmap(track.file_path)
         if not pixmap:
             self._set_to_default()
-            self._image_scraper.set_track(track)
-            self._image_scraper.run()
+            # print("START", track.title)
+            self._background_pixmap_update_timer.stop()
+            self.image_downloader.deleteLater()
+            self._image_downloader_thread.quit()
+            # self._image_downloader_thread = ImageDownloaderThread()
+
+            self.image_downloader = ImageDownloader()
+            self.image_downloader.image_downloaded.connect(self._image_downloaded)
+            self.image_downloader.image_downloaded.connect(self._image_downloader_thread.quit)
+            self.image_downloader.set_track(track)
+            self.image_downloader.moveToThread(self._image_downloader_thread)
+            self._image_downloader_thread.started.connect(self.image_downloader.get_image)
+            # print("IS RUNNING", self._image_downloader_thread.isRunning())
+            self._background_pixmap_update_timer.timeout.connect(
+                lambda: self._image_downloader_thread.start())
+            self._background_pixmap_update_timer.start(2000)
+
         else:
             self._set_custom_background_pixmap(pixmap)
 
@@ -404,6 +432,7 @@ class AudioController(QFrame):
 
     @pyqtSlot()
     def play(self) -> None:
+        self._background_pixmap_update_timer.stop()
         if self.playlist.has_ended() or not self.get_playing_track():
             return
 
