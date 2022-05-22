@@ -10,8 +10,7 @@ from constants import PANEL_MIN_WIDTH
 from data_models.track import Track
 from gui.views.information_table_view import InformationTableView
 from utils import (ElidedLabel, get_embedded_artwork_pixmap, SquareImageLabel, get_default_artwork_pixmap,
-                   TransparentComboBox, format_seconds)
-from utils.tag_manager import TagManager
+                   TransparentComboBox, format_seconds, TagManager)
 
 
 class InformationPanel(QFrame):

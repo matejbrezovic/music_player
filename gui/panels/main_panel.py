@@ -7,7 +7,7 @@ from constants import MAIN_PANEL_MIN_WIDTH
 from data_models.track import Track
 from gui.widgets.track_view_widget import TrackViewWidget
 from repositories.cached_tracks_repository import CachedTracksRepository
-from utils.tag_manager import TagManager
+from utils import TagManager
 
 
 class MainPanel(QFrame):

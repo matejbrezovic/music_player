@@ -2,7 +2,7 @@ import sys
 
 from PyQt6 import QtWidgets
 
-from utils.tag_manager import TagManager
+from utils import TagManager
 
 if __name__ == '__main__':
     app = QtWidgets.QApplication(sys.argv)

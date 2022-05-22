@@ -6,8 +6,7 @@ from PyQt6 import QtWidgets
 
 from constants import ROOT
 from data_models.track import Track
-from utils.tag_manager import TagManager
-from utils import *
+from utils import TagManager
 
 DEFAULT_LOADED_TRACKS_FILE_PATH = f"{ROOT}/tracks.txt"
 

@@ -12,7 +12,7 @@ from PyQt6.QtWidgets import (QPushButton, QScrollArea, QTreeWidgetItem, QTreeWid
 from constants import DEFAULT_CONFIG_PATH, SUPPORTED_AUDIO_FORMATS
 from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import delete_grid_layout_items, PathCheckbox, QHLine
-from utils.config import Config
+from utils import Config
 
 
 class ScanFoldersDialog(QDialog):

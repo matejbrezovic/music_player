@@ -18,8 +18,7 @@ from gui.widgets.seek_slider import SeekSlider
 from gui.widgets.volume_slider import VolumeSlider
 from utils import (get_formatted_time, format_player_position_to_seconds, TrackNotInPlaylistError,
                    get_embedded_artwork_pixmap, get_blurred_pixmap, change_icon_color, HoverButton, format_seconds,
-                   get_default_artwork_pixmap)
-from utils.image_downloader import ImageDownloader
+                   get_default_artwork_pixmap, ImageDownloader)
 
 
 class AudioController(QFrame):
