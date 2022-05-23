@@ -103,10 +103,10 @@ class MainWindow(QMainWindow):
             if len(tracks) == 1:
                 if self.main_panel.displayed_tracks != self.information_panel.playing_tracks:
                     self.audio_controller.set_playlist(self.main_panel.displayed_tracks)
-                self.audio_controller.set_playing_track(tracks[0])
+                self.audio_controller.set_playing_track(tracks[0], 0)
             else:
                 self.audio_controller.set_playlist(tracks)
-                self.audio_controller.set_playing_track(tracks[0])
+                self.audio_controller.set_playing_track(tracks[0], 0)
 
         self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
         self.add_files_dialog.finished.connect(self.navigation_panel.refresh_groups)
@@ -118,10 +118,10 @@ class MainWindow(QMainWindow):
         self.header_menu.information_panel_view_key_changed.connect(self.information_panel.view_key_changed)
 
         self.main_panel.track_double_clicked.connect(
-            lambda track, index: (self.status_bar.update_info(self.main_panel.displayed_tracks),
-                                  self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
-                                  self.audio_controller.set_playlist_index(index),
-                                  self.audio_controller.play()))
+            lambda track, _: (self.status_bar.update_info(self.main_panel.displayed_tracks),
+                              self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
+                              self.audio_controller.set_playlist_index(self.audio_controller.playlist.index(track)),
+                              self.audio_controller.play()))
         self.main_panel.play_now_triggered.connect(play_now_triggered)
         self.main_panel.queue_next_triggered.connect(self.queue_next)
         self.main_panel.queue_last_triggered.connect(self.queue_last)
@@ -140,12 +140,12 @@ class MainWindow(QMainWindow):
         # self.information_panel.track_clicked.connect(lambda: ...)
 
         self.information_panel.track_double_clicked.connect(
-            lambda track: (self.audio_controller.set_playing_track(track),
-                           self.audio_controller.play()))
+            lambda track, index: (self.audio_controller.set_playing_track(track, index),
+                                  self.audio_controller.play()))
 
         self.audio_controller.playing_track_updated.connect(
-            lambda track: (self.main_panel.set_playing_track(track),
-                           self.information_panel.set_playing_track(track)))
+            lambda track, index: (self.main_panel.set_playing_track(track),
+                                  self.information_panel.set_playing_track(track, index)))
 
         self.audio_controller.paused.connect(lambda: (self.main_panel.pause_playing_track(),
                                              self.information_panel.pause_playing_track()))

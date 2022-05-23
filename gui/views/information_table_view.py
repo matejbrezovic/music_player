@@ -145,8 +145,8 @@ class InformationTableItemDelegate(QStyledItemDelegate):
 
 class InformationTableView(QTableView):
     set_new_tracks = pyqtSignal()
-    track_clicked = pyqtSignal(Track)
-    track_double_clicked = pyqtSignal(Track)
+    track_clicked = pyqtSignal(Track, int)
+    track_double_clicked = pyqtSignal(Track, int)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -161,8 +161,8 @@ class InformationTableView(QTableView):
         palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.BrightText, QColor(79, 180, 242))
         self.setPalette(palette)
 
-        self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()]))
-        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()]))
+        self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()], index.row()))
+        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()], index.row()))
 
         self._viewport_fix_timer = QTimer(self)
         self._viewport_fix_timer.setTimerType(Qt.TimerType.PreciseTimer)

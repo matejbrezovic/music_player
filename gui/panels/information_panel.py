@@ -14,8 +14,8 @@ from utils import (ElidedLabel, get_embedded_artwork_pixmap, SquareImageLabel, g
 
 
 class InformationPanel(QFrame):
-    track_clicked = pyqtSignal(Track)
-    track_double_clicked = pyqtSignal(Track)
+    track_clicked = pyqtSignal(Track, int)
+    track_double_clicked = pyqtSignal(Track, int)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -124,8 +124,8 @@ class InformationPanel(QFrame):
         self.information_table_view.clearSelection()
         self.information_table_view.set_tracks(tracks)
 
-    @pyqtSlot(Track)
-    def set_playing_track(self, track: Track) -> None:
+    @pyqtSlot(Track, int)
+    def set_playing_track(self, track: Track, index: int) -> None:
         def get_track_info(t: Track) -> str:
             f = TagManager().load_file(t.file_path)
             extension = t.file_path.split(".")[-1].upper()
@@ -143,10 +143,7 @@ class InformationPanel(QFrame):
         self.playing_track_image_label.setPixmap(artwork_pixmap)
 
         if track in self.playing_tracks:
-            track_index = self.playing_tracks.index(track)
-            self.information_table_view.set_currently_playing_track_index(track_index)
-        else:
-            self.information_table_view.set_currently_playing_track_index(self.playing_tracks.index(track))
+            self.information_table_view.set_currently_playing_track_index(index)
 
     def set_track_pixmap(self, pixmap: QPixmap) -> None:
         self.playing_track_image_label.pixmap = pixmap

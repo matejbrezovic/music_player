@@ -46,12 +46,15 @@ class TrackViewWidget(QWidget):
         self.table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.table_view.setFrameShape(QFrame.Shape.NoFrame)
 
-        self.table_view.clicked.connect(lambda model_index: self.track_clicked.emit(
-                                                            self.displayed_tracks[model_index.row()],
-                                                            model_index.row()))
-        self.table_view.doubleClicked.connect(lambda model_index: self.track_double_clicked.emit(
-                                                                  self.displayed_tracks[model_index.row()],
-                                                                  model_index.row()))
+        # self.table_view.clicked.connect(lambda model_index: self.track_clicked.emit(
+        #                                                     self.displayed_tracks[model_index.row()],
+        #                                                     model_index.row()))
+        # self.table_view.doubleClicked.connect(lambda model_index: self.track_double_clicked.emit(
+        #                                                           self.displayed_tracks[model_index.row()],
+        #                                                           model_index.row()))
+        self.table_view.track_clicked.connect(self.track_clicked.emit)
+        self.table_view.track_double_clicked.connect(self.track_double_clicked.emit)
+
         self.table_view.play_now_triggered.connect(self.play_now_triggered.emit)
         self.table_view.queue_next_triggered.connect(self.queue_next_triggered.emit)
         self.table_view.queue_last_triggered.connect(self.queue_last_triggered.emit)

@@ -47,7 +47,7 @@ class ImageDownloader(QObject):
         try:
             url = self._bing_image_search(self.query)
             # print(url)
-        except httpx.ConnectError as e:
+        except (httpx.ConnectError, httpx.HTTPStatusError, httpx.ConnectTimeout) as e:
             # print(e)
             return
 

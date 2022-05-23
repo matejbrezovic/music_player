@@ -2,9 +2,10 @@ from __future__ import annotations
 
 import sys
 import typing
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Union
 
-from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QSize, QAbstractItemModel, QRect, QAbstractTableModel, Qt
+from PyQt6.QtCore import (QModelIndex, pyqtSignal, pyqtSlot, QSize, QAbstractItemModel, QRect, QAbstractTableModel, Qt,
+                          QSortFilterProxyModel)
 from PyQt6.QtGui import (QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut,
                          QContextMenuEvent, QFocusEvent, QMouseEvent, QCursor, QColor)
 from PyQt6.QtMultimedia import QMediaDevices
@@ -22,14 +23,16 @@ from utils import get_formatted_time_in_mins
 
 
 class TrackTableHeader(QHeaderView):
-    def __init__(self, orientation: Qt.Orientation, parent: TrackTableView = None):
-        super().__init__(orientation, parent)
-        self.padding = parent.padding
+    def __init__(self, orientation: Qt.Orientation, track_table_view: TrackTableView = None):
+        super().__init__(orientation, track_table_view)
+        self.padding = track_table_view.padding
         self.setSectionsClickable(True)
         self.setSortIndicatorShown(True)
         self.setSectionsMovable(True)
         self.setFirstSectionMovable(False)
+        self.setSortIndicatorShown(True)
 
+        self.sortIndicatorChanged.connect(self.sort_indicator_changed)
         self.sectionMoved.connect(self.section_moved)
         self.sectionResized.connect(self.section_resized)
         self.__section_moved_recursions = 0
@@ -63,6 +66,10 @@ class TrackTableHeader(QHeaderView):
             self.__section_moved_recursions += 1
             self.moveSection(new_visual_index, old_visual_index)
 
+    @pyqtSlot(int, Qt.SortOrder)
+    def sort_indicator_changed(self, logical_index: int, order: Qt.SortOrder) -> None:
+        self.setSortIndicator(logical_index, order)
+
     def text(self, section: int):
         if isinstance(self.model(), QAbstractItemModel):
             return self.section_text[section]
@@ -94,7 +101,7 @@ class TrackTableModel(QAbstractTableModel):
     def __init__(self, parent: TrackTableView = None):
         super().__init__(parent)
         self._table_view: TrackTableView = parent
-        self._tracks: List[Track] = []
+        self.tracks: List[Track] = []
         self.is_playing = False
         self.playing_track_index: Optional[int] = None
 
@@ -106,11 +113,11 @@ class TrackTableModel(QAbstractTableModel):
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         self.layoutAboutToBeChanged.emit()
-        self._tracks = tracks
+        self.tracks = tracks
         self.layoutChanged.emit()
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
-        if not self._tracks or index.row() >= len(self._tracks):
+        if not self.tracks or index.row() >= len(self.tracks):
             return None
         if role == Qt.ItemDataRole.TextAlignmentRole:
             if index.column() == 0:
@@ -118,12 +125,8 @@ class TrackTableModel(QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DecorationRole:
             if index.column() == 0:
-                track = self._tracks[index.row()]
+                track = self.tracks[index.row()]
                 artwork_pixmap: Optional[QPixmap] = track.artwork_pixmap
-                # if artwork_pixmap is None:
-                #     new_pixmap = get_artwork_pixmap(track.file_path)
-                #     track.artwork_pixmap = new_pixmap if new_pixmap else ""
-                #     artwork_pixmap = track.artwork_pixmap
                 if not artwork_pixmap or artwork_pixmap.isNull():
                     return None
                 return artwork_pixmap.scaled(self._table_view.columnWidth(index.column()),
@@ -145,14 +148,14 @@ class TrackTableModel(QAbstractTableModel):
 
             value = MAIN_PANEL_COLUMN_NAMES[index.column()].lower()
             if value == "time":
-                return get_formatted_time_in_mins(self._tracks[index.row()].length)
+                return self.tracks[index.row()].length
             elif value == "rating":
-                return StarRating(self._tracks[index.row()].rating)
+                return StarRating(self.tracks[index.row()].rating)
 
-            return getattr(self._tracks[index.row()], value) if value else None
+            return getattr(self.tracks[index.row()], value) if value else None
 
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
-        return len(self._tracks)
+        return len(self.tracks)
 
     def columnCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(MAIN_PANEL_COLUMN_NAMES)
@@ -172,7 +175,7 @@ class TrackTableModel(QAbstractTableModel):
 
     def setData(self, index: QModelIndex, value: Any, role: Qt.ItemDataRole = Qt.ItemDataRole.EditRole) -> bool:
         if isinstance(value, StarRating):
-            self._tracks[index.row()].rating = value.star_count()
+            self.tracks[index.row()].rating = value.star_count()
 
         return super().setData(index, value, role)
 
@@ -180,13 +183,13 @@ class TrackTableModel(QAbstractTableModel):
     def set_paused(self) -> None:
         self.is_playing = False
         if self.playing_track_index is not None:
-            self.dataChanged.emit(self.index(self.playing_track_index, 1), self.index(self.playing_track_index, 1))
+            self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
 
     @pyqtSlot()
     def set_unpaused(self) -> None:
         self.is_playing = True
         if self.playing_track_index is not None:
-            self.dataChanged.emit(self.index(self.playing_track_index, 1), self.index(self.playing_track_index, 1))
+            self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
 
     @pyqtSlot(int)
     def set_playing_track_index(self, index: Optional[int]) -> None:
@@ -194,9 +197,9 @@ class TrackTableModel(QAbstractTableModel):
         self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
 
     def delete_tracks(self, tracks: List[Track]) -> None:
-        for track in self._tracks.copy():
+        for track in self.tracks.copy():
             if track in tracks:
-                self._tracks.remove(track)
+                self.tracks.remove(track)
         self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount(), self.columnCount()))
 
 
@@ -219,9 +222,12 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
         else:
             painter.setBrush(QBrush(Qt.GlobalColor.white))
 
-        display_role: str = index.data(Qt.ItemDataRole.DisplayRole)
+        display_role: Union[str, int] = index.data(Qt.ItemDataRole.DisplayRole)
         decoration_role: QPixmap = index.data(Qt.ItemDataRole.DecorationRole)
         if display_role:
+            if MAIN_PANEL_COLUMN_NAMES[index.column()].lower() == "time":
+                display_role = get_formatted_time_in_mins(display_role)
+
             if option.state & QStyle.StateFlag.State_Selected and self._table_view.hasFocus():
                 painter.setPen(QColor(option.palette.highlightedText()))
             else:
@@ -260,6 +266,53 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
             painter.drawPixmap(rect, pixmap)
 
 
+class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
+    def __init__(self, table_view: TrackTableView, *args, **kwargs):
+        super().__init__(table_view, *args, **kwargs)
+        self._sort_order = Qt.SortOrder.AscendingOrder
+        self._sort_key = None
+        self._source_model: Optional[TrackTableModel] = None
+        self._table_view = table_view
+
+    def setSourceModel(self, source_model: TrackTableModel) -> None:
+        self._source_model = source_model
+        self._source_model.dataChanged.connect(self.dataChanged.emit)
+        self._source_model.layoutAboutToBeChanged.connect(self.layoutAboutToBeChanged.emit)
+        self._source_model.layoutChanged.connect(self.layoutChanged.emit)
+        super().setSourceModel(source_model)
+
+    def sort(self, column: int, _: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
+        if column not in (0, 1):
+            self._sort_key = MAIN_PANEL_COLUMN_NAMES[column].lower()
+            if self._sort_key == "time":
+                self._sort_key = "length"
+            self._source_model.layoutAboutToBeChanged.emit()
+            if self._sort_order == Qt.SortOrder.AscendingOrder:
+                self._sort_order = Qt.SortOrder.DescendingOrder
+                self._source_model.tracks.sort(key=self._sort_func)
+
+            else:
+                self._sort_order = Qt.SortOrder.AscendingOrder
+                self._source_model.tracks.sort(key=self._sort_func, reverse=True)
+
+            self._table_view._tracks = self._source_model.tracks
+            self._source_model.set_playing_track_index(self._table_view.get_playing_track_index())
+
+        self.layoutChanged.emit()
+        self.dataChanged.emit(QModelIndex(), QModelIndex())
+
+    def _sort_func(self, track: Track) -> Any:
+        output = getattr(track, self._sort_key)
+        if output is None and self._sort_key not in ("year", "length"):
+            return ""
+        elif output is None:
+            return 0
+        return output
+
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
+        return self.sourceModel().data(index, role)
+
+
 class TrackTableView(QTableView):
     new_tracks_set = pyqtSignal()
     play_now_triggered = pyqtSignal(list)
@@ -267,10 +320,13 @@ class TrackTableView(QTableView):
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
     tracks_deleted = pyqtSignal(list)
+    track_clicked = pyqtSignal(Track, int)
+    track_double_clicked = pyqtSignal(Track, int)
 
     def __init__(self, *args):
         super().__init__(*args)
         self._tracks: List[Track] = []
+        self.playing_track = None
 
         self.padding = 4
         self.rating_column = 7
@@ -280,9 +336,14 @@ class TrackTableView(QTableView):
         self._table_delegate = TrackTableItemDelegate(self)
         self._star_delegate = StarDelegate(self)
         self._table_header = TrackTableHeader(Qt.Orientation.Horizontal, self)
-        # self._table_header.sectionHandleDoubleClicked.disconnect()
-        # self._table_header.sectionHandleDoubleClicked.connect(self.resizeColumnToContents)
-        self.setModel(self._table_model)
+        self._table_header.sectionClicked.connect(self.header_section_clicked)
+        self.clicked.connect(self.row_clicked)
+        self.doubleClicked.connect(self.row_double_clicked)
+
+        self._proxy_sort_model = TrackTableSortFilterProxyModel(self)
+        self._proxy_sort_model.setSourceModel(self._table_model)
+
+        self.setModel(self._proxy_sort_model)
         self.setItemDelegate(self._table_delegate)
         self.setItemDelegateForColumn(7, self._star_delegate)
         self.setHorizontalHeader(self._table_header)
@@ -290,9 +351,44 @@ class TrackTableView(QTableView):
 
         self.verticalHeader().setDefaultSectionSize(22)
         self.verticalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Fixed)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
 
         self._setup_context_menu()
         self._setup_shortcuts()
+
+    def row_double_clicked(self, model_index: QModelIndex) -> None:
+        playing_track_index = model_index.row()
+        self.playing_track = self._tracks[playing_track_index]
+        self.track_double_clicked.emit(self.playing_track, playing_track_index)
+
+    def row_clicked(self, model_index: QModelIndex) -> None:
+        index = model_index.row()
+        track = self._tracks[index]
+        self.track_clicked.emit(track, index)
+
+    def header_section_clicked(self, logical_index: int) -> None:
+        if logical_index not in (0, 1):
+            # selected_tracks = self.get_selected_tracks()
+            self.sortByColumn(logical_index, Qt.SortOrder.AscendingOrder)
+            self.clearSelection()
+            # self.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+
+            # for t in selected_tracks:
+            #     self.selectRow(self._tracks.index(t))
+            #     print("SELECTED ROW:", self._tracks.index(t))
+            # self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+
+    def get_selected_tracks(self) -> List[Track]:
+        tracks = []
+        for i in self.selectedIndexes():
+            tracks.append(self._tracks[i.row()])
+        return tracks
+
+    def get_playing_track_index(self) -> Optional[int]:
+        try:
+            return self._tracks.index(self.playing_track)
+        except ValueError:
+            return None
 
     def _setup_context_menu(self):
         self.context_menu = QMenu(self)
@@ -384,13 +480,14 @@ class TrackTableView(QTableView):
         if not self._tracks:
             return
 
-        selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
+        selected_track_indexes = sorted(set([i.row() for i in self.selectionModel().selection().indexes()]))
         self.play_now_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
     def queue_next_action_triggered(self) -> None:
         if not self._tracks:
             return
-        selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
+        selected_track_indexes = sorted(set([i.row() for i in self.selectionModel().selection().indexes()]))
+        print(selected_track_indexes)
         self.queue_next_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
     def queue_last_action_triggered(self) -> None:
@@ -422,6 +519,7 @@ class TrackTableView(QTableView):
 
     @pyqtSlot(int)
     def set_playing_track_index(self, index: Optional[int]) -> None:
+        self.playing_track_index = index
         self._table_model.set_playing_track_index(index)
 
     @pyqtSlot()
