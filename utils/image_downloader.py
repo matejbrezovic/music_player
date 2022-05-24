@@ -42,13 +42,9 @@ class ImageDownloader(QObject):
         if init:
             self._network_access_manager = QNetworkAccessManager()
             self._network_access_manager.finished.connect(self.handle_reply)
-
-        # print(self.thread() == self._network_access_manager.thread())
         try:
             url = self._bing_image_search(self.query)
-            # print(url)
         except (httpx.ConnectError, httpx.HTTPStatusError, httpx.ConnectTimeout) as e:
-            # print(e)
             return
 
         if not url:
@@ -65,14 +61,10 @@ class ImageDownloader(QObject):
             qimg = QImage.fromData(bytes_string)
 
             self._image_num = 0
-            # print(qimg)
             self.image_downloaded.emit(qimg, self.track)
 
         else:
-            # print("Error occured: ", er)
-            # print(reply.errorString())
             self._image_num += 1
-
             if self._image_num < self._limit:
                 self.get_image(init=False)
 

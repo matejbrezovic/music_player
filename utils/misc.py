@@ -21,7 +21,6 @@ def get_project_root(file_path: str) -> str:
 
     if dir_path == '/':
         dir_path = os.path.dirname(file_path)
-
     return dir_path
 
 

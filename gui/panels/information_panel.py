@@ -1,5 +1,5 @@
 import math
-from typing import List
+from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSlot, pyqtSignal, Qt, QSize
 from PyQt6.QtGui import QPixmap
@@ -23,6 +23,7 @@ class InformationPanel(QFrame):
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
         self.playing_tracks: List[Track] = []
+        self.playing_track: Optional[Track] = None
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setSpacing(0)
@@ -114,7 +115,7 @@ class InformationPanel(QFrame):
         self.vertical_splitter.addWidget(self.track_info_widget)
         self.vertical_splitter.setSizes([1, 1])
         self.main_layout.addWidget(self.vertical_splitter)
-        self.artwork_pixmap = QPixmap(f"icons/album.png")
+        self.artwork_pixmap = get_default_artwork_pixmap("album")
 
     def view_key_changed(self, key: int) -> None:
         ...
@@ -134,6 +135,10 @@ class InformationPanel(QFrame):
             channels = "Stereo" if f["#channels"].first == 2 else "Mono"
             return f"{extension} {bitrate}, {samplerate}, {channels}, {format_seconds(t.length)}"
 
+        if self.playing_track == track:
+            return
+
+        self.playing_track = track
         self.playing_track_title_label.setText(str(track.title))
         self.currently_playing_track_info.setText(get_track_info(track))
         artwork_pixmap = get_embedded_artwork_pixmap(track.file_path)

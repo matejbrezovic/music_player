@@ -62,14 +62,7 @@ class NavigationPanel(QFrame):
             artwork_pixmap = get_embedded_artwork_pixmap(tracks[0].file_path)
 
             if not artwork_pixmap:
-                if group_key in ("artist", "composer"):
-                    return QPixmap("icons/artist.png")
-                elif group_key == "album":
-                    return QPixmap("icons/album.png")
-                elif group_key == "folder":
-                    return QPixmap("icons/folder.png")
-                else:
-                    return QPixmap("icons/misc.png")
+                artwork_pixmap = get_default_artwork_pixmap(group_key)
             return artwork_pixmap
 
         group_key: str = GROUP_OPTIONS[key].lower()

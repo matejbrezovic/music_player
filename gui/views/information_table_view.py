@@ -5,9 +5,9 @@ from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QFocusEvent, QPalette, 
 from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate,
                              QStyle, QStyleOptionViewItem, QApplication, QAbstractItemView)
 
-from constants import SELECTION_QCOLOR, LOST_FOCUS_QCOLOR
+from constants import SELECTION_QCOLOR, LOST_FOCUS_QCOLOR, ROOT
 from data_models.track import Track
-from utils import ElidedLabel, get_embedded_artwork_pixmap, get_formatted_time_in_mins
+from utils import ElidedLabel, get_embedded_artwork_pixmap, get_formatted_time_in_mins, get_default_artwork_pixmap
 
 
 class InformationTableModel(QAbstractTableModel):
@@ -32,7 +32,7 @@ class InformationTableModel(QAbstractTableModel):
                 if index.row() not in self.loaded_pixmap_mapping:
                     artwork_pixmap = get_embedded_artwork_pixmap(self._tracks[index.row()].file_path)
                     if not artwork_pixmap or artwork_pixmap.isNull():
-                        artwork_pixmap = QPixmap(f"icons/album.png")
+                        artwork_pixmap = get_default_artwork_pixmap("album")
                     self.loaded_pixmap_mapping[index.row()] = artwork_pixmap
                 else:
                     artwork_pixmap = self.loaded_pixmap_mapping[index.row()]
@@ -69,12 +69,14 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         self.pixmap_width = 16
         self.pixmap_height = 16
 
-        self.playing_pixmap = QPixmap("icons/speaker-playing.png").scaled(self.pixmap_width, self.pixmap_height,
-                                                                          Qt.AspectRatioMode.IgnoreAspectRatio,
-                                                                          Qt.TransformationMode.SmoothTransformation)
-        self.paused_pixmap = QPixmap("icons/speaker-not-playing.png").scaled(self.pixmap_width, self.pixmap_height,
-                                                                             Qt.AspectRatioMode.IgnoreAspectRatio,
-                                                                             Qt.TransformationMode.SmoothTransformation)
+        self.playing_pixmap = QPixmap(f"{ROOT}/icons/speaker-playing.png").scaled(
+            self.pixmap_width, self.pixmap_height,
+            Qt.AspectRatioMode.IgnoreAspectRatio,
+            Qt.TransformationMode.SmoothTransformation)
+        self.paused_pixmap = QPixmap(f"{ROOT}/icons/speaker-not-playing.png").scaled(
+            self.pixmap_width, self.pixmap_height,
+            Qt.AspectRatioMode.IgnoreAspectRatio,
+            Qt.TransformationMode.SmoothTransformation)
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         painter.setPen(QPen(Qt.PenStyle.NoPen))

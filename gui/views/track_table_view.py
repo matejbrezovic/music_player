@@ -13,7 +13,7 @@ from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeade
                              QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame, QMainWindow,
                              QAbstractScrollArea, QDialog)
 
-from constants import MAIN_PANEL_COLUMN_NAMES, SELECTION_QCOLOR, LOST_FOCUS_QCOLOR
+from constants import MAIN_PANEL_COLUMN_NAMES, SELECTION_QCOLOR, LOST_FOCUS_QCOLOR, ROOT
 from data_models.track import Track
 from gui.dialogs.delete_track_dialog import DeleteTracksDialog
 from gui.star.star_delegate import StarDelegate
@@ -105,8 +105,8 @@ class TrackTableModel(QAbstractTableModel):
         self.is_playing = False
         self.playing_track_index: Optional[int] = None
 
-        self.playing_speaker_pixmap = QPixmap("icons/speaker-playing.png")
-        self.muted_speaker_pixmap = QPixmap("icons/speaker-not-playing.png")
+        self.playing_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-playing.png")
+        self.muted_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-not-playing.png")
 
         self.general_flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
 
@@ -307,7 +307,10 @@ class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
             return ""
         elif output is None:
             return 0
-        return output
+        elif self._sort_key in ("year", "length"):
+            return output
+        else:
+            return str(output)
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         return self.sourceModel().data(index, role)

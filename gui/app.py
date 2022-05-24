@@ -12,5 +12,4 @@ class App(QApplication):
         self.setApplicationVersion(APPLICATION_VERSION)
 
         self.setEffectEnabled(Qt.UIEffect.UI_AnimateCombo, False)
-        # noinspection PyArgumentList
         self.setStyle(QStyleFactory.create("windowsvista"))
