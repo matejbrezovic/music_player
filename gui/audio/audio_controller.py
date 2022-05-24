@@ -96,6 +96,9 @@ class AudioController(QFrame):
         self.prev_button.setIcon(self.prev_icon)
         self.next_button.setIcon(self.next_icon)
 
+        self.prev_button.setEnabled(False)
+        self.next_button.setEnabled(False)
+
         self.play_button.clicked.connect(self.play_pause_button_clicked)
         self.next_button.clicked.connect(self.next_button_clicked)
         self.prev_button.clicked.connect(self.prev_button_clicked)
@@ -421,6 +424,7 @@ class AudioController(QFrame):
         self.playlist.set_playlist_index(0)
         self.playlist_updated.emit(playlist)
         self.update_total_queue_time(sum(track.length for track in playlist))
+        self.playlist.update_currently_playing()
 
     @pyqtSlot(int)
     def set_playlist_index(self, index: int) -> None:

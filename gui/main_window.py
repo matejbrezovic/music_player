@@ -158,6 +158,8 @@ class MainWindow(QMainWindow):
         self.scan_folders_dialog.added_tracks.connect(self._added_tracks_to_database)
         self.scan_folders_dialog.removed_tracks.connect(self._removed_tracks_from_database)
 
+        self.add_files_dialog.added_tracks.connect(self._added_tracks_to_database)
+
         self.audio_controller.background_pixmap_updated.connect(self.information_panel.set_track_pixmap)
 
     def queue_next(self, tracks_to_queue: List[Track]) -> None:
