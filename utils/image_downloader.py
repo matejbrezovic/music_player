@@ -3,7 +3,7 @@ from time import sleep
 from typing import Optional
 
 import httpx
-from PyQt6.QtCore import QUrl, QObject, pyqtSignal
+from PyQt6.QtCore import QUrl, QObject, pyqtSignal, QRect
 from PyQt6.QtGui import QImage
 from PyQt6.QtNetwork import QNetworkReply, QNetworkRequest, QNetworkAccessManager
 from PyQt6.QtWidgets import QApplication
@@ -59,6 +59,9 @@ class ImageDownloader(QObject):
         if er == QNetworkReply.NetworkError.NoError:
             bytes_string = reply.readAll()
             qimg = QImage.fromData(bytes_string)
+
+            if qimg.height() > qimg.width():
+                qimg = qimg.copy(QRect(0, 0, qimg.width(), qimg.width()))
 
             self._image_num = 0
             self.image_downloaded.emit(qimg, self.track)

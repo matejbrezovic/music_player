@@ -140,40 +140,6 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         track_count = cursor.execute("SELECT Count(track_id) FROM tracks").fetchone()[0]
         return track_count
 
-    def get_track_by_id(self, track_id: int) -> Track:
-        conn = self.get_connection()
-        conn.row_factory = sqlite3.Row
-        cursor = conn.cursor()
-
-        row = cursor.execute("SELECT * FROM tracks WHERE track_id = ?", (track_id,)).fetchall()[0]
-
-        track = Track(
-            track_id=row["track_id"],
-            file_path=row["file_path"],
-            title=row["title"],
-            album=row["album"],
-            artist=row["artist"],
-            composer=row["composer"],
-            genre=row["genre"],
-            year=row["year"],
-            length=row["length"],
-            size=row["size"],
-            rating=0,
-            artwork_pixmap=get_embedded_artwork_pixmap(row["file_path"])
-        )
-
-        if QApplication.instance() is not None:
-            track.artwork_pixmap = get_embedded_artwork_pixmap(track.file_path)
-
-        return track
-
-    def drop_track_by_id(self, track_id: int) -> None:
-        conn = self.get_connection()
-        cursor = conn.cursor()
-        cursor.execute("DELETE FROM tracks WHERE track_id = ?", (track_id,))
-        conn.commit()
-        conn.close()
-
     def drop_track_by(self, key: str, value: Union[int, float, str]) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()

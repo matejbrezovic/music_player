@@ -7,11 +7,11 @@ from typing import List, Optional, Any, Union
 from PyQt6.QtCore import (QModelIndex, pyqtSignal, pyqtSlot, QSize, QAbstractItemModel, QRect, QAbstractTableModel, Qt,
                           QSortFilterProxyModel)
 from PyQt6.QtGui import (QPixmap, QPainter, QPen, QBrush, QFontMetrics, QAction, QKeySequence, QShortcut,
-                         QContextMenuEvent, QFocusEvent, QMouseEvent, QCursor, QColor)
+                         QContextMenuEvent, QFocusEvent, QMouseEvent, QCursor, QColor, QIcon)
 from PyQt6.QtMultimedia import QMediaDevices
 from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeaderView, QStyleOptionViewItem, QStyle,
                              QStyledItemDelegate, QMenu, QVBoxLayout, QPushButton, QWidget, QFrame, QMainWindow,
-                             QAbstractScrollArea, QDialog)
+                             QAbstractScrollArea, QDialog, QStyleOptionHeaderV2, QProxyStyle)
 
 from constants import MAIN_PANEL_COLUMN_NAMES, SELECTION_QCOLOR, LOST_FOCUS_QCOLOR, ROOT
 from data_models.track import Track
@@ -20,6 +20,60 @@ from gui.star.star_delegate import StarDelegate
 from gui.star.star_rating import StarRating
 from repositories.tracks_repository import TracksRepository
 from utils import get_formatted_time_in_mins
+
+
+class HeaderProxyStyle(QProxyStyle):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.padding = 0
+        self.header_arrow_width = 10
+
+    def drawPrimitive(self, element: QStyle.PrimitiveElement, option: QStyleOptionHeaderV2, painter: QPainter,
+                      widget: Optional[QWidget] = ...) -> None:
+        if element == QStyle.PrimitiveElement.PE_IndicatorHeaderArrow:
+            return
+        else:
+            super().drawPrimitive(element, option, painter, widget)
+
+    def drawControl(self, control: QStyle.ControlElement, option: QStyleOptionHeaderV2, painter: QPainter,
+                    widget: Optional[QWidget] = ...) -> None:
+        if control == QStyle.ControlElement.CE_HeaderLabel:
+            option.rect.setTop(option.rect.top() - 2)
+            painter.setPen(self.standardPalette().text().color())
+
+            text_width = option.fontMetrics.horizontalAdvance(option.text)
+            text_height = option.fontMetrics.height()
+
+            space_between_text_and_arrow = 4
+
+            painter.drawText(option.rect, option.textAlignment, option.text)
+
+            sort_pixmap = None
+            if option.sortIndicator == option.SortIndicator.SortUp:
+                sort_pixmap = QIcon(ROOT + "/icons/downward-arrow.png").pixmap(10, 10)
+            elif option.sortIndicator == option.SortIndicator.SortDown:
+                sort_pixmap = QIcon(ROOT + "/icons/upward-arrow.png").pixmap(10, 10)
+
+            if sort_pixmap:
+                sort_rect = QRect(option.rect.left() + text_width + space_between_text_and_arrow,
+                                  option.rect.top() + (text_height - sort_pixmap.height()) // 2,
+                                  sort_pixmap.width(), sort_pixmap.height())
+
+                if option.rect.width() > self.padding * 2 + text_width + sort_rect.width():
+                    painter.drawPixmap(sort_rect, sort_pixmap)
+
+        elif control == QStyle.ControlElement.CE_HeaderSection:
+            super().drawControl(control, option, painter, widget)
+            rect = option.rect
+            top = rect.topRight()
+            top.setY(top.y() + 1)
+            bottom = rect.bottomRight()
+            bottom.setY(bottom.y() - 2)
+
+            painter.setPen(Qt.GlobalColor.gray)
+            painter.drawLine(top, bottom)
+        else:
+            super().drawControl(control, option, painter, widget)
 
 
 class TrackTableHeader(QHeaderView):
@@ -31,6 +85,10 @@ class TrackTableHeader(QHeaderView):
         self.setSectionsMovable(True)
         self.setFirstSectionMovable(False)
         self.setSortIndicatorShown(True)
+
+        proxy_style = HeaderProxyStyle(self.style())
+        proxy_style.padding = self.padding
+        self.setStyle(proxy_style)
 
         self.sortIndicatorChanged.connect(self.sort_indicator_changed)
         self.sectionMoved.connect(self.section_moved)
@@ -75,26 +133,29 @@ class TrackTableHeader(QHeaderView):
             return self.section_text[section]
 
     def paintSection(self, painter: QPainter, rect: QRect, logical_index: int) -> None:
+        if not self.rect().isValid():
+            return
+
         elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logical_index),
                                                                 Qt.TextElideMode.ElideRight,
                                                                 self.sectionSize(logical_index) - self.padding)
+        opt = QStyleOptionHeaderV2()
+        old_brush_origin = painter.brushOrigin()
 
-        top = rect.topRight()
-        top.setY(top.y() + 1)
-        bottom = rect.bottomRight()
-        bottom.setY(bottom.y() - 2)
+        self.initStyleOption(opt)
+        self.initStyleOptionForIndex(opt, logical_index)
 
-        painter.setPen(Qt.GlobalColor.gray)
-        painter.drawLine(top, bottom)
-
-        painter.setPen(Qt.GlobalColor.black)
-        rect.setLeft(rect.left() + self.padding)
-        rect.setRight(rect.right() - self.padding)
-
+        opt.text = elided_text
+        opt.rect = rect
         if logical_index == self.count() - 1:
-            painter.drawText(rect, Qt.AlignmentFlag.AlignRight, elided_text)
+            opt.textAlignment = Qt.AlignmentFlag.AlignRight
         else:
-            painter.drawText(rect, Qt.AlignmentFlag.AlignLeft, elided_text)
+            opt.textAlignment = Qt.AlignmentFlag.AlignLeft
+
+        painter.setBrushOrigin(opt.rect.topLeft())
+        self.style().drawControl(QStyle.ControlElement.CE_Header, opt, painter, self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_IndicatorHeaderArrow, opt, painter, self)
+        painter.setBrushOrigin(old_brush_origin)
 
 
 class TrackTableModel(QAbstractTableModel):
@@ -281,18 +342,15 @@ class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
         self._source_model.layoutChanged.connect(self.layoutChanged.emit)
         super().setSourceModel(source_model)
 
-    def sort(self, column: int, _: Qt.SortOrder = Qt.SortOrder.AscendingOrder) -> None:
+    def sort(self, column: int, sort_order: Qt.SortOrder = Qt.SortOrder) -> None:
         if column not in (0, 1):
             self._sort_key = MAIN_PANEL_COLUMN_NAMES[column].lower()
             if self._sort_key == "time":
                 self._sort_key = "length"
             self._source_model.layoutAboutToBeChanged.emit()
-            if self._sort_order == Qt.SortOrder.AscendingOrder:
-                self._sort_order = Qt.SortOrder.DescendingOrder
+            if sort_order == Qt.SortOrder.AscendingOrder:
                 self._source_model.tracks.sort(key=self._sort_func)
-
             else:
-                self._sort_order = Qt.SortOrder.AscendingOrder
                 self._source_model.tracks.sort(key=self._sort_func, reverse=True)
 
             self._table_view._tracks = self._source_model.tracks
@@ -308,9 +366,9 @@ class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
         elif output is None:
             return 0
         elif self._sort_key in ("year", "length"):
-            return output
+            return output.lower()
         else:
-            return str(output)
+            return str(output).lower()
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         return self.sourceModel().data(index, role)
@@ -339,12 +397,14 @@ class TrackTableView(QTableView):
         self._table_delegate = TrackTableItemDelegate(self)
         self._star_delegate = StarDelegate(self)
         self._table_header = TrackTableHeader(Qt.Orientation.Horizontal, self)
-        self._table_header.sectionClicked.connect(self.header_section_clicked)
+        self._table_header.sectionClicked.connect(self.sort_by_column)
         self.clicked.connect(self.row_clicked)
         self.doubleClicked.connect(self.row_double_clicked)
 
         self._proxy_sort_model = TrackTableSortFilterProxyModel(self)
         self._proxy_sort_model.setSourceModel(self._table_model)
+        self._sort_order = Qt.SortOrder.AscendingOrder
+        self._old_sort_indicator_section_index = None
 
         self.setModel(self._proxy_sort_model)
         self.setItemDelegate(self._table_delegate)
@@ -369,17 +429,27 @@ class TrackTableView(QTableView):
         track = self._tracks[index]
         self.track_clicked.emit(track, index)
 
-    def header_section_clicked(self, logical_index: int) -> None:
+    def sort_by_column(self, logical_index: int, order: Optional[Qt.SortOrder] = None) -> None:
         if logical_index not in (0, 1):
-            # selected_tracks = self.get_selected_tracks()
-            self.sortByColumn(logical_index, Qt.SortOrder.AscendingOrder)
-            self.clearSelection()
-            # self.setSelectionMode(QAbstractItemView.SelectionMode.MultiSelection)
+            if self._sort_order == Qt.SortOrder.AscendingOrder:
+                self._sort_order = Qt.SortOrder.DescendingOrder
+            else:
+                self._sort_order = Qt.SortOrder.AscendingOrder
 
-            # for t in selected_tracks:
-            #     self.selectRow(self._tracks.index(t))
-            #     print("SELECTED ROW:", self._tracks.index(t))
-            # self.setSelectionMode(QAbstractItemView.SelectionMode.ExtendedSelection)
+            if not self._table_header.isSortIndicatorShown():
+                self._table_header.setSortIndicatorShown(True)
+                self._sort_order = Qt.SortOrder.AscendingOrder
+
+            if self._old_sort_indicator_section_index != logical_index:
+                self._old_sort_indicator_section_index = logical_index
+                self._sort_order = Qt.SortOrder.AscendingOrder
+            if order:
+                self._sort_order = order
+
+            print(self._sort_order)
+
+            self.clearSelection()
+            self.sortByColumn(logical_index, self._sort_order)
 
     def get_selected_tracks(self) -> List[Track]:
         tracks = []
@@ -519,10 +589,10 @@ class TrackTableView(QTableView):
         self._tracks = tracks
         self._table_model.set_tracks(tracks)
         self.new_tracks_set.emit()
+        self.sort_by_column(self._table_header.sortIndicatorSection(), self._sort_order)
 
     @pyqtSlot(int)
     def set_playing_track_index(self, index: Optional[int]) -> None:
-        self.playing_track_index = index
         self._table_model.set_playing_track_index(index)
 
     @pyqtSlot()
