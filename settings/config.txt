@@ -1,5 +1,0 @@
-{
-	"preselected_folders": [
-		"/home/matey"
-	]
-}
