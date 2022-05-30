@@ -203,7 +203,7 @@ class TrackTableView(QTableView):
         if not self._tracks:
             return
         selected_track_indexes = sorted(set([i.row() for i in self.selectionModel().selection().indexes()]))
-        print(selected_track_indexes)
+        # print(selected_track_indexes)
         self.queue_next_triggered.emit([self._tracks[i] for i in selected_track_indexes])
 
     def queue_last_action_triggered(self) -> None:
@@ -423,9 +423,11 @@ class TrackTableModel(QAbstractTableModel):
         self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
 
     def delete_tracks(self, tracks: List[Track]) -> None:
+        self.layoutAboutToBeChanged.emit()
         for track in self.tracks.copy():
             if track in tracks:
                 self.tracks.remove(track)
+        self.layoutChanged.emit()
         self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount(), self.columnCount()))
 
 

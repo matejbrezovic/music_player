@@ -62,9 +62,12 @@ class NavigationTableView(QTableView):
 
     @pyqtSlot(QModelIndex)
     def double_click_action(self, index: QModelIndex) -> None:
+        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
+        if not tracks:
+            return
+
         self.last_group_key = self.group_key
         self.last_group_title = self.groups[index.row()].title
-        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
         self.group_double_clicked.emit(tracks, (self.group_key, self.last_group_title))
 
     def focusInEvent(self, event: QFocusEvent) -> None:
@@ -178,7 +181,12 @@ class NavigationGroupWidget(QWidget):
         self.title_label = ElidedLabel(title)
         self.title_label.setContentsMargins(0, 0, 0, 0)
 
-        self.tracks_label = ElidedLabel(f"{tracks_num} {'tracks' if tracks_num > 1 else 'track'}")
+        if tracks_num == 0:
+            tracks_label_text = "No tracks"
+        else:
+            tracks_label_text = f"{tracks_num} {'tracks' if tracks_num > 1 else 'track'}"
+
+        self.tracks_label = ElidedLabel(tracks_label_text)
         self.tracks_label.setFont(QFont(self.tracks_label.font().family(), 8))
         self.tracks_label.setContentsMargins(0, 0, 0, 0)
 
