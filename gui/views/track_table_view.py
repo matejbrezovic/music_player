@@ -25,8 +25,8 @@ from utils import get_formatted_time_in_mins
 class HeaderProxyStyle(QProxyStyle):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.padding = 0
         self.header_arrow_width = 10
+        self.padding = 2
 
     def drawPrimitive(self, element: QStyle.PrimitiveElement, option: QStyleOptionHeaderV2, painter: QPainter,
                       widget: Optional[QWidget] = ...) -> None:
@@ -46,21 +46,33 @@ class HeaderProxyStyle(QProxyStyle):
 
             space_between_text_and_arrow = 4
 
-            painter.drawText(option.rect, option.textAlignment, option.text)
-
             sort_pixmap = None
+            sort_rect = None
             if option.sortIndicator == option.SortIndicator.SortUp:
                 sort_pixmap = QIcon(ROOT + "/icons/downward-arrow.png").pixmap(10, 10)
             elif option.sortIndicator == option.SortIndicator.SortDown:
                 sort_pixmap = QIcon(ROOT + "/icons/upward-arrow.png").pixmap(10, 10)
 
             if sort_pixmap:
-                sort_rect = QRect(option.rect.left() + text_width + space_between_text_and_arrow,
-                                  option.rect.top() + (text_height - sort_pixmap.height()) // 2,
-                                  sort_pixmap.width(), sort_pixmap.height())
+                if option.textAlignment == Qt.AlignmentFlag.AlignRight:
+                    sort_rect = QRect(option.rect.right() - sort_pixmap.width() - self.padding +
+                                      space_between_text_and_arrow,
+                                      option.rect.top() + (text_height - sort_pixmap.height()) // 2,
+                                      sort_pixmap.width(), sort_pixmap.height())
+                else:
+                    sort_rect = QRect(option.rect.left() + text_width + space_between_text_and_arrow,
+                                      option.rect.top() + (text_height - sort_pixmap.height()) // 2,
+                                      sort_pixmap.width(), sort_pixmap.height())
 
-                if option.rect.width() > self.padding * 2 + text_width + sort_rect.width():
+                if option.rect.width() > text_width + sort_rect.width():
                     painter.drawPixmap(sort_rect, sort_pixmap)
+
+            text_rect = option.rect
+            if option.textAlignment == Qt.AlignmentFlag.AlignRight and sort_pixmap and \
+                    option.rect.width() > text_width + sort_rect.width():
+                text_rect.setRight(text_rect.right() - sort_pixmap.width() - space_between_text_and_arrow)
+
+            painter.drawText(text_rect, option.textAlignment, option.text)
 
         elif control == QStyle.ControlElement.CE_HeaderSection:
             super().drawControl(control, option, painter, widget)
@@ -85,10 +97,7 @@ class TrackTableHeader(QHeaderView):
         self.setSectionsMovable(True)
         self.setFirstSectionMovable(False)
         self.setSortIndicatorShown(True)
-
-        proxy_style = HeaderProxyStyle(self.style())
-        proxy_style.padding = self.padding
-        self.setStyle(proxy_style)
+        self.setStyle(HeaderProxyStyle(self.style()))
 
         self.sortIndicatorChanged.connect(self.sort_indicator_changed)
         self.sectionMoved.connect(self.section_moved)
@@ -126,7 +135,8 @@ class TrackTableHeader(QHeaderView):
 
     @pyqtSlot(int, Qt.SortOrder)
     def sort_indicator_changed(self, logical_index: int, order: Qt.SortOrder) -> None:
-        self.setSortIndicator(logical_index, order)
+        if logical_index not in {0, 1}:
+            self.setSortIndicator(logical_index, order)
 
     def text(self, section: int):
         if isinstance(self.model(), QAbstractItemModel):
@@ -152,6 +162,9 @@ class TrackTableHeader(QHeaderView):
         else:
             opt.textAlignment = Qt.AlignmentFlag.AlignLeft
 
+        if logical_index in {0, 1}:
+            opt.sortIndicator = opt.SortIndicator.None_
+
         painter.setBrushOrigin(opt.rect.topLeft())
         self.style().drawControl(QStyle.ControlElement.CE_Header, opt, painter, self)
         self.style().drawPrimitive(QStyle.PrimitiveElement.PE_IndicatorHeaderArrow, opt, painter, self)
@@ -170,6 +183,8 @@ class TrackTableModel(QAbstractTableModel):
         self.muted_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-not-playing.png")
 
         self.general_flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
+
+        self.t = 0
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
@@ -264,11 +279,11 @@ class TrackTableModel(QAbstractTableModel):
         self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount(), self.columnCount()))
 
 
-class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawing speed
-    def __init__(self, parent: TrackTableView = None):
-        super().__init__(parent)
-        self.padding = parent.padding
-        self._table_view: TrackTableView = parent
+class TrackTableItemDelegate(QStyledItemDelegate):
+    def __init__(self, track_table_view: TrackTableView = None):
+        super().__init__(track_table_view)
+        self.padding = track_table_view.padding
+        self._table_view: TrackTableView = track_table_view
         self.last_height = self._table_view.height()
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
@@ -297,7 +312,6 @@ class TrackTableItemDelegate(QStyledItemDelegate):  # TODO optimize pixmap drawi
             if text:
                 elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
                                                                    max(option.rect.width() - self.padding * 2, 18))
-
                 if index.column():
                     alignment = Qt.AlignmentFlag.AlignVCenter
                     if index.column() == len(MAIN_PANEL_COLUMN_NAMES) - 1:
@@ -366,7 +380,9 @@ class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
         elif output is None:
             return 0
         elif self._sort_key in ("year", "length"):
-            return output.lower()
+            if isinstance(output, str):
+                output = output.lower()
+            return output
         else:
             return str(output).lower()
 
@@ -430,7 +446,7 @@ class TrackTableView(QTableView):
         self.track_clicked.emit(track, index)
 
     def sort_by_column(self, logical_index: int, order: Optional[Qt.SortOrder] = None) -> None:
-        if logical_index not in (0, 1):
+        if logical_index not in {0, 1}:
             if self._sort_order == Qt.SortOrder.AscendingOrder:
                 self._sort_order = Qt.SortOrder.DescendingOrder
             else:
@@ -446,16 +462,11 @@ class TrackTableView(QTableView):
             if order:
                 self._sort_order = order
 
-            print(self._sort_order)
-
             self.clearSelection()
             self.sortByColumn(logical_index, self._sort_order)
 
     def get_selected_tracks(self) -> List[Track]:
-        tracks = []
-        for i in self.selectedIndexes():
-            tracks.append(self._tracks[i.row()])
-        return tracks
+        return sorted([self._tracks[i.row()] for i in set(self.selectedIndexes())])
 
     def get_playing_track_index(self) -> Optional[int]:
         try:
@@ -582,6 +593,7 @@ class TrackTableView(QTableView):
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
+        ...
         for index in self.selectedIndexes():
             if index.column() == self.rating_column:
                 self._star_delegate.commit_and_close_editor(index)
