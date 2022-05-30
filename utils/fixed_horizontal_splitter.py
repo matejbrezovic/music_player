@@ -51,4 +51,4 @@ class FixedHorizontalSplitterProxyStyle(QProxyStyle):
             painter.drawRect(option.rect)
             painter.restore()
         else:
-            return super().drawControl(element, option, painter, widget)
+            super().drawControl(element, option, painter, widget)

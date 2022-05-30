@@ -421,10 +421,13 @@ class AudioController(QFrame):
         self.prev_button.setEnabled(True)
         self.next_button.setEnabled(True)
         self.playlist.set_playlist(playlist)
-        self.playlist.set_playlist_index(0)
+        self.set_playlist_index(0)
+        # self.playlist.update_currently_playing()
+        if self.is_audio_order_shuffled:
+            self.playlist.set_shuffled()
+
         self.playlist_updated.emit(playlist)
         self.update_total_queue_time(sum(track.length for track in playlist))
-        self.playlist.update_currently_playing()
 
     @pyqtSlot(int)
     def set_playlist_index(self, index: int) -> None:
@@ -623,8 +626,11 @@ class AudioController(QFrame):
     def set_playing_track(self, track: Track, index: int) -> None:
         if track not in self.playlist.playlist:
             raise TrackNotInPlaylistError
-
-        self.set_playlist_index(index)
+        if not self.is_audio_order_shuffled:
+            self.set_playlist_index(index)
+        else:
+            self.playlist.set_playing_track(track)
+            self.playlist.set_shuffled()
         self.play()
 
     @pyqtSlot(str)

@@ -10,6 +10,78 @@ from data_models.track import Track
 from utils import ElidedLabel, get_embedded_artwork_pixmap, get_formatted_time_in_mins, get_default_artwork_pixmap
 
 
+class InformationTableView(QTableView):
+    set_new_tracks = pyqtSignal()
+    track_clicked = pyqtSignal(Track, int)
+    track_double_clicked = pyqtSignal(Track, int)
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self._table_model = InformationTableModel(self)
+        self._table_delegate = InformationTableItemDelegate(self)
+        self.setModel(self._table_model)
+        self.setItemDelegate(self._table_delegate)
+        self._tracks: List[Track] = []
+        self._playing_track_index = -1
+
+        palette = self.palette()
+        palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.BrightText, QColor(79, 180, 242))
+        self.setPalette(palette)
+
+        self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()], index.row()))
+        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()], index.row()))
+
+        self._viewport_fix_timer = QTimer(self)
+        self._viewport_fix_timer.setTimerType(Qt.TimerType.PreciseTimer)
+        self._viewport_fix_timer.setSingleShot(True)
+        self._viewport_fix_timer.timeout.connect(self._on_viewport_fix_timeout)
+
+    def set_tracks(self, tracks: List[Track]) -> None:
+        self._table_model.set_tracks(tracks)
+        self._table_delegate.set_tracks(tracks)
+        self._tracks = tracks
+        self.set_new_tracks.emit()
+
+    def _on_viewport_fix_timeout(self):
+        visible_index_range = range(self.rowAt(4), self.rowAt(self.rect().height()))
+        if self._playing_track_index is None:
+            self.scrollToTop()
+        elif self._playing_track_index not in visible_index_range:
+            self.scrollTo(self._table_model.index(self._playing_track_index, 0),
+                          QAbstractItemView.ScrollHint.PositionAtTop)
+        elif self._playing_track_index in visible_index_range[2:]:
+            self.scrollTo(self._table_model.index(self._playing_track_index - 2, 0),
+                          QAbstractItemView.ScrollHint.PositionAtTop)
+        self.viewport().repaint()
+
+    def set_currently_playing_track_index(self, index: Optional[int]) -> None:
+        self._table_delegate.is_playing = False if index is None else True
+        self._playing_track_index = index
+        self._table_model.set_currently_playing_track_index(index)
+        self._table_delegate.set_currently_playing_track_index(index)
+        self._viewport_fix_timer.start(1)
+        # self.viewport().repaint()
+
+    def set_paused(self) -> None:
+        self._table_delegate.is_playing = False
+        self.viewport().repaint()
+
+    def set_unpaused(self) -> None:
+        self._table_delegate.is_playing = True
+        self.viewport().repaint()
+
+    def stop_playing(self):
+        self.set_currently_playing_track_index(None)
+
+    def focusInEvent(self, event: QFocusEvent) -> None:
+        if QApplication.mouseButtons() & Qt.MouseButton.LeftButton:
+            self.clearSelection()
+        return super().focusInEvent(event)
+
+    def focusOutEvent(self, event: QFocusEvent) -> None:
+        return super().focusOutEvent(event)
+
+
 class InformationTableModel(QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
@@ -143,78 +215,6 @@ class InformationTableItemDelegate(QStyledItemDelegate):
 
     def set_currently_playing_track_index(self, index: Optional[int]) -> None:
         self._playing_track_index = index
-
-
-class InformationTableView(QTableView):
-    set_new_tracks = pyqtSignal()
-    track_clicked = pyqtSignal(Track, int)
-    track_double_clicked = pyqtSignal(Track, int)
-
-    def __init__(self, *args):
-        super().__init__(*args)
-        self._table_model = InformationTableModel(self)
-        self._table_delegate = InformationTableItemDelegate(self)
-        self.setModel(self._table_model)
-        self.setItemDelegate(self._table_delegate)
-        self._tracks: List[Track] = []
-        self._playing_track_index = -1
-
-        palette = self.palette()
-        palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.BrightText, QColor(79, 180, 242))
-        self.setPalette(palette)
-
-        self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()], index.row()))
-        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()], index.row()))
-
-        self._viewport_fix_timer = QTimer(self)
-        self._viewport_fix_timer.setTimerType(Qt.TimerType.PreciseTimer)
-        self._viewport_fix_timer.setSingleShot(True)
-        self._viewport_fix_timer.timeout.connect(self._on_timeout)
-
-    def set_tracks(self, tracks: List[Track]) -> None:
-        self._table_model.set_tracks(tracks)
-        self._table_delegate.set_tracks(tracks)
-        self._tracks = tracks
-        self.set_new_tracks.emit()
-
-    def _on_timeout(self):
-        visible_index_range = range(self.rowAt(4), self.rowAt(self.rect().height()))
-        if self._playing_track_index is None:
-            self.scrollToTop()
-        elif self._playing_track_index not in visible_index_range:
-            self.scrollTo(self._table_model.index(self._playing_track_index, 0),
-                          QAbstractItemView.ScrollHint.PositionAtTop)
-        elif self._playing_track_index in visible_index_range[2:]:
-            self.scrollTo(self._table_model.index(self._playing_track_index - 2, 0),
-                          QAbstractItemView.ScrollHint.PositionAtTop)
-        self.viewport().repaint()
-
-    def set_currently_playing_track_index(self, index: Optional[int]) -> None:
-        self._table_delegate.is_playing = False if index is None else True
-        self._playing_track_index = index
-        self._table_model.set_currently_playing_track_index(index)
-        self._table_delegate.set_currently_playing_track_index(index)
-        self._viewport_fix_timer.start(1)
-        # self.viewport().repaint()
-
-    def set_paused(self) -> None:
-        self._table_delegate.is_playing = False
-        self.viewport().repaint()
-
-    def set_unpaused(self) -> None:
-        self._table_delegate.is_playing = True
-        self.viewport().repaint()
-
-    def stop_playing(self):
-        self.set_currently_playing_track_index(None)
-
-    def focusInEvent(self, event: QFocusEvent) -> None:
-        if QApplication.mouseButtons() & Qt.MouseButton.LeftButton:
-            self.clearSelection()
-        return super().focusInEvent(event)
-
-    def focusOutEvent(self, event: QFocusEvent) -> None:
-        return super().focusOutEvent(event)
 
 
 class TrackInfoWidget(QWidget):

@@ -24,15 +24,6 @@ def get_project_root(file_path: str) -> str:
     return dir_path
 
 
-class Singleton(type):
-    _instances = {}
-
-    def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
-
-
 def delete_items(layout: QLayout) -> None:
     if layout is not None:
         while layout.count():
@@ -62,6 +53,25 @@ def index_pos(index: QModelIndex):
     return index.row(), index.column()
 
 
+def combine_colors(color_a: Union[QColor, Qt.GlobalColor], color_b: Union[QColor, Qt.GlobalColor],
+                   part_a: float) -> QColor:
+    if part_a > 1 or part_a < 0:
+        raise BaseException
+    rgb_a = part_a * QColor(color_a).rgb()
+    rgb_b = (1 - part_a) * QColor(color_b).rgb()
+
+    return QColor(int(rgb_a + rgb_b))
+
+
+class Singleton(type):
+    _instances = {}
+
+    def __call__(cls, *args, **kwargs):
+        if cls not in cls._instances:
+            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
+        return cls._instances[cls]
+
+
 class TrackNotInPlaylistError(Exception):
     pass
 
@@ -71,16 +81,6 @@ class QHLine(QFrame):
         super().__init__(*args)
         self.setFrameShape(QFrame.Shape.HLine)
         self.setFrameShadow(QFrame.Shadow.Sunken)
-
-
-def combine_colors(color_a: Union[QColor, Qt.GlobalColor], color_b: Union[QColor, Qt.GlobalColor],
-                   part_a: float) -> QColor:
-    if part_a > 1 or part_a < 0:
-        raise BaseException
-    rgb_a = part_a * QColor(color_a).rgb()
-    rgb_b = (1 - part_a) * QColor(color_b).rgb()
-
-    return QColor(int(rgb_a + rgb_b))
 
 
 class PathCheckbox(QCheckBox):

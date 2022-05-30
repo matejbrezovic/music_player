@@ -5,6 +5,7 @@ from PyQt6.QtCore import pyqtSignal, QObject
 
 from data_models.track import Track
 from gui.audio.enums import *
+from utils import TrackNotInPlaylistError
 
 
 class AudioPlaylist(QObject):
@@ -54,8 +55,8 @@ class AudioPlaylist(QObject):
         self.set_playlist(new_playlist)
 
     def set_playlist_index(self, playlist_index: int) -> None:
-        self.playing_track = self.playlist[playlist_index] if self.playlist else None
         self._playing_track_index = playlist_index
+        self.update_currently_playing()
 
     def get_ordered_playing_track_index(self) -> int:
         if self._repeat_mode == RepeatMode.RepeatOne:
@@ -162,7 +163,14 @@ class AudioPlaylist(QObject):
             self.update_currently_playing()
 
     def update_currently_playing(self) -> None:
-        self.playing_track = self.playlist[self._playing_track_index]
+        self.playing_track = self.playlist[self._playing_track_index] if self.playlist else None
+
+    def set_playing_track(self, track: Track) -> None:
+        if track not in self.playlist:
+            raise TrackNotInPlaylistError
+
+        self.playing_track = track
+        self.set_playlist_index(self.playlist.index(self.playing_track))
 
     def has_ended(self) -> bool:
         return self._playlist_ended

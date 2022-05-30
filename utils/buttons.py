@@ -37,15 +37,6 @@ class HoverButton(QPushButton):
             self.hover_icon = get_hover_icon(self.normal_icon, is_in_dark_mode)
 
 
-def change_icon_color(icon: QIcon, color: QColor) -> QIcon:
-    pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
-    mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
-    pixmap.fill(color)
-    pixmap.setMask(mask)
-    icon = QIcon(pixmap)
-    return icon
-
-
 def get_hover_icon(icon: QIcon, is_in_dark_mode: bool) -> QIcon:
     pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
     mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
@@ -53,6 +44,15 @@ def get_hover_icon(icon: QIcon, is_in_dark_mode: bool) -> QIcon:
     color = constants.DARK_AUDIO_CONTROLLER_HOVER_COLOR if is_in_dark_mode \
         else constants.LIGHT_AUDIO_CONTROLLER_HOVER_COLOR
 
+    pixmap.fill(color)
+    pixmap.setMask(mask)
+    icon = QIcon(pixmap)
+    return icon
+
+
+def change_icon_color(icon: QIcon, color: QColor) -> QIcon:
+    pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
+    mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
     pixmap.fill(color)
     pixmap.setMask(mask)
     icon = QIcon(pixmap)

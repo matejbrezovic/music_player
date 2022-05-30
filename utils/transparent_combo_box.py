@@ -50,4 +50,3 @@ class TransparentComboBox(QComboBox):
     def leaveEvent(self, *args, **kwargs):
         super().leaveEvent(*args, **kwargs)
         self.setStyleSheet(self.hide_combobox + self.default_stylesheet)
-

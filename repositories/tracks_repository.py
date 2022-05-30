@@ -158,14 +158,14 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         """Adds new tracks to database if they're already not there and removes tracks from database
         if they're not in new tracks."""
         tracks_in_database = self.get_tracks_by("folder", folder_path)
-        file_paths_in_database = [t.file_path for t in tracks_in_database]
+        file_paths_in_database = [track.file_path for track in tracks_in_database]
 
         if not tracks_in_database:
             to_add = new_file_paths
             to_remove = []
         else:
             if isinstance(file_paths_in_database[0], tuple):
-                file_paths_in_database = [t[0] for t in file_paths_in_database]
+                file_paths_in_database = [track[0] for track in file_paths_in_database]
 
             to_add = list(set(new_file_paths) - set(file_paths_in_database))
             to_remove = list(set(file_paths_in_database) - set(new_file_paths))
@@ -254,5 +254,3 @@ if __name__ == "__main__":
             print(f"{track.artist} ||| {track.title}")
 
     print(t.get_track_count())
-
-

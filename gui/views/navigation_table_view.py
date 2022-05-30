@@ -11,6 +11,71 @@ from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import ElidedLabel
 
 
+class NavigationTableView(QTableView):
+    set_new_groups = pyqtSignal()
+    group_clicked = pyqtSignal(list, tuple)
+    group_double_clicked = pyqtSignal(list, tuple)
+
+    def __init__(self, *args):
+        super().__init__(*args)
+        self.groups: List[NavigationGroup] = []
+        self.group_key = None
+        self.last_group_key = self.group_key
+        self.last_group_title = None
+        self._table_model = NavigationTableModel(self)
+        self._table_delegate = NavigationTableItemDelegate(self)
+        self.setModel(self._table_model)
+        self.setItemDelegate(self._table_delegate)
+        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+
+        palette = self.palette()
+        palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.BrightText, QColor(79, 180, 242))
+        self.setPalette(palette)
+
+        self.clicked.connect(self.single_click_action)
+        self.doubleClicked.connect(self.double_click_action)
+
+    @pyqtSlot(str)
+    def set_group_key(self, key: str) -> None:
+        self.group_key = key
+
+    @pyqtSlot(list)
+    def set_groups(self, groups: List[NavigationGroup]) -> None:
+        self.groups = groups
+        self._table_model.set_groups(groups)
+        self._table_delegate.set_groups(groups)
+
+    @pyqtSlot(QModelIndex)
+    def single_click_action(self, index: QModelIndex) -> None:
+        if not self.groups:
+            return
+
+        self.last_group_key = self.group_key
+        self.last_group_title = self.groups[index.row()].title
+        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
+
+        self.group_clicked.emit(tracks, (self.group_key, self.last_group_title))
+
+    def currentChanged(self, current: QModelIndex, previous: QModelIndex) -> None:
+        self.single_click_action(current)
+        super().currentChanged(current, previous)
+
+    @pyqtSlot(QModelIndex)
+    def double_click_action(self, index: QModelIndex) -> None:
+        self.last_group_key = self.group_key
+        self.last_group_title = self.groups[index.row()].title
+        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
+        self.group_double_clicked.emit(tracks, (self.group_key, self.last_group_title))
+
+    def focusInEvent(self, event: QFocusEvent) -> None:
+        if QApplication.mouseButtons() & Qt.MouseButton.LeftButton:
+            self.clearSelection()
+        return super().focusInEvent(event)
+
+    def focusOutEvent(self, event: QFocusEvent) -> None:
+        return super().focusOutEvent(event)
+
+
 class NavigationTableModel(QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
@@ -98,71 +163,6 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
     @pyqtSlot(list)
     def set_groups(self, groups: List[NavigationGroup]) -> None:
         self._groups = groups
-
-
-class NavigationTableView(QTableView):
-    set_new_groups = pyqtSignal()
-    group_clicked = pyqtSignal(list, tuple)
-    group_double_clicked = pyqtSignal(list, tuple)
-
-    def __init__(self, *args):
-        super().__init__(*args)
-        self.groups: List[NavigationGroup] = []
-        self.group_key = None
-        self.last_group_key = self.group_key
-        self.last_group_title = None
-        self._table_model = NavigationTableModel(self)
-        self._table_delegate = NavigationTableItemDelegate(self)
-        self.setModel(self._table_model)
-        self.setItemDelegate(self._table_delegate)
-        self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
-
-        palette = self.palette()
-        palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.BrightText, QColor(79, 180, 242))
-        self.setPalette(palette)
-
-        self.clicked.connect(self.single_click_action)
-        self.doubleClicked.connect(self.double_click_action)
-
-    @pyqtSlot(str)
-    def set_group_key(self, key: str) -> None:
-        self.group_key = key
-
-    @pyqtSlot(list)
-    def set_groups(self, groups: List[NavigationGroup]) -> None:
-        self.groups = groups
-        self._table_model.set_groups(groups)
-        self._table_delegate.set_groups(groups)
-
-    @pyqtSlot(QModelIndex)
-    def single_click_action(self, index: QModelIndex) -> None:
-        if not self.groups:
-            return
-
-        self.last_group_key = self.group_key
-        self.last_group_title = self.groups[index.row()].title
-        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
-
-        self.group_clicked.emit(tracks, (self.group_key, self.last_group_title))
-
-    def currentChanged(self, current: QModelIndex, previous: QModelIndex) -> None:
-        self.single_click_action(current)
-        super().currentChanged(current, previous)
-
-    @pyqtSlot(QModelIndex)
-    def double_click_action(self, index: QModelIndex) -> None:
-        self.last_group_key = self.group_key
-        self.last_group_title = self.groups[index.row()].title
-        tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
-        self.group_double_clicked.emit(tracks, (self.group_key, self.last_group_title))
-
-    def focusInEvent(self, event: QFocusEvent) -> None:
-        if QApplication.mouseButtons() & Qt.MouseButton.LeftButton:
-            self.clearSelection()
-        return super().focusInEvent(event)
-
-    def focusOutEvent(self, event: QFocusEvent) -> None:
-        return super().focusOutEvent(event)
 
 
 class NavigationGroupWidget(QWidget):

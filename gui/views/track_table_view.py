@@ -22,374 +22,6 @@ from repositories.tracks_repository import TracksRepository
 from utils import get_formatted_time_in_mins
 
 
-class HeaderProxyStyle(QProxyStyle):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.header_arrow_width = 10
-        self.padding = 2
-
-    def drawPrimitive(self, element: QStyle.PrimitiveElement, option: QStyleOptionHeaderV2, painter: QPainter,
-                      widget: Optional[QWidget] = ...) -> None:
-        if element == QStyle.PrimitiveElement.PE_IndicatorHeaderArrow:
-            return
-        else:
-            super().drawPrimitive(element, option, painter, widget)
-
-    def drawControl(self, control: QStyle.ControlElement, option: QStyleOptionHeaderV2, painter: QPainter,
-                    widget: Optional[QWidget] = ...) -> None:
-        if control == QStyle.ControlElement.CE_HeaderLabel:
-            option.rect.setTop(option.rect.top() - 2)
-            painter.setPen(self.standardPalette().text().color())
-
-            text_width = option.fontMetrics.horizontalAdvance(option.text)
-            text_height = option.fontMetrics.height()
-
-            space_between_text_and_arrow = 4
-
-            sort_pixmap = None
-            sort_rect = None
-            if option.sortIndicator == option.SortIndicator.SortUp:
-                sort_pixmap = QIcon(ROOT + "/icons/downward-arrow.png").pixmap(10, 10)
-            elif option.sortIndicator == option.SortIndicator.SortDown:
-                sort_pixmap = QIcon(ROOT + "/icons/upward-arrow.png").pixmap(10, 10)
-
-            if sort_pixmap:
-                if option.textAlignment == Qt.AlignmentFlag.AlignRight:
-                    sort_rect = QRect(option.rect.right() - sort_pixmap.width() - self.padding +
-                                      space_between_text_and_arrow,
-                                      option.rect.top() + (text_height - sort_pixmap.height()) // 2,
-                                      sort_pixmap.width(), sort_pixmap.height())
-                else:
-                    sort_rect = QRect(option.rect.left() + text_width + space_between_text_and_arrow,
-                                      option.rect.top() + (text_height - sort_pixmap.height()) // 2,
-                                      sort_pixmap.width(), sort_pixmap.height())
-
-                if option.rect.width() > text_width + sort_rect.width():
-                    painter.drawPixmap(sort_rect, sort_pixmap)
-
-            text_rect = option.rect
-            if option.textAlignment == Qt.AlignmentFlag.AlignRight and sort_pixmap and \
-                    option.rect.width() > text_width + sort_rect.width():
-                text_rect.setRight(text_rect.right() - sort_pixmap.width() - space_between_text_and_arrow)
-
-            painter.drawText(text_rect, option.textAlignment, option.text)
-
-        elif control == QStyle.ControlElement.CE_HeaderSection:
-            super().drawControl(control, option, painter, widget)
-            rect = option.rect
-            top = rect.topRight()
-            top.setY(top.y() + 1)
-            bottom = rect.bottomRight()
-            bottom.setY(bottom.y() - 2)
-
-            painter.setPen(Qt.GlobalColor.gray)
-            painter.drawLine(top, bottom)
-        else:
-            super().drawControl(control, option, painter, widget)
-
-
-class TrackTableHeader(QHeaderView):
-    def __init__(self, orientation: Qt.Orientation, track_table_view: TrackTableView = None):
-        super().__init__(orientation, track_table_view)
-        self.padding = track_table_view.padding
-        self.setSectionsClickable(True)
-        self.setSortIndicatorShown(True)
-        self.setSectionsMovable(True)
-        self.setFirstSectionMovable(False)
-        self.setSortIndicatorShown(True)
-        self.setStyle(HeaderProxyStyle(self.style()))
-
-        self.sortIndicatorChanged.connect(self.sort_indicator_changed)
-        self.sectionMoved.connect(self.section_moved)
-        self.sectionResized.connect(self.section_resized)
-        self.__section_moved_recursions = 0
-
-        self.section_text = MAIN_PANEL_COLUMN_NAMES
-
-        self.minimum_last_section_size = self.padding * 2 + self.fontMetrics().horizontalAdvance(self.section_text[-1])
-
-        self.setStyleSheet("""
-        QHeaderView {
-        border-bottom: 1px solid gray;
-        border-top: 0px;
-        border-right: 0px;
-        border-left: 0px;
-        }
-        """)
-
-    @pyqtSlot(int, int, int)
-    def section_resized(self, logical_index: int, _: int, new_size: int) -> None:
-        """Sets minimum size for the last section."""
-        if logical_index == self.count() - 1 and new_size < self.minimum_last_section_size:
-            self.resizeSection(self.count() - 1, self.minimum_last_section_size)
-
-    @pyqtSlot(int, int, int)
-    def section_moved(self, _: int, old_visual_index: int, new_visual_index: int) -> None:
-        """Prevents section 1 from moving."""
-        if self.__section_moved_recursions:
-            self.__section_moved_recursions = 0
-            return
-        if {0, 1} & {old_visual_index, new_visual_index}:
-            self.__section_moved_recursions += 1
-            self.moveSection(new_visual_index, old_visual_index)
-
-    @pyqtSlot(int, Qt.SortOrder)
-    def sort_indicator_changed(self, logical_index: int, order: Qt.SortOrder) -> None:
-        if logical_index not in {0, 1}:
-            self.setSortIndicator(logical_index, order)
-
-    def text(self, section: int):
-        if isinstance(self.model(), QAbstractItemModel):
-            return self.section_text[section]
-
-    def paintSection(self, painter: QPainter, rect: QRect, logical_index: int) -> None:
-        if not self.rect().isValid():
-            return
-
-        elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logical_index),
-                                                                Qt.TextElideMode.ElideRight,
-                                                                self.sectionSize(logical_index) - self.padding)
-        opt = QStyleOptionHeaderV2()
-        old_brush_origin = painter.brushOrigin()
-
-        self.initStyleOption(opt)
-        self.initStyleOptionForIndex(opt, logical_index)
-
-        opt.text = elided_text
-        opt.rect = rect
-        if logical_index == self.count() - 1:
-            opt.textAlignment = Qt.AlignmentFlag.AlignRight
-        else:
-            opt.textAlignment = Qt.AlignmentFlag.AlignLeft
-
-        if logical_index in {0, 1}:
-            opt.sortIndicator = opt.SortIndicator.None_
-
-        painter.setBrushOrigin(opt.rect.topLeft())
-        self.style().drawControl(QStyle.ControlElement.CE_Header, opt, painter, self)
-        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_IndicatorHeaderArrow, opt, painter, self)
-        painter.setBrushOrigin(old_brush_origin)
-
-
-class TrackTableModel(QAbstractTableModel):
-    def __init__(self, parent: TrackTableView = None):
-        super().__init__(parent)
-        self._table_view: TrackTableView = parent
-        self.tracks: List[Track] = []
-        self.is_playing = False
-        self.playing_track_index: Optional[int] = None
-
-        self.playing_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-playing.png")
-        self.muted_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-not-playing.png")
-
-        self.general_flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
-
-        self.t = 0
-
-    @pyqtSlot(list)
-    def set_tracks(self, tracks: List[Track]) -> None:
-        self.layoutAboutToBeChanged.emit()
-        self.tracks = tracks
-        self.layoutChanged.emit()
-
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
-        if not self.tracks or index.row() >= len(self.tracks):
-            return None
-        if role == Qt.ItemDataRole.TextAlignmentRole:
-            if index.column() == 0:
-                return Qt.AlignmentFlag.AlignCenter
-
-        if role == Qt.ItemDataRole.DecorationRole:
-            if index.column() == 0:
-                track = self.tracks[index.row()]
-                artwork_pixmap: Optional[QPixmap] = track.artwork_pixmap
-                if not artwork_pixmap or artwork_pixmap.isNull():
-                    return None
-                return artwork_pixmap.scaled(self._table_view.columnWidth(index.column()),
-                                             self._table_view.columnWidth(index.column()),
-                                             Qt.AspectRatioMode.KeepAspectRatio,
-                                             Qt.TransformationMode.SmoothTransformation)
-            elif index.column() == 1:
-                if self.playing_track_index is None:
-                    return
-                if index.row() == self.playing_track_index:
-                    if self.is_playing:
-                        return self.playing_speaker_pixmap
-                    elif not self.is_playing:
-                        return self.muted_speaker_pixmap
-
-        if role == Qt.ItemDataRole.DisplayRole and not index.data(Qt.ItemDataRole.DecorationRole):
-            if not index.column():
-                return "-"
-
-            value = MAIN_PANEL_COLUMN_NAMES[index.column()].lower()
-            if value == "time":
-                return self.tracks[index.row()].length
-            elif value == "rating":
-                return StarRating(self.tracks[index.row()].rating)
-
-            return getattr(self.tracks[index.row()], value) if value else None
-
-    def rowCount(self, index: QModelIndex = QModelIndex) -> int:
-        return len(self.tracks)
-
-    def columnCount(self, index: QModelIndex = QModelIndex) -> int:
-        return len(MAIN_PANEL_COLUMN_NAMES)
-
-    def headerData(self, section: int, orientation: Qt.Orientation,
-                   role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
-        if role == Qt.ItemDataRole.DisplayRole:
-            if orientation == Qt.Orientation.Horizontal:
-                return MAIN_PANEL_COLUMN_NAMES[section]
-            return f"{section}"
-        return None
-
-    def flags(self, index: QModelIndex):
-        if index.column() == self._table_view.rating_column:
-            return self.general_flags | Qt.ItemFlag.ItemIsEditable
-        return self.general_flags
-
-    def setData(self, index: QModelIndex, value: Any, role: Qt.ItemDataRole = Qt.ItemDataRole.EditRole) -> bool:
-        if isinstance(value, StarRating):
-            self.tracks[index.row()].rating = value.star_count()
-
-        return super().setData(index, value, role)
-
-    @pyqtSlot()
-    def set_paused(self) -> None:
-        self.is_playing = False
-        if self.playing_track_index is not None:
-            self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
-
-    @pyqtSlot()
-    def set_unpaused(self) -> None:
-        self.is_playing = True
-        if self.playing_track_index is not None:
-            self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
-
-    @pyqtSlot(int)
-    def set_playing_track_index(self, index: Optional[int]) -> None:
-        self.playing_track_index = index
-        self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
-
-    def delete_tracks(self, tracks: List[Track]) -> None:
-        for track in self.tracks.copy():
-            if track in tracks:
-                self.tracks.remove(track)
-        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount(), self.columnCount()))
-
-
-class TrackTableItemDelegate(QStyledItemDelegate):
-    def __init__(self, track_table_view: TrackTableView = None):
-        super().__init__(track_table_view)
-        self.padding = track_table_view.padding
-        self._table_view: TrackTableView = track_table_view
-        self.last_height = self._table_view.height()
-
-    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
-        painter.setPen(QPen(Qt.PenStyle.NoPen))
-        if option.state & QStyle.StateFlag.State_Selected:
-            if self._table_view.hasFocus():
-                fill_color = SELECTION_QCOLOR
-            else:
-                fill_color = LOST_FOCUS_QCOLOR
-            painter.setBrush(fill_color)
-            painter.drawRect(option.rect)
-        else:
-            painter.setBrush(QBrush(Qt.GlobalColor.white))
-
-        display_role: Union[str, int] = index.data(Qt.ItemDataRole.DisplayRole)
-        decoration_role: QPixmap = index.data(Qt.ItemDataRole.DecorationRole)
-        if display_role:
-            if MAIN_PANEL_COLUMN_NAMES[index.column()].lower() == "time":
-                display_role = get_formatted_time_in_mins(display_role)
-
-            if option.state & QStyle.StateFlag.State_Selected and self._table_view.hasFocus():
-                painter.setPen(QColor(option.palette.highlightedText()))
-            else:
-                painter.setPen(QColor(option.palette.text()))
-            text = f"{display_role}"
-            if text:
-                elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
-                                                                   max(option.rect.width() - self.padding * 2, 18))
-                if index.column():
-                    alignment = Qt.AlignmentFlag.AlignVCenter
-                    if index.column() == len(MAIN_PANEL_COLUMN_NAMES) - 1:
-                        alignment |= Qt.AlignmentFlag.AlignRight
-                else:
-                    alignment = Qt.AlignmentFlag.AlignCenter
-
-                option.rect.setLeft(option.rect.left() + self.padding)
-                option.rect.setRight(option.rect.right() - self.padding)
-                painter.drawText(option.rect, alignment, elided_text)
-
-        if decoration_role and not decoration_role.isNull():
-            pixmap = decoration_role
-            rect = option.rect
-            rect.setRect(rect.left() + 1, rect.top() + 1,
-                         rect.width() - 2, rect.height() - 2)
-
-            if index.column() == 1:
-                height = rect.height()
-                width = rect.width()
-                rect.setHeight(width)
-                rect.translate(0, (height - width) // 2)
-
-                pixmap = pixmap.scaled(width, width,
-                                       Qt.AspectRatioMode.KeepAspectRatio,
-                                       Qt.TransformationMode.SmoothTransformation)
-            painter.drawPixmap(rect, pixmap)
-
-
-class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
-    def __init__(self, table_view: TrackTableView, *args, **kwargs):
-        super().__init__(table_view, *args, **kwargs)
-        self._sort_order = Qt.SortOrder.AscendingOrder
-        self._sort_key = None
-        self._source_model: Optional[TrackTableModel] = None
-        self._table_view = table_view
-
-    def setSourceModel(self, source_model: TrackTableModel) -> None:
-        self._source_model = source_model
-        self._source_model.dataChanged.connect(self.dataChanged.emit)
-        self._source_model.layoutAboutToBeChanged.connect(self.layoutAboutToBeChanged.emit)
-        self._source_model.layoutChanged.connect(self.layoutChanged.emit)
-        super().setSourceModel(source_model)
-
-    def sort(self, column: int, sort_order: Qt.SortOrder = Qt.SortOrder) -> None:
-        if column not in (0, 1):
-            self._sort_key = MAIN_PANEL_COLUMN_NAMES[column].lower()
-            if self._sort_key == "time":
-                self._sort_key = "length"
-            self._source_model.layoutAboutToBeChanged.emit()
-            if sort_order == Qt.SortOrder.AscendingOrder:
-                self._source_model.tracks.sort(key=self._sort_func)
-            else:
-                self._source_model.tracks.sort(key=self._sort_func, reverse=True)
-
-            self._table_view._tracks = self._source_model.tracks
-            self._source_model.set_playing_track_index(self._table_view.get_playing_track_index())
-
-        self.layoutChanged.emit()
-        self.dataChanged.emit(QModelIndex(), QModelIndex())
-
-    def _sort_func(self, track: Track) -> Any:
-        output = getattr(track, self._sort_key)
-        if output is None and self._sort_key not in ("year", "length"):
-            return ""
-        elif output is None:
-            return 0
-        elif self._sort_key in ("year", "length"):
-            if isinstance(output, str):
-                output = output.lower()
-            return output
-        else:
-            return str(output).lower()
-
-    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
-        return self.sourceModel().data(index, role)
-
-
 class TrackTableView(QTableView):
     new_tracks_set = pyqtSignal()
     play_now_triggered = pyqtSignal(list)
@@ -638,6 +270,374 @@ class TrackTableView(QTableView):
             if index.column() == self.rating_column:
                 typing.cast(StarDelegate, self.itemDelegateForColumn(self.rating_column)).commit_and_close_editor(index)
         super().focusOutEvent(event)
+
+
+class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
+    def __init__(self, table_view: TrackTableView, *args, **kwargs):
+        super().__init__(table_view, *args, **kwargs)
+        self._sort_order = Qt.SortOrder.AscendingOrder
+        self._sort_key = None
+        self._source_model: Optional[TrackTableModel] = None
+        self._table_view = table_view
+
+    def setSourceModel(self, source_model: TrackTableModel) -> None:
+        self._source_model = source_model
+        self._source_model.dataChanged.connect(self.dataChanged.emit)
+        self._source_model.layoutAboutToBeChanged.connect(self.layoutAboutToBeChanged.emit)
+        self._source_model.layoutChanged.connect(self.layoutChanged.emit)
+        super().setSourceModel(source_model)
+
+    def sort(self, column: int, sort_order: Qt.SortOrder = Qt.SortOrder) -> None:
+        if column not in (0, 1):
+            self._sort_key = MAIN_PANEL_COLUMN_NAMES[column].lower()
+            if self._sort_key == "time":
+                self._sort_key = "length"
+            self._source_model.layoutAboutToBeChanged.emit()
+            if sort_order == Qt.SortOrder.AscendingOrder:
+                self._source_model.tracks.sort(key=self._sort_func)
+            else:
+                self._source_model.tracks.sort(key=self._sort_func, reverse=True)
+
+            self._table_view._tracks = self._source_model.tracks
+            self._source_model.set_playing_track_index(self._table_view.get_playing_track_index())
+
+        self.layoutChanged.emit()
+        self.dataChanged.emit(QModelIndex(), QModelIndex())
+
+    def _sort_func(self, track: Track) -> Any:
+        output = getattr(track, self._sort_key)
+        if output is None and self._sort_key not in ("year", "length"):
+            return ""
+        elif output is None:
+            return 0
+        elif self._sort_key in ("year", "length"):
+            if isinstance(output, str):
+                output = output.lower()
+            return output
+        else:
+            return str(output).lower()
+
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
+        return self.sourceModel().data(index, role)
+
+
+class TrackTableModel(QAbstractTableModel):
+    def __init__(self, parent: TrackTableView = None):
+        super().__init__(parent)
+        self._table_view: TrackTableView = parent
+        self.tracks: List[Track] = []
+        self.is_playing = False
+        self.playing_track_index: Optional[int] = None
+
+        self.playing_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-playing.png")
+        self.muted_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-not-playing.png")
+
+        self.general_flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
+
+        self.t = 0
+
+    @pyqtSlot(list)
+    def set_tracks(self, tracks: List[Track]) -> None:
+        self.layoutAboutToBeChanged.emit()
+        self.tracks = tracks
+        self.layoutChanged.emit()
+
+    def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
+        if not self.tracks or index.row() >= len(self.tracks):
+            return None
+        if role == Qt.ItemDataRole.TextAlignmentRole:
+            if index.column() == 0:
+                return Qt.AlignmentFlag.AlignCenter
+
+        if role == Qt.ItemDataRole.DecorationRole:
+            if index.column() == 0:
+                track = self.tracks[index.row()]
+                artwork_pixmap: Optional[QPixmap] = track.artwork_pixmap
+                if not artwork_pixmap or artwork_pixmap.isNull():
+                    return None
+                return artwork_pixmap.scaled(self._table_view.columnWidth(index.column()),
+                                             self._table_view.columnWidth(index.column()),
+                                             Qt.AspectRatioMode.KeepAspectRatio,
+                                             Qt.TransformationMode.SmoothTransformation)
+            elif index.column() == 1:
+                if self.playing_track_index is None:
+                    return
+                if index.row() == self.playing_track_index:
+                    if self.is_playing:
+                        return self.playing_speaker_pixmap
+                    elif not self.is_playing:
+                        return self.muted_speaker_pixmap
+
+        if role == Qt.ItemDataRole.DisplayRole and not index.data(Qt.ItemDataRole.DecorationRole):
+            if not index.column():
+                return "-"
+
+            value = MAIN_PANEL_COLUMN_NAMES[index.column()].lower()
+            if value == "time":
+                return self.tracks[index.row()].length
+            elif value == "rating":
+                return StarRating(self.tracks[index.row()].rating)
+
+            return getattr(self.tracks[index.row()], value) if value else None
+
+    def rowCount(self, index: QModelIndex = QModelIndex) -> int:
+        return len(self.tracks)
+
+    def columnCount(self, index: QModelIndex = QModelIndex) -> int:
+        return len(MAIN_PANEL_COLUMN_NAMES)
+
+    def headerData(self, section: int, orientation: Qt.Orientation,
+                   role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
+        if role == Qt.ItemDataRole.DisplayRole:
+            if orientation == Qt.Orientation.Horizontal:
+                return MAIN_PANEL_COLUMN_NAMES[section]
+            return f"{section}"
+        return None
+
+    def flags(self, index: QModelIndex):
+        if index.column() == self._table_view.rating_column:
+            return self.general_flags | Qt.ItemFlag.ItemIsEditable
+        return self.general_flags
+
+    def setData(self, index: QModelIndex, value: Any, role: Qt.ItemDataRole = Qt.ItemDataRole.EditRole) -> bool:
+        if isinstance(value, StarRating):
+            self.tracks[index.row()].rating = value.star_count()
+
+        return super().setData(index, value, role)
+
+    @pyqtSlot()
+    def set_paused(self) -> None:
+        self.is_playing = False
+        if self.playing_track_index is not None:
+            self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
+
+    @pyqtSlot()
+    def set_unpaused(self) -> None:
+        self.is_playing = True
+        if self.playing_track_index is not None:
+            self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
+
+    @pyqtSlot(int)
+    def set_playing_track_index(self, index: Optional[int]) -> None:
+        self.playing_track_index = index
+        self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
+
+    def delete_tracks(self, tracks: List[Track]) -> None:
+        for track in self.tracks.copy():
+            if track in tracks:
+                self.tracks.remove(track)
+        self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount(), self.columnCount()))
+
+
+class TrackTableItemDelegate(QStyledItemDelegate):
+    def __init__(self, track_table_view: TrackTableView = None):
+        super().__init__(track_table_view)
+        self.padding = track_table_view.padding
+        self._table_view: TrackTableView = track_table_view
+        self.last_height = self._table_view.height()
+
+    def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        painter.setPen(QPen(Qt.PenStyle.NoPen))
+        if option.state & QStyle.StateFlag.State_Selected:
+            if self._table_view.hasFocus():
+                fill_color = SELECTION_QCOLOR
+            else:
+                fill_color = LOST_FOCUS_QCOLOR
+            painter.setBrush(fill_color)
+            painter.drawRect(option.rect)
+        else:
+            painter.setBrush(QBrush(Qt.GlobalColor.white))
+
+        display_role: Union[str, int] = index.data(Qt.ItemDataRole.DisplayRole)
+        decoration_role: QPixmap = index.data(Qt.ItemDataRole.DecorationRole)
+        if display_role:
+            if MAIN_PANEL_COLUMN_NAMES[index.column()].lower() == "time":
+                display_role = get_formatted_time_in_mins(display_role)
+
+            if option.state & QStyle.StateFlag.State_Selected and self._table_view.hasFocus():
+                painter.setPen(QColor(option.palette.highlightedText()))
+            else:
+                painter.setPen(QColor(option.palette.text()))
+            text = f"{display_role}"
+            if text:
+                elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
+                                                                   max(option.rect.width() - self.padding * 2, 18))
+                if index.column():
+                    alignment = Qt.AlignmentFlag.AlignVCenter
+                    if index.column() == len(MAIN_PANEL_COLUMN_NAMES) - 1:
+                        alignment |= Qt.AlignmentFlag.AlignRight
+                else:
+                    alignment = Qt.AlignmentFlag.AlignCenter
+
+                option.rect.setLeft(option.rect.left() + self.padding)
+                option.rect.setRight(option.rect.right() - self.padding)
+                painter.drawText(option.rect, alignment, elided_text)
+
+        if decoration_role and not decoration_role.isNull():
+            pixmap = decoration_role
+            rect = option.rect
+            rect.setRect(rect.left() + 1, rect.top() + 1,
+                         rect.width() - 2, rect.height() - 2)
+
+            if index.column() == 1:
+                height = rect.height()
+                width = rect.width()
+                rect.setHeight(width)
+                rect.translate(0, (height - width) // 2)
+
+                pixmap = pixmap.scaled(width, width,
+                                       Qt.AspectRatioMode.KeepAspectRatio,
+                                       Qt.TransformationMode.SmoothTransformation)
+            painter.drawPixmap(rect, pixmap)
+
+
+class TrackTableHeader(QHeaderView):
+    def __init__(self, orientation: Qt.Orientation, track_table_view: TrackTableView = None):
+        super().__init__(orientation, track_table_view)
+        self.padding = track_table_view.padding
+        self.setSectionsClickable(True)
+        self.setSortIndicatorShown(True)
+        self.setSectionsMovable(True)
+        self.setFirstSectionMovable(False)
+        self.setSortIndicatorShown(True)
+        self.setStyle(HeaderProxyStyle(self.style()))
+
+        self.sortIndicatorChanged.connect(self.sort_indicator_changed)
+        self.sectionMoved.connect(self.section_moved)
+        self.sectionResized.connect(self.section_resized)
+        self.__section_moved_recursions = 0
+
+        self.section_text = MAIN_PANEL_COLUMN_NAMES
+
+        self.minimum_last_section_size = self.padding * 2 + self.fontMetrics().horizontalAdvance(self.section_text[-1])
+
+        self.setStyleSheet("""
+        QHeaderView {
+        border-bottom: 1px solid gray;
+        border-top: 0px;
+        border-right: 0px;
+        border-left: 0px;
+        }
+        """)
+
+    @pyqtSlot(int, int, int)
+    def section_resized(self, logical_index: int, _: int, new_size: int) -> None:
+        """Sets minimum size for the last section."""
+        if logical_index == self.count() - 1 and new_size < self.minimum_last_section_size:
+            self.resizeSection(self.count() - 1, self.minimum_last_section_size)
+
+    @pyqtSlot(int, int, int)
+    def section_moved(self, _: int, old_visual_index: int, new_visual_index: int) -> None:
+        """Prevents section 1 from moving."""
+        if self.__section_moved_recursions:
+            self.__section_moved_recursions = 0
+            return
+        if {0, 1} & {old_visual_index, new_visual_index}:
+            self.__section_moved_recursions += 1
+            self.moveSection(new_visual_index, old_visual_index)
+
+    @pyqtSlot(int, Qt.SortOrder)
+    def sort_indicator_changed(self, logical_index: int, order: Qt.SortOrder) -> None:
+        if logical_index not in {0, 1}:
+            self.setSortIndicator(logical_index, order)
+
+    def text(self, section: int):
+        if isinstance(self.model(), QAbstractItemModel):
+            return self.section_text[section]
+
+    def paintSection(self, painter: QPainter, rect: QRect, logical_index: int) -> None:
+        if not self.rect().isValid():
+            return
+
+        elided_text: str = QFontMetrics(self.font()).elidedText(self.text(logical_index),
+                                                                Qt.TextElideMode.ElideRight,
+                                                                self.sectionSize(logical_index) - self.padding)
+        opt = QStyleOptionHeaderV2()
+        old_brush_origin = painter.brushOrigin()
+
+        self.initStyleOption(opt)
+        self.initStyleOptionForIndex(opt, logical_index)
+
+        opt.text = elided_text
+        opt.rect = rect
+        if logical_index == self.count() - 1:
+            opt.textAlignment = Qt.AlignmentFlag.AlignRight
+        else:
+            opt.textAlignment = Qt.AlignmentFlag.AlignLeft
+
+        if logical_index in {0, 1}:
+            opt.sortIndicator = opt.SortIndicator.None_
+
+        painter.setBrushOrigin(opt.rect.topLeft())
+        self.style().drawControl(QStyle.ControlElement.CE_Header, opt, painter, self)
+        self.style().drawPrimitive(QStyle.PrimitiveElement.PE_IndicatorHeaderArrow, opt, painter, self)
+        painter.setBrushOrigin(old_brush_origin)
+
+
+class HeaderProxyStyle(QProxyStyle):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.header_arrow_width = 10
+        self.padding = 2
+
+    def drawPrimitive(self, element: QStyle.PrimitiveElement, option: QStyleOptionHeaderV2, painter: QPainter,
+                      widget: Optional[QWidget] = ...) -> None:
+        if element == QStyle.PrimitiveElement.PE_IndicatorHeaderArrow:
+            return
+        else:
+            super().drawPrimitive(element, option, painter, widget)
+
+    def drawControl(self, control: QStyle.ControlElement, option: QStyleOptionHeaderV2, painter: QPainter,
+                    widget: Optional[QWidget] = ...) -> None:
+        if control == QStyle.ControlElement.CE_HeaderLabel:
+            option.rect.setTop(option.rect.top() - 2)
+            painter.setPen(self.standardPalette().text().color())
+
+            text_width = option.fontMetrics.horizontalAdvance(option.text)
+            text_height = option.fontMetrics.height()
+
+            space_between_text_and_arrow = 4
+
+            sort_pixmap = None
+            sort_rect = None
+            if option.sortIndicator == option.SortIndicator.SortUp:
+                sort_pixmap = QIcon(ROOT + "/icons/downward-arrow.png").pixmap(10, 10)
+            elif option.sortIndicator == option.SortIndicator.SortDown:
+                sort_pixmap = QIcon(ROOT + "/icons/upward-arrow.png").pixmap(10, 10)
+
+            if sort_pixmap:
+                if option.textAlignment == Qt.AlignmentFlag.AlignRight:
+                    sort_rect = QRect(option.rect.right() - sort_pixmap.width() - self.padding +
+                                      space_between_text_and_arrow,
+                                      option.rect.top() + (text_height - sort_pixmap.height()) // 2,
+                                      sort_pixmap.width(), sort_pixmap.height())
+                else:
+                    sort_rect = QRect(option.rect.left() + text_width + space_between_text_and_arrow,
+                                      option.rect.top() + (text_height - sort_pixmap.height()) // 2,
+                                      sort_pixmap.width(), sort_pixmap.height())
+
+                if option.rect.width() > text_width + sort_rect.width():
+                    painter.drawPixmap(sort_rect, sort_pixmap)
+
+            text_rect = option.rect
+            if option.textAlignment == Qt.AlignmentFlag.AlignRight and sort_pixmap and \
+                    option.rect.width() > text_width + sort_rect.width():
+                text_rect.setRight(text_rect.right() - sort_pixmap.width() - space_between_text_and_arrow)
+
+            painter.drawText(text_rect, option.textAlignment, option.text)
+
+        elif control == QStyle.ControlElement.CE_HeaderSection:
+            super().drawControl(control, option, painter, widget)
+            rect = option.rect
+            top = rect.topRight()
+            top.setY(top.y() + 1)
+            bottom = rect.bottomRight()
+            bottom.setY(bottom.y() - 2)
+
+            painter.setPen(Qt.GlobalColor.gray)
+            painter.drawLine(top, bottom)
+        else:
+            super().drawControl(control, option, painter, widget)
 
 
 class TestMainWindow(QMainWindow):

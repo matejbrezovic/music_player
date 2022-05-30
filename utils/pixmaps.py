@@ -13,8 +13,6 @@ from PyQt6.QtGui import QPixmap, QImage
 from utils import get_project_root
 
 
-
-
 def get_embedded_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
     class NoArtworkError(Exception):
         pass
@@ -34,19 +32,6 @@ def get_embedded_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
     except (AttributeError, NoArtworkError, mutagen.MutagenError, TypeError):
         return None
     return pixmap
-
-
-class ImageDownloaderThread(QThread):
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.started.connect(self.s)
-        self.finished.connect(self.f)
-
-    def s(self):
-        print("STARTED", self.thread())
-
-    def f(self):
-        print("FINISHED", self.thread())
 
 
 def get_default_artwork_pixmap(default_type: str) -> QPixmap:
@@ -72,15 +57,3 @@ def get_blurred_pixmap(pixmap: QPixmap) -> QPixmap:
     qim = QImage(data, blur_img.size[0], blur_img.size[1], QImage.Format.Format_ARGB32)
 
     return QPixmap.fromImage(qim)
-
-
-def is_pixmap_valid(pixmap: QPixmap) -> bool:
-    try:
-        img = pixmap.toImage()
-        buffer = QBuffer()
-        buffer.open(QBuffer.OpenModeFlag.ReadWrite)
-        img.save(buffer, "JPG")
-        Image.open(io.BytesIO(buffer.data()))
-    except UnidentifiedImageError:
-        return False
-    return True
