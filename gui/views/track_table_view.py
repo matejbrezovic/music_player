@@ -98,11 +98,11 @@ class TrackTableView(QTableView):
             self.sortByColumn(logical_index, self._sort_order)
 
     def get_selected_tracks(self) -> List[Track]:
-        return sorted([self._tracks[i.row()] for i in set(self.selectedIndexes())])
+        return sorted([self._table_model.tracks[i.row()] for i in set(self.selectedIndexes())])
 
     def get_playing_track_index(self) -> Optional[int]:
         try:
-            return self._tracks.index(self.playing_track)
+            return self._table_model.tracks.index(self.playing_track)
         except ValueError:
             return None
 
@@ -223,6 +223,10 @@ class TrackTableView(QTableView):
 
         self.selectRow(sorted(selected_track_indexes)[0])
 
+    @property
+    def tracks(self) -> List[Track]:
+        return self._table_model.tracks
+
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         ...
@@ -327,14 +331,13 @@ class TrackTableModel(QAbstractTableModel):
         self._table_view: TrackTableView = parent
         self.tracks: List[Track] = []
         self.is_playing = False
-        self.playing_track_index: Optional[int] = None
+        # self.playing_track_index: Optional[int] = None
+        self.playing_track: Optional[Track] = None
 
         self.playing_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-playing.png")
         self.muted_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-not-playing.png")
 
         self.general_flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
-
-        self.t = 0
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
@@ -360,6 +363,7 @@ class TrackTableModel(QAbstractTableModel):
                                              Qt.AspectRatioMode.KeepAspectRatio,
                                              Qt.TransformationMode.SmoothTransformation)
             elif index.column() == 1:
+                # print(self.playing_track_index)
                 if self.playing_track_index is None:
                     return
                 if index.row() == self.playing_track_index:

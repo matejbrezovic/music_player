@@ -19,7 +19,7 @@ class TrackViewWidget(QWidget):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.displayed_tracks: List[Track] = []
+        self._displayed_tracks: List[Track] = []
         self.loaded_displays = {}
         self.default_stylesheet = ""
         self.selected_row_index = 0
@@ -74,10 +74,14 @@ class TrackViewWidget(QWidget):
 
         self.main_layout.addWidget(self.table_view)
 
+    @property
+    def displayed_tracks(self) -> List[Track]:
+        return self.table_view.tracks
+
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         self.table_view.set_tracks(tracks)
-        self.displayed_tracks = tracks
+        self._displayed_tracks = tracks
         index = self.displayed_tracks.index(self.playing_track) if self.playing_track in self.displayed_tracks else None
         self.table_view.set_playing_track_index(index)
         self.table_view.selectionModel().clearSelection()
@@ -86,6 +90,7 @@ class TrackViewWidget(QWidget):
     @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:
         self.playing_track = track
+        self.table_view.playing_track = track
         if track not in self.displayed_tracks:
             self.table_view.set_playing_track_index(None)
             return

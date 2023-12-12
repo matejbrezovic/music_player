@@ -21,7 +21,7 @@ class MainPanel(QFrame):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.displayed_tracks = []
+        # self._displayed_tracks = []
         self.cached_tracks_repository = CachedTracksRepository()
         self.setStyleSheet("MainPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(MAIN_PANEL_MIN_WIDTH)
@@ -47,6 +47,10 @@ class MainPanel(QFrame):
     def view_key_changed(self) -> None:
         ...
 
+    @property
+    def displayed_tracks(self):
+        return self.track_view_widget.displayed_tracks
+
     @pyqtSlot(list)
     def display_tracks(self, tracks: List[Track],
                        key_value_tuple: Tuple[Optional[str], Optional[str]] = (None, None)) -> None:
@@ -54,7 +58,7 @@ class MainPanel(QFrame):
             return
         self._display_key, self._display_value = key_value_tuple
         self.track_view_widget.set_tracks(tracks)
-        self.displayed_tracks = tracks
+        # self._displayed_tracks = tracks
 
     @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:

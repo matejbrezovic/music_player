@@ -133,8 +133,8 @@ class MainWindow(QMainWindow):
 
         self.navigation_panel.group_double_clicked.connect(
             lambda tracks, key_value_tuple: (self.main_panel.display_tracks(tracks, key_value_tuple),
-                                             self.status_bar.update_info(tracks),
-                                             self.audio_controller.set_playlist(tracks),
+                                             self.status_bar.update_info(self.main_panel.displayed_tracks),
+                                             self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
                                              self.audio_controller.play()))
 
         # self.information_panel.track_clicked.connect(lambda: ...)
