@@ -1,3 +1,4 @@
 dist/
 build/
-.zip
+*.zip
+__pycache__/

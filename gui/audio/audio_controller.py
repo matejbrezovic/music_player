@@ -52,7 +52,7 @@ class AudioController(QFrame):
         self._background_pixmap_update_timer.setSingleShot(True)
 
         self.playlist = AudioPlaylist()
-        self.playlist.updated_playlist.connect(self.playlist_updated)
+        self.playlist.playlist_updated.connect(self.playlist_updated)
         self._playing_track = None
 
         self.total_queue_time = 0

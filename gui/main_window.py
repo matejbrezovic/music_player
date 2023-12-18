@@ -33,13 +33,10 @@ class MainWindow(QMainWindow):
         self.setWindowTitle(APPLICATION_NAME)
         self.setGeometry(MAIN_WINDOW_X, MAIN_WINDOW_Y, MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
 
-    def __post__(self):
-        self._setup_signals()
-        self.navigation_panel.refresh_groups()
-
     def show(self):
         super().show()
-        self.__post__()
+        self._setup_signals()
+        self.navigation_panel.refresh_groups()
 
     def _setup_ui(self) -> None:
         self.central_widget = QWidget(self)
@@ -111,8 +108,6 @@ class MainWindow(QMainWindow):
         self.scan_folders_dialog.finished.connect(self.navigation_panel.refresh_groups)
         self.add_files_dialog.finished.connect(self.navigation_panel.refresh_groups)
 
-        # self.main_panel.track_clicked.connect(lambda: ...)
-
         self.header_menu.navigation_panel_group_key_changed.connect(self.navigation_panel.group_key_changed)
         self.header_menu.main_panel_view_key_changed.connect(self.main_panel.view_key_changed)
         self.header_menu.information_panel_view_key_changed.connect(self.information_panel.view_key_changed)
@@ -136,8 +131,6 @@ class MainWindow(QMainWindow):
                                              self.status_bar.update_info(self.main_panel.displayed_tracks),
                                              self.audio_controller.set_playlist(self.main_panel.displayed_tracks),
                                              self.audio_controller.play()))
-
-        # self.information_panel.track_clicked.connect(lambda: ...)
 
         self.information_panel.track_double_clicked.connect(
             lambda track, index: (self.audio_controller.set_playing_track(track, index),

@@ -9,7 +9,7 @@ from utils import TrackNotInPlaylistError
 
 
 class AudioPlaylist(QObject):
-    updated_playlist = pyqtSignal(list)
+    playlist_updated = pyqtSignal(list)
     last_track_playing = pyqtSignal()
     first_track_playing = pyqtSignal()
 
