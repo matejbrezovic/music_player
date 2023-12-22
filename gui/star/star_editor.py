@@ -18,7 +18,7 @@ class StarEditor(QWidget):
     def __repr__(self):
         return f"Editor {self._star_rating.star_count()}"
 
-    def set_star_rating(self, star_rating: StarRating):
+    def set_star_rating(self, star_rating: StarRating) -> None:
         self._star_rating = star_rating
         if self.color:
             self._star_rating.set_color(self.color)

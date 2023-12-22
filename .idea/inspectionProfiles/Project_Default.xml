@@ -1,6 +1,38 @@
 <component name="InspectionProjectProfileManager">
   <profile version="1.0">
     <option name="myName" value="Project Default" />
+    <inspection_tool class="PyArgumentEqualDefaultInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyAugmentAssignmentInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyBehaveInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyClassicStyleClassInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyCompatibilityInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ourVersions">
+        <value>
+          <list size="1">
+            <item index="0" class="java.lang.String" itemvalue="3.12" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
+    <inspection_tool class="PyMandatoryEncodingInspection" enabled="true" level="WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyMissingOrEmptyDocstringInspection" enabled="true" level="INFORMATION" enabled_by_default="true" editorAttributes="INFORMATION_ATTRIBUTES" />
+    <inspection_tool class="PyMissingTypeHintsInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true" />
+    <inspection_tool class="PyPackageRequirementsInspection" enabled="true" level="WARNING" enabled_by_default="true">
+      <option name="ignoredPackages">
+        <value>
+          <list size="8">
+            <item index="0" class="java.lang.String" itemvalue="Pillow" />
+            <item index="1" class="java.lang.String" itemvalue="httpx" />
+            <item index="2" class="java.lang.String" itemvalue="PyQt6" />
+            <item index="3" class="java.lang.String" itemvalue="h11" />
+            <item index="4" class="java.lang.String" itemvalue="PyQt6-Qt6" />
+            <item index="5" class="java.lang.String" itemvalue="PyQt6-sip" />
+            <item index="6" class="java.lang.String" itemvalue="httpcore" />
+            <item index="7" class="java.lang.String" itemvalue="idna" />
+          </list>
+        </value>
+      </option>
+    </inspection_tool>
     <inspection_tool class="PyPep8NamingInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
       <option name="ignoredErrors">
         <list>
@@ -11,10 +43,10 @@
     <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredIdentifiers">
         <list>
-          <option value="os._ScandirIterator.is_dir" />
-          <option value="os._ScandirIterator.path" />
-          <option value="PyQt5.QtCore.pyqtSignal.connect" />
-          <option value="PyQt5.QtCore.pyqtSignal.emit" />
+          <option value="PyQt6.QtWidgets.clicked.*" />
+          <option value="PyQt6.QtWidgets.valueChanged.*" />
+          <option value="PyQt6.QtCore.pyqtSignal.emit" />
+          <option value="PyQt6.QtCore.*.*.connect" />
         </list>
       </option>
     </inspection_tool>

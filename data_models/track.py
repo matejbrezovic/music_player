@@ -18,6 +18,7 @@ class Track:
     rating: int = field(repr=False, default=0)
     # artwork_path: str = field(repr=False)
     artwork_pixmap: Any = field(repr=False, default=None)
+    playlist_id: int = field(repr=False, default=0)
 
     def __str__(self):
         return repr(self)
@@ -27,6 +28,10 @@ class Track:
             return False
 
         return self.file_path == other.file_path
+
+    def __hash__(self):
+        return hash((self.track_id, self.file_path, self.title, self.album,
+                    self.artist, self.composer, self.size, self.playlist_id))
 
     @property
     def format(self) -> str:

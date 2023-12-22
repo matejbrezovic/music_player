@@ -31,7 +31,7 @@ class HoverButton(QPushButton):
         self.hover_icon = get_hover_icon(icon, self.is_in_dark_mode)
         super().setIcon(icon)
 
-    def set_is_in_dark_mode(self, is_in_dark_mode: bool) -> None:
+    def set_dark_mode(self, is_in_dark_mode: bool) -> None:
         self.is_in_dark_mode = is_in_dark_mode
         if self.normal_icon:
             self.hover_icon = get_hover_icon(self.normal_icon, is_in_dark_mode)
