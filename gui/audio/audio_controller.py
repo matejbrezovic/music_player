@@ -425,7 +425,6 @@ class AudioController(QFrame):
         self.prev_button.setEnabled(True)
         self.next_button.setEnabled(True)
         self.playlist.set_playlist(playlist)
-        self.set_playlist_index(0)
 
         self.playlist_updated.emit(playlist)
         self.update_total_queue_time(sum(track.length for track in playlist))
@@ -447,11 +446,8 @@ class AudioController(QFrame):
 
         self.track_title_label.setText(new_playing_track.display_name)
 
-        if not self.playlist.index(new_playing_track) and self._repeat_mode == RepeatMode.RepeatOff:
-            print("KKKK")
-            self.prev_button.setEnabled(False)
-        else:
-            self.prev_button.setEnabled(True)
+        self.prev_button.setEnabled(True)
+        self.playlist.playlist_ended = False
 
         if self.playlist.index(new_playing_track) == len(self.playlist) - 1 and \
                 self._repeat_mode == RepeatMode.RepeatOff:
@@ -586,6 +582,7 @@ class AudioController(QFrame):
         # print(self.playlist.playing_track)
 
         if self.playlist.has_ended():
+            print("STOPPED")
             self.playlist_ended()
             self.prev_button.setEnabled(False)
             return

@@ -10,25 +10,23 @@ from utils import TrackNotInPlaylistError
 
 class AudioPlaylist(QObject):
     playlist_updated = pyqtSignal(list)
-    last_track_playing = pyqtSignal()
-    first_track_playing = pyqtSignal()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._playing_track_index = 0
         self._is_shuffled = False
         self._repeat_mode = RepeatMode.RepeatOff
-        self._playlist_ended = False
+        self.playlist_ended = False
 
         self.playlist: List[Track] = []
         self.playing_track: Optional[Track] = None
 
-        # used only when playlist is shuffled
         self.played_tracks: List[Track] = []
         self._index_in_played_tracks: int = 0
 
         # tracks added to queue manually by user
-        self.user_queued_tracks: List[Track] = []
+        self.user_queued_next_tracks: List[Track] = []
+        self.user_queued_last_tracks: List[Track] = []
 
     def __bool__(self):
         return (bool(self.played_tracks) or
@@ -46,20 +44,17 @@ class AudioPlaylist(QObject):
     def set_playlist(self, playlist: List[Track]) -> None:
         self.played_tracks = []
         self.playlist = playlist.copy()
-        self._playlist_ended = False
+        self.playlist_ended = False
+        self.user_queued_next_tracks = []
+        self.user_queued_last_tracks = []
 
-    def queue_next(self, tracks: List[Track]) -> None:  # todo add queue
-        # print(tracks)
-        insert_index = self._playing_track_index + 1
-        new_playlist = self.playlist[:insert_index] + tracks + self.playlist[insert_index:]
-        self.playlist = new_playlist
-        self._playlist_ended = False
+    def queue_next(self, tracks: List[Track]) -> None:
+        self.user_queued_next_tracks.extend(tracks)
+        self.playlist_ended = False
 
     def queue_last(self, tracks: List[Track]) -> None:
-        # print(tracks)
-        new_playlist = self.playlist + tracks
-        self.playlist = new_playlist
-        self._playlist_ended = False
+        self.user_queued_last_tracks.extend(tracks)
+        self.playlist_ended = False
 
     def set_playlist_index(self, playlist_index: int) -> None:
         self._playing_track_index = playlist_index
@@ -72,7 +67,7 @@ class AudioPlaylist(QObject):
         self._is_shuffled = not self._is_shuffled
         self.played_tracks = []
         self._index_in_played_tracks = 0
-        self._playlist_ended = False
+        self.playlist_ended = False
 
     def set_repeat_on(self) -> None:
         self._repeat_mode = RepeatMode.RepeatOn
@@ -84,68 +79,81 @@ class AudioPlaylist(QObject):
         self._repeat_mode = RepeatMode.RepeatOne
 
     def set_next(self) -> None:
-        if (len(self.played_tracks) == len(self.playlist) and self._repeat_mode == RepeatMode.RepeatOff or
-                self._playing_track_index == len(self.playlist) - 1):
-            self._playlist_ended = True
-        else:
-            if self._index_in_played_tracks <= -1:
-                self._index_in_played_tracks += 1
-                if self._index_in_played_tracks < 0:
-                    self.update_currently_playing(self.played_tracks[self._index_in_played_tracks])
-                    return
+        if ((len(self.played_tracks) == len(self.playlist) and self._repeat_mode == RepeatMode.RepeatOff or
+                self._playing_track_index == len(self.playlist) - 1) and
+                not self.user_queued_next_tracks and not self.user_queued_last_tracks):
+            self.playlist_ended = True
+            return
 
-            self._playlist_ended = False
-            tracks_left_to_play = list(set(self.playlist).symmetric_difference(set(self.played_tracks)))
-            if not tracks_left_to_play:
-                self._index_in_played_tracks = 0
+        if self.user_queued_next_tracks:
+            new_playing_track = self.user_queued_next_tracks.pop(0)
+            self.update_currently_playing(new_playing_track)
+            return
+
+        if self._index_in_played_tracks <= -1:
+            self._index_in_played_tracks += 1
+            if self._index_in_played_tracks < 0:
                 self.update_currently_playing(self.played_tracks[self._index_in_played_tracks])
                 return
 
-            if self._is_shuffled:
-                new_playing_track = choice(tracks_left_to_play)
-            else:
-                if self._repeat_mode == RepeatMode.RepeatOn or self._repeat_mode == RepeatMode.RepeatOne:
-                    self._playlist_ended = False
-                    if len(self.playlist) - 1 > self._playing_track_index:
-                        self._playing_track_index += 1
-                    else:
-                        self._playing_track_index = 0
-                new_playing_track = self.playlist[self._playing_track_index + 1]
+        self.playlist_ended = False
+        tracks_left_to_play = list(set(self.playlist).symmetric_difference(set(self.played_tracks)))
+        if not tracks_left_to_play and not self.user_queued_next_tracks and not self.user_queued_last_tracks:
+            self._index_in_played_tracks = 0
+            self.update_currently_playing(self.played_tracks[self._index_in_played_tracks])
+            return
 
+        if self._is_shuffled:
+            new_playing_track = choice(tracks_left_to_play)
+        elif tracks_left_to_play:
+            if self._repeat_mode == RepeatMode.RepeatOn or self._repeat_mode == RepeatMode.RepeatOne:
+                self.playlist_ended = False
+                if len(self.playlist) - 1 > self._playing_track_index:
+                    self._playing_track_index += 1
+                else:
+                    self._playing_track_index = 0
+            new_playing_track = self.playlist[self._playing_track_index + 1]
             self._playing_track_index = self.playlist.index(new_playing_track)
+        else:
+            new_playing_track = self.user_queued_last_tracks.pop(0)
 
-            if len(tracks_left_to_play) == 1 and self._repeat_mode == RepeatMode.RepeatOff:
-                self.last_track_playing.emit()
-            self.update_currently_playing(new_playing_track)
+        self.update_currently_playing(new_playing_track)
 
-    def set_prev(self) -> None:  # TODO fix when going to previous right at the beginning
+    def set_prev(self) -> None:
         if (self._index_in_played_tracks == -len(self.played_tracks) and self._index_in_played_tracks != 0 or
                 not self.played_tracks and (self._is_shuffled or self._playing_track_index == 0)):
-            self._playlist_ended = True
+            self.playlist_ended = True
+            return
+
+        self.playlist_ended = False
+
+        if self._is_shuffled:
+            self._index_in_played_tracks -= 1
+            new_playing_track = self.played_tracks[self._index_in_played_tracks]
         else:
-            self._playlist_ended = False
-
-            if self._is_shuffled:
-                self._index_in_played_tracks -= 1
-                new_playing_track = self.played_tracks[self._index_in_played_tracks]
+            if self._playing_track_index == 0:
+                self.playlist_ended = True
+                new_playing_track = self.playing_track
             else:
-                if self._playing_track_index == 0:
-                    self._playlist_ended = True
-                    new_playing_track = self.playing_track
-                else:
-                    self._playing_track_index -= 1
-                    new_playing_track = self.playlist[self._playing_track_index]
+                self._playing_track_index -= 1
+                self._index_in_played_tracks -= 1
+                new_playing_track = self.playlist[self._playing_track_index]
 
-            self.update_currently_playing(new_playing_track)
+        self.update_currently_playing(new_playing_track, prev=True)
 
-    def update_currently_playing(self, new_playing_track: Track) -> None:
-        # new_playing_track = self.playlist[self._playing_track_index] if self.playlist else None
-
+    def update_currently_playing(self, new_playing_track: Track, prev: bool = False) -> None:
         if self.playing_track != new_playing_track:
             if self.playing_track is not None:
-                self.played_tracks.append(self.playing_track)
+                if self._index_in_played_tracks != 0:
+                    self.played_tracks.insert(self._index_in_played_tracks, new_playing_track)
+                    if not prev:
+                        self._index_in_played_tracks += 1
+                else:
+                    self.played_tracks.append(self.playing_track)
             self._playing_track_index = self.playlist.index(new_playing_track)
             self.playing_track = new_playing_track
+
+        print(self.played_tracks)
 
     def set_playing_track(self, track: Track) -> None:
         if track not in self.playlist:
@@ -155,7 +163,7 @@ class AudioPlaylist(QObject):
         self.set_playlist_index(self.playlist.index(self.playing_track))
 
     def has_ended(self) -> bool:
-        return self._playlist_ended
+        return self.playlist_ended
 
     def is_shuffled(self) -> bool:
         return self._is_shuffled
