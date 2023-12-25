@@ -40,13 +40,18 @@
         </list>
       </option>
     </inspection_tool>
+    <inspection_tool class="PyShadowingBuiltinsInspection" enabled="true" level="WEAK WARNING" enabled_by_default="true">
+      <option name="ignoredNames">
+        <list>
+          <option value="dict" />
+        </list>
+      </option>
+    </inspection_tool>
     <inspection_tool class="PyUnresolvedReferencesInspection" enabled="true" level="WARNING" enabled_by_default="true">
       <option name="ignoredIdentifiers">
         <list>
-          <option value="PyQt6.QtWidgets.clicked.*" />
-          <option value="PyQt6.QtWidgets.valueChanged.*" />
-          <option value="PyQt6.QtCore.pyqtSignal.emit" />
-          <option value="PyQt6.QtCore.*.*.connect" />
+          <option value="PyQt6.QtCore.pyqtBoundSignal.connect" />
+          <option value="PyQt6.QtCore.pyqtSignal.connect" />
         </list>
       </option>
     </inspection_tool>

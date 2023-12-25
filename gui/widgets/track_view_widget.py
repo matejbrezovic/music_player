@@ -1,3 +1,4 @@
+from copy import deepcopy
 from typing import List
 
 from PyQt6 import QtWidgets
@@ -89,12 +90,14 @@ class TrackViewWidget(QWidget):
 
     @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:
-        self.playing_track = track
-        self.table_view.playing_track = track
-        if track not in self.displayed_tracks:
+        self.playing_track = deepcopy(track)
+        self.playing_track.queue_id = 0
+        self.table_view.playing_track = self.playing_track
+        if self.playing_track not in self.displayed_tracks:
             self.table_view.set_playing_track_index(None)
             return
-        self.table_view.set_playing_track_index(self.displayed_tracks.index(track))
+
+        self.table_view.set_playing_track_index(self.displayed_tracks.index(self.playing_track))
         self.table_view.set_unpaused()
 
     @pyqtSlot()
@@ -111,4 +114,4 @@ class TrackViewWidget(QWidget):
 
     @pyqtSlot()
     def stop_playing(self):
-        self.table_view.stop_playing()
+        self.table_view.set_stopped()

@@ -4,6 +4,7 @@ from typing import Union
 from PyQt6.QtCore import QModelIndex, Qt, pyqtSignal
 from PyQt6.QtGui import QColor
 from PyQt6.QtWidgets import QGridLayout, QLayout, QFrame, QCheckBox
+from PyQt6.sip import wrappertype as pyqt_wrapper_type
 
 
 def classify(module):
@@ -64,15 +65,28 @@ def combine_colors(color_a: Union[QColor, Qt.GlobalColor], color_b: Union[QColor
 
 
 class Singleton(type):
-    _instances = {}
+    def __init__(cls, name, bases, _dict):
+        super().__init__(name, bases, _dict)
+        cls.instance = None
 
     def __call__(cls, *args, **kwargs):
-        if cls not in cls._instances:
-            cls._instances[cls] = super(Singleton, cls).__call__(*args, **kwargs)
-        return cls._instances[cls]
+        if cls.instance is None:
+            cls.instance = super().__call__(*args, **kwargs)
+        return cls.instance
 
 
-class TrackNotInPlaylistError(Exception):
+class QtSingleton(pyqt_wrapper_type, type):
+    def __init__(cls, name, bases, _dict):
+        super().__init__(name, bases, _dict)
+        cls.instance = None
+
+    def __call__(cls, *args, **kwargs):
+        if cls.instance is None:
+            cls.instance = super().__call__(*args, **kwargs)
+        return cls.instance
+
+
+class TrackNotInQueueError(Exception):
     pass
 
 

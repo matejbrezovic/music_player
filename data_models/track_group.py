@@ -5,7 +5,7 @@ from PyQt6.QtGui import QPixmap
 
 
 @dataclass
-class NavigationGroup:
+class TrackGroup:
     title: str
     visual_title: str
     tracks_num: int

@@ -1,4 +1,5 @@
 import os
+from copy import deepcopy, copy
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -8,8 +9,8 @@ class Track:
     track_id: int
     file_path: str = field(repr=False)
     title: str
-    album: str
-    artist: str
+    album: str = field(repr=False)
+    artist: str = field(repr=False)
     composer: str = field(repr=False)
     genre: str = field(repr=False)
     year: int = field(repr=False)
@@ -18,7 +19,7 @@ class Track:
     rating: int = field(repr=False, default=0)
     # artwork_path: str = field(repr=False)
     artwork_pixmap: Any = field(repr=False, default=None)
-    playlist_id: int = field(repr=False, default=0)
+    queue_id: int = field(repr=True, default=0)
 
     def __str__(self):
         return repr(self)
@@ -27,11 +28,22 @@ class Track:
         if not isinstance(other, Track):
             return False
 
-        return self.file_path == other.file_path
+        return self.file_path == other.file_path and self.queue_id == other.queue_id
 
-    def __hash__(self):
-        return hash((self.track_id, self.file_path, self.title, self.album,
-                    self.artist, self.composer, self.size, self.playlist_id))
+    # def __hash__(self):
+    #     return hash((self.track_id, self.file_path, self.title, self.album,
+    #                 self.artist, self.composer, self.size, self.queue_id))
+
+    def __deepcopy__(self, memo):
+        cls = self.__class__
+        result = cls.__new__(cls)
+        memo[id(self)] = result
+        for k, v in self.__dict__.items():
+            try:
+                setattr(result, k, deepcopy(v, memo))
+            except TypeError:  # cannot deepcopy QPixmap
+                setattr(result, k, v)
+        return result
 
     @property
     def format(self) -> str:

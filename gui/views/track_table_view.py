@@ -97,8 +97,8 @@ class TrackTableView(QTableView):
             self.clearSelection()
             self.sortByColumn(logical_index, self._sort_order)
 
-    def get_selected_tracks(self) -> List[Track]:
-        return sorted([self._table_model.tracks[i.row()] for i in set(self.selectedIndexes())])
+    # def get_selected_tracks(self) -> List[Track]:
+    #     return sorted([self._table_model.tracks[i.row()] for i in set(self.selectedIndexes())])
 
     def get_playing_track_index(self) -> Optional[int]:
         try:
@@ -229,7 +229,6 @@ class TrackTableView(QTableView):
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
-        ...
         for index in self.selectedIndexes():
             if index.column() == self.rating_column:
                 self._star_delegate.commit_and_close_editor(index)
@@ -241,6 +240,7 @@ class TrackTableView(QTableView):
 
     @pyqtSlot(int)
     def set_playing_track_index(self, index: Optional[int]) -> None:
+        self._is_stopped = False
         self._table_model.set_playing_track_index(index)
 
     @pyqtSlot()
@@ -256,8 +256,8 @@ class TrackTableView(QTableView):
         ...
 
     @pyqtSlot()
-    def stop_playing(self) -> None:
-        self.set_playing_track_index(None)
+    def set_stopped(self) -> None:
+        self._table_model.set_stopped()
 
     def focusInEvent(self, event: QFocusEvent) -> None:
         # It's important to clear selection for better visuals, but to do it before opening new editor
@@ -277,8 +277,8 @@ class TrackTableView(QTableView):
 
 
 class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
-    def __init__(self, table_view: TrackTableView, *args, **kwargs):
-        super().__init__(table_view, *args, **kwargs)
+    def __init__(self, table_view: TrackTableView):
+        super().__init__(table_view)
         self._sort_order = Qt.SortOrder.AscendingOrder
         self._sort_key = None
         self._source_model: Optional[TrackTableModel] = None
@@ -330,7 +330,8 @@ class TrackTableModel(QAbstractTableModel):
         super().__init__(parent)
         self._table_view: TrackTableView = parent
         self.tracks: List[Track] = []
-        self.is_playing = False
+        self.is_paused = True
+        self.is_stopped = True
         # self.playing_track_index: Optional[int] = None
         self.playing_track: Optional[Track] = None
 
@@ -363,13 +364,12 @@ class TrackTableModel(QAbstractTableModel):
                                              Qt.AspectRatioMode.KeepAspectRatio,
                                              Qt.TransformationMode.SmoothTransformation)
             elif index.column() == 1:
-                # print(self.playing_track_index)
-                if self.playing_track_index is None:
+                if self.playing_track_index is None or self.is_stopped:
                     return
                 if index.row() == self.playing_track_index:
-                    if self.is_playing:
+                    if not self.is_paused:
                         return self.playing_speaker_pixmap
-                    elif not self.is_playing:
+                    elif self.is_paused:
                         return self.muted_speaker_pixmap
 
         if role == Qt.ItemDataRole.DisplayRole and not index.data(Qt.ItemDataRole.DecorationRole):
@@ -411,13 +411,22 @@ class TrackTableModel(QAbstractTableModel):
 
     @pyqtSlot()
     def set_paused(self) -> None:
-        self.is_playing = False
+        self.is_stopped = False
+        self.is_paused = True
         if self.playing_track_index is not None:
             self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
 
     @pyqtSlot()
     def set_unpaused(self) -> None:
-        self.is_playing = True
+        self.is_stopped = False
+        self.is_paused = False
+        if self.playing_track_index is not None:
+            self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
+
+    @pyqtSlot()
+    def set_stopped(self):
+        self.is_stopped = True
+        self.is_paused = True
         if self.playing_track_index is not None:
             self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
 

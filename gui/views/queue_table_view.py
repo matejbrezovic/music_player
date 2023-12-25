@@ -10,39 +10,33 @@ from data_models.track import Track
 from utils import ElidedLabel, get_embedded_artwork_pixmap, get_formatted_time_in_mins, get_default_artwork_pixmap
 
 
-class InformationTableView(QTableView):
-    set_new_tracks = pyqtSignal()
-    track_clicked = pyqtSignal(Track, int)
-    track_double_clicked = pyqtSignal(Track, int)
+class QueueTableView(QTableView):
+    track_double_clicked = pyqtSignal(Track)
 
     def __init__(self, *args):
         super().__init__(*args)
-        self._table_model = InformationTableModel(self)
-        self._table_delegate = InformationTableItemDelegate(self)
+        self._table_model = QueueTableModel(self)
+        self._table_delegate = QueueTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
-        self._tracks: List[Track] = []
         self._playing_track_index = -1
 
         palette = self.palette()
         palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.BrightText, QColor(79, 180, 242))
         self.setPalette(palette)
 
-        self.clicked.connect(lambda index: self.track_clicked.emit(self._tracks[index.row()], index.row()))
-        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._tracks[index.row()], index.row()))
+        self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._table_model.tracks[index.row()]))
 
         self._viewport_fix_timer = QTimer(self)
         self._viewport_fix_timer.setTimerType(Qt.TimerType.PreciseTimer)
         self._viewport_fix_timer.setSingleShot(True)
-        self._viewport_fix_timer.timeout.connect(self._on_viewport_fix_timeout)
+        self._viewport_fix_timer.timeout.connect(self.on_viewport_fix_timeout)
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._table_model.set_tracks(tracks)
         self._table_delegate.set_tracks(tracks)
-        self._tracks = tracks
-        self.set_new_tracks.emit()
 
-    def _on_viewport_fix_timeout(self):
+    def on_viewport_fix_timeout(self):
         visible_index_range = range(self.rowAt(4), self.rowAt(self.rect().height()))
         if self._playing_track_index is None:
             self.scrollToTop()
@@ -54,24 +48,29 @@ class InformationTableView(QTableView):
                           QAbstractItemView.ScrollHint.PositionAtTop)
         self.viewport().repaint()
 
-    def set_currently_playing_track_index(self, index: Optional[int]) -> None:
-        self._table_delegate.is_playing = False if index is None else True
+    def set_playing_track(self, track: Optional[Track]) -> None:
+        self._table_delegate.is_paused = True if track is None else False
+
+        index = self._table_model.tracks.index(track) if track in self._table_model.tracks else None
+
         self._playing_track_index = index
-        self._table_model.set_currently_playing_track_index(index)
-        self._table_delegate.set_currently_playing_track_index(index)
-        self._viewport_fix_timer.start(1)
-        # self.viewport().repaint()
+        self._table_model.set_playing_track_index(index)
+        self._table_delegate.set_playing_track_index(index)
+        self._viewport_fix_timer.start(0)
 
     def set_paused(self) -> None:
-        self._table_delegate.is_playing = False
+        self._table_delegate.is_stopped = False
+        self._table_delegate.is_paused = True
         self.viewport().repaint()
 
     def set_unpaused(self) -> None:
-        self._table_delegate.is_playing = True
+        self._table_delegate.is_stopped = False
+        self._table_delegate.is_paused = False
         self.viewport().repaint()
 
     def stop_playing(self):
-        self.set_currently_playing_track_index(None)
+        self._table_delegate.is_stopped = True
+        self.viewport().repaint()
 
     def focusInEvent(self, event: QFocusEvent) -> None:
         if QApplication.mouseButtons() & Qt.MouseButton.LeftButton:
@@ -82,18 +81,18 @@ class InformationTableView(QTableView):
         return super().focusOutEvent(event)
 
 
-class InformationTableModel(QAbstractTableModel):
+class QueueTableModel(QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
-        self.table_view = parent
-        self._tracks: List[Track] = []
+        # self.table_view = parent
+        self.tracks: List[Track] = []
         self._playing_track_index = None
 
         self.loaded_tracks_num = 0
         self.loaded_pixmap_mapping = {}
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
-        if not self._tracks:
+        if not self.tracks:
             return None
 
         if role == Qt.ItemDataRole.TextAlignmentRole:
@@ -102,7 +101,7 @@ class InformationTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DecorationRole:
             if not index.column():
                 if index.row() not in self.loaded_pixmap_mapping:
-                    artwork_pixmap = get_embedded_artwork_pixmap(self._tracks[index.row()].file_path)
+                    artwork_pixmap = get_embedded_artwork_pixmap(self.tracks[index.row()].file_path)
                     if not artwork_pixmap or artwork_pixmap.isNull():
                         artwork_pixmap = get_default_artwork_pixmap("album")
                     self.loaded_pixmap_mapping[index.row()] = artwork_pixmap
@@ -111,7 +110,7 @@ class InformationTableModel(QAbstractTableModel):
                 return artwork_pixmap
 
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
-        return len(self._tracks)
+        return len(self.tracks)
 
     def columnCount(self, index: QModelIndex = QModelIndex) -> int:
         return 2
@@ -119,23 +118,24 @@ class InformationTableModel(QAbstractTableModel):
     def set_tracks(self, tracks: List[Track]) -> None:
         self.loaded_pixmap_mapping = {}
         self.layoutAboutToBeChanged.emit()
-        self._tracks = tracks
+        self.tracks = tracks
         self.layoutChanged.emit()
         self.dataChanged.emit(self.createIndex(0, 0),
                               self.createIndex(self.rowCount(),
                                                self.columnCount()))
 
-    def set_currently_playing_track_index(self, index: Optional[int]) -> None:
+    def set_playing_track_index(self, index: Optional[int]) -> None:
         self._playing_track_index = index
 
 
-class InformationTableItemDelegate(QStyledItemDelegate):
-    def __init__(self, parent: QTableView = None):
+class QueueTableItemDelegate(QStyledItemDelegate):
+    def __init__(self, parent: QueueTableView = None):
         super().__init__(parent)
-        self._table_view: QTableView = parent
+        self._table_view = parent
         self._tracks: List[Track] = []
         self._playing_track_index = None
-        self.is_playing = False
+        self.is_paused = True
+        self.is_stopped = True
         self.track_info_widgets_mapping = {}
 
         self.pixmap_width = 16
@@ -179,24 +179,25 @@ class InformationTableItemDelegate(QStyledItemDelegate):
 
             if index.row() not in self.track_info_widgets_mapping:
                 track = self._tracks[index.row()]
-                track_info_widget = TrackInfoWidget(track.title,
+                track_info_widget = QueueItemWidget(track.title,
                                                     track.artist,
                                                     get_formatted_time_in_mins(track.length))
                 self.track_info_widgets_mapping[index.row()] = track_info_widget
             else:
                 track_info_widget = self.track_info_widgets_mapping[index.row()]
 
-            if index.row() == self._playing_track_index:
+            if index.row() == self._playing_track_index and not self.is_stopped:
                 vertical_offset = 4
                 bottom_right = QPoint(main_part_rect.left() + self.pixmap_width, main_part_rect.top() +
                                       self.pixmap_height + vertical_offset)
                 top_left = QPoint(main_part_rect.left(), main_part_rect.top() + vertical_offset)
                 pixmap_rect = QRect(top_left, bottom_right)
                 main_part_rect.setLeft(main_part_rect.left() + self.pixmap_width)
-                if self.is_playing:
+                if not self.is_paused:
                     painter.drawPixmap(pixmap_rect, self.playing_pixmap)
                 else:
                     painter.drawPixmap(pixmap_rect, self.paused_pixmap)
+                # self._table_view.on_viewport_fix_timeout()
 
             track_info_widget.setGeometry(main_part_rect)
 
@@ -213,11 +214,11 @@ class InformationTableItemDelegate(QStyledItemDelegate):
         self.track_info_widgets_mapping = {}
         self._tracks = tracks
 
-    def set_currently_playing_track_index(self, index: Optional[int]) -> None:
+    def set_playing_track_index(self, index: Optional[int]) -> None:
         self._playing_track_index = index
 
 
-class TrackInfoWidget(QWidget):
+class QueueItemWidget(QWidget):
     def __init__(self, title: str, artist: str, duration: str, *args):
         super().__init__(*args)
         self.v_layout = QVBoxLayout()

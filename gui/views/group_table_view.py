@@ -6,24 +6,24 @@ from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QStyledItemDelega
                              QStyleOptionViewItem, QApplication, QAbstractItemView)
 
 from constants import SELECTION_QCOLOR, LOST_FOCUS_QCOLOR
-from data_models.navigation_group import NavigationGroup
+from data_models.track_group import TrackGroup
 from repositories.cached_tracks_repository import CachedTracksRepository
 from utils import ElidedLabel
 
 
-class NavigationTableView(QTableView):
+class GroupTableView(QTableView):
     set_new_groups = pyqtSignal()
     group_clicked = pyqtSignal(list, tuple)
     group_double_clicked = pyqtSignal(list, tuple)
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.groups: List[NavigationGroup] = []
+        self.groups: List[TrackGroup] = []
         self.group_key = None
         self.last_group_key = self.group_key
         self.last_group_title = None
-        self._table_model = NavigationTableModel(self)
-        self._table_delegate = NavigationTableItemDelegate(self)
+        self._table_model = GroupTableModel(self)
+        self._table_delegate = GroupTableItemDelegate(self)
         self.setModel(self._table_model)
         self.setItemDelegate(self._table_delegate)
         self.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -40,7 +40,7 @@ class NavigationTableView(QTableView):
         self.group_key = key
 
     @pyqtSlot(list)
-    def set_groups(self, groups: List[NavigationGroup]) -> None:
+    def set_groups(self, groups: List[TrackGroup]) -> None:
         self.groups = groups
         self._table_model.set_groups(groups)
         self._table_delegate.set_groups(groups)
@@ -79,11 +79,11 @@ class NavigationTableView(QTableView):
         return super().focusOutEvent(event)
 
 
-class NavigationTableModel(QAbstractTableModel):
+class GroupTableModel(QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self.table_view = parent
-        self._groups: List[NavigationGroup] = []
+        self._groups: List[TrackGroup] = []
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
         if not self._groups:
@@ -107,7 +107,7 @@ class NavigationTableModel(QAbstractTableModel):
         return 2
 
     @pyqtSlot(list)
-    def set_groups(self, groups: List[NavigationGroup]) -> None:
+    def set_groups(self, groups: List[TrackGroup]) -> None:
         self.layoutAboutToBeChanged.emit()
         self._groups = groups
         self.layoutChanged.emit()
@@ -116,11 +116,11 @@ class NavigationTableModel(QAbstractTableModel):
                                                self.columnCount()))
 
 
-class NavigationTableItemDelegate(QStyledItemDelegate):
+class GroupTableItemDelegate(QStyledItemDelegate):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
         self._table_view: QTableView = parent
-        self._groups: List[NavigationGroup] = []
+        self._groups: List[TrackGroup] = []
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         # set background color
@@ -149,7 +149,7 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
 
         if index.column() == 1:
             navigation_group = self._groups[index.row()]
-            navigation_group_widget = NavigationGroupWidget(navigation_group.visual_title, navigation_group.tracks_num)
+            navigation_group_widget = GroupItemWidget(navigation_group.visual_title, navigation_group.tracks_num)
 
             navigation_group_widget.setGeometry(option.rect)
 
@@ -164,11 +164,11 @@ class NavigationTableItemDelegate(QStyledItemDelegate):
             painter.restore()
 
     @pyqtSlot(list)
-    def set_groups(self, groups: List[NavigationGroup]) -> None:
+    def set_groups(self, groups: List[TrackGroup]) -> None:
         self._groups = groups
 
 
-class NavigationGroupWidget(QWidget):
+class GroupItemWidget(QWidget):
     def __init__(self, title: str, tracks_num: int, *args):
         super().__init__(*args)
 

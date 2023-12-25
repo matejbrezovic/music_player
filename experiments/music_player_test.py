@@ -254,10 +254,10 @@ class MainWindow(QMainWindow):
 		infoBox.show()
 
 	def prevItemPlaylist(self):
-		self.player.playlist().previous()
+		self.player.audio_queue().previous()
 
 	def nextItemPlaylist(self):
-		self.player.playlist().next()
+		self.player.audio_queue().next()
 
 	def exitAction(self):
 		exitAc = QAction('&Exit',self)
