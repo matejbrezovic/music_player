@@ -1,6 +1,6 @@
 from typing import List, Any, Optional, Union
 
-from PyQt6.QtCore import QModelIndex, pyqtSignal, QRect, QPoint, QTimer, QAbstractTableModel, Qt
+from PyQt6.QtCore import QModelIndex, pyqtSignal, QRect, QPoint, QTimer, QAbstractTableModel, Qt, QSize
 from PyQt6.QtGui import QPixmap, QBrush, QPen, QPainter, QFocusEvent, QPalette, QColor
 from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLabel, QSizePolicy, QStyledItemDelegate,
                              QStyle, QStyleOptionViewItem, QApplication, QAbstractItemView)
@@ -26,37 +26,29 @@ class QueueTableView(QTableView):
         self.setPalette(palette)
 
         self.doubleClicked.connect(lambda index: self.track_double_clicked.emit(self._table_model.tracks[index.row()]))
-
-        self._viewport_fix_timer = QTimer(self)
-        self._viewport_fix_timer.setTimerType(Qt.TimerType.PreciseTimer)
-        self._viewport_fix_timer.setSingleShot(True)
-        self._viewport_fix_timer.timeout.connect(self.on_viewport_fix_timeout)
+        self._table_model.dataChanged.connect(lambda: self._handle_scrolling())
 
     def set_tracks(self, tracks: List[Track]) -> None:
         self._table_model.set_tracks(tracks)
         self._table_delegate.set_tracks(tracks)
 
-    def on_viewport_fix_timeout(self):
-        visible_index_range = range(self.rowAt(4), self.rowAt(self.rect().height()))
+    def _handle_scrolling(self):
         if self._playing_track_index is None:
             self.scrollToTop()
-        elif self._playing_track_index not in visible_index_range:
-            self.scrollTo(self._table_model.index(self._playing_track_index, 0),
+        elif self._playing_track_index < 2:
+            self.scrollTo(self._table_model.index(0, 0),
                           QAbstractItemView.ScrollHint.PositionAtTop)
-        elif self._playing_track_index in visible_index_range[2:]:
+        else:
             self.scrollTo(self._table_model.index(self._playing_track_index - 2, 0),
                           QAbstractItemView.ScrollHint.PositionAtTop)
-        self.viewport().repaint()
 
     def set_playing_track(self, track: Optional[Track]) -> None:
         self._table_delegate.is_paused = True if track is None else False
 
-        index = self._table_model.tracks.index(track) if track in self._table_model.tracks else None
+        self._playing_track_index = self._table_model.tracks.index(track) if track in self._table_model.tracks else None
 
-        self._playing_track_index = index
-        self._table_model.set_playing_track_index(index)
-        self._table_delegate.set_playing_track_index(index)
-        self._viewport_fix_timer.start(0)
+        self._table_delegate.set_playing_track_index(self._playing_track_index)
+        self._handle_scrolling()
 
     def set_paused(self) -> None:
         self._table_delegate.is_stopped = False
@@ -84,9 +76,7 @@ class QueueTableView(QTableView):
 class QueueTableModel(QAbstractTableModel):
     def __init__(self, parent: QTableView = None):
         super().__init__(parent)
-        # self.table_view = parent
         self.tracks: List[Track] = []
-        self._playing_track_index = None
 
         self.loaded_tracks_num = 0
         self.loaded_pixmap_mapping = {}
@@ -123,9 +113,6 @@ class QueueTableModel(QAbstractTableModel):
         self.dataChanged.emit(self.createIndex(0, 0),
                               self.createIndex(self.rowCount(),
                                                self.columnCount()))
-
-    def set_playing_track_index(self, index: Optional[int]) -> None:
-        self._playing_track_index = index
 
 
 class QueueTableItemDelegate(QStyledItemDelegate):
@@ -197,7 +184,6 @@ class QueueTableItemDelegate(QStyledItemDelegate):
                     painter.drawPixmap(pixmap_rect, self.playing_pixmap)
                 else:
                     painter.drawPixmap(pixmap_rect, self.paused_pixmap)
-                # self._table_view.on_viewport_fix_timeout()
 
             track_info_widget.setGeometry(main_part_rect)
 
