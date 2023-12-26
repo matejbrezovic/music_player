@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import sys
 import typing
-from typing import List, Optional, Any, Union
+from typing import List, Optional, Any, Union, Dict
 
 from PyQt6.QtCore import (QModelIndex, pyqtSignal, pyqtSlot, QSize, QAbstractItemModel, QRect, QAbstractTableModel, Qt,
                           QSortFilterProxyModel)
@@ -34,7 +34,6 @@ class TrackTableView(QTableView):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self._tracks: List[Track] = []
         self.playing_track = None
 
         self.padding = 4
@@ -69,12 +68,12 @@ class TrackTableView(QTableView):
 
     def row_double_clicked(self, model_index: QModelIndex) -> None:
         playing_track_index = model_index.row()
-        self.playing_track = self._tracks[playing_track_index]
+        self.playing_track = self._table_model.tracks[playing_track_index]
         self.track_double_clicked.emit(self.playing_track, playing_track_index)
 
     def row_clicked(self, model_index: QModelIndex) -> None:
         index = model_index.row()
-        track = self._tracks[index]
+        track = self._table_model.tracks[index]
         self.track_clicked.emit(track, index)
 
     def sort_by_column(self, logical_index: int, order: Optional[Qt.SortOrder] = None) -> None:
@@ -193,28 +192,27 @@ class TrackTableView(QTableView):
         self.output_to_triggered.emit(audio_output)
 
     def play_now_action_triggered(self) -> None:
-        if not self._tracks:
+        if not self._table_model.tracks:
             return
 
         selected_track_indexes = sorted(set([i.row() for i in self.selectionModel().selection().indexes()]))
-        self.play_now_triggered.emit([self._tracks[i] for i in selected_track_indexes])
+        self.play_now_triggered.emit([self._table_model.tracks[i] for i in selected_track_indexes])
 
     def queue_next_action_triggered(self) -> None:
-        if not self._tracks:
+        if not self._table_model.tracks:
             return
         selected_track_indexes = sorted(set([i.row() for i in self.selectionModel().selection().indexes()]))
-        # print(selected_track_indexes)
-        self.queue_next_triggered.emit([self._tracks[i] for i in selected_track_indexes])
+        self.queue_next_triggered.emit([self._table_model.tracks[i] for i in selected_track_indexes])
 
     def queue_last_action_triggered(self) -> None:
-        if not self._tracks:
+        if not self._table_model.tracks:
             return
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
-        self.queue_last_triggered.emit([self._tracks[i] for i in selected_track_indexes])
+        self.queue_last_triggered.emit([self._table_model.tracks[i] for i in selected_track_indexes])
 
     def delete_action_triggered(self) -> None:
         selected_track_indexes = set([i.row() for i in self.selectionModel().selection().indexes()])
-        selected_tracks = [self._tracks[i] for i in selected_track_indexes]
+        selected_tracks = [self._table_model.tracks[i] for i in selected_track_indexes]
         d = DeleteTracksDialog(selected_tracks)
         code = d.exec()
         if code == QDialog.DialogCode.Accepted:
@@ -223,24 +221,19 @@ class TrackTableView(QTableView):
 
         self.selectRow(sorted(selected_track_indexes)[0])
 
-    @property
-    def tracks(self) -> List[Track]:
-        return self._table_model.tracks
-
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         for index in self.selectedIndexes():
             if index.column() == self.rating_column:
                 self._star_delegate.commit_and_close_editor(index)
         self.clearSelection()
-        self._tracks = tracks
         self._table_model.set_tracks(tracks)
+        self._table_delegate.set_tracks(tracks)
         self.new_tracks_set.emit()
         self.sort_by_column(self._table_header.sortIndicatorSection(), self._sort_order)
 
     @pyqtSlot(int)
     def set_playing_track_index(self, index: Optional[int]) -> None:
-        self._is_stopped = False
         self._table_model.set_playing_track_index(index)
 
     @pyqtSlot()
@@ -251,9 +244,12 @@ class TrackTableView(QTableView):
     def set_unpaused(self) -> None:
         self._table_model.set_unpaused()
 
-    @pyqtSlot(list)
-    def added_tracks(self, tracks: List[Track]):
-        ...
+    # @pyqtSlot(list)
+    # def added_tracks(self, tracks: List[Track]):
+    #     ...
+
+    def displayed_tracks(self) -> List[Track]:
+        return self._table_model.tracks
 
     @pyqtSlot()
     def set_stopped(self) -> None:
@@ -332,7 +328,7 @@ class TrackTableModel(QAbstractTableModel):
         self.tracks: List[Track] = []
         self.is_paused = True
         self.is_stopped = True
-        # self.playing_track_index: Optional[int] = None
+        self.playing_track_index: Optional[int] = None
         self.playing_track: Optional[Track] = None
 
         self.playing_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-playing.png")
@@ -356,7 +352,7 @@ class TrackTableModel(QAbstractTableModel):
         if role == Qt.ItemDataRole.DecorationRole:
             if index.column() == 0:
                 track = self.tracks[index.row()]
-                artwork_pixmap: Optional[QPixmap] = track.artwork_pixmap
+                artwork_pixmap: Optional[QPixmap] = track.artwork_pixmap  # todo cache this
                 if not artwork_pixmap or artwork_pixmap.isNull():
                     return None
                 return artwork_pixmap.scaled(self._table_view.columnWidth(index.column()),
@@ -449,9 +445,14 @@ class TrackTableItemDelegate(QStyledItemDelegate):
         super().__init__(track_table_view)
         self.padding = track_table_view.padding
         self._table_view: TrackTableView = track_table_view
-        self.last_height = self._table_view.height()
+        self._tracks: List[Track] = []
+
+        self._cached_elided_texts: Dict[QModelIndex, str] = {}
+        self._cached_column_widths: Dict[int, int] = {}  # column index, column width
+        self._cached_pixmaps: Dict[QModelIndex, QPixmap] = {}
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
+        # print('PAINTTT')
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():
@@ -465,18 +466,36 @@ class TrackTableItemDelegate(QStyledItemDelegate):
 
         display_role: Union[str, int] = index.data(Qt.ItemDataRole.DisplayRole)
         decoration_role: QPixmap = index.data(Qt.ItemDataRole.DecorationRole)
-        if display_role:
-            if MAIN_PANEL_COLUMN_NAMES[index.column()].lower() == "time":
-                display_role = get_formatted_time_in_mins(display_role)
 
+        if decoration_role and not decoration_role.isNull():
+            rect = option.rect
+            rect.setRect(rect.left() + 1, rect.top() + 1,
+                         rect.width() - 2, rect.height() - 2)
+
+            if index in self._cached_pixmaps:
+                painter.drawPixmap(rect, self._cached_pixmaps[index])
+            else:
+                pixmap = decoration_role
+                if index.column() == 1:
+                    height = rect.height()
+                    width = rect.width()
+                    rect.setHeight(width)
+                    rect.translate(0, (height - width) // 2)
+
+                    pixmap = pixmap.scaled(width, width,
+                                           Qt.AspectRatioMode.KeepAspectRatio,
+                                           Qt.TransformationMode.SmoothTransformation)
+                painter.drawPixmap(rect, pixmap)
+                self._cached_pixmaps[index] = pixmap
+
+        elif display_role:
             if option.state & QStyle.StateFlag.State_Selected and self._table_view.hasFocus():
                 painter.setPen(QColor(option.palette.highlightedText()))
             else:
                 painter.setPen(QColor(option.palette.text()))
-            text = f"{display_role}"
-            if text:
-                elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
-                                                                   max(option.rect.width() - self.padding * 2, 18))
+
+            if (index in self._cached_elided_texts and
+                    self._table_view.columnWidth(index.column()) == self._cached_column_widths[index.column()]):
                 if index.column():
                     alignment = Qt.AlignmentFlag.AlignVCenter
                     if index.column() == len(MAIN_PANEL_COLUMN_NAMES) - 1:
@@ -486,24 +505,36 @@ class TrackTableItemDelegate(QStyledItemDelegate):
 
                 option.rect.setLeft(option.rect.left() + self.padding)
                 option.rect.setRight(option.rect.right() - self.padding)
-                painter.drawText(option.rect, alignment, elided_text)
+                painter.drawText(option.rect, alignment, self._cached_elided_texts[index])
+            else:
+                self._cached_column_widths[index.column()] = self._table_view.columnWidth(index.column())
+                if MAIN_PANEL_COLUMN_NAMES[index.column()].lower() == "time":
+                    display_role = get_formatted_time_in_mins(display_role)
 
-        if decoration_role and not decoration_role.isNull():
-            pixmap = decoration_role
-            rect = option.rect
-            rect.setRect(rect.left() + 1, rect.top() + 1,
-                         rect.width() - 2, rect.height() - 2)
+                text = f"{display_role}"
+                if text:
+                    elided_text = QFontMetrics(option.font).elidedText(str(text), Qt.TextElideMode.ElideRight,
+                                                                       max(option.rect.width() - self.padding * 2, 18))
+                    if index.column():
+                        alignment = Qt.AlignmentFlag.AlignVCenter
+                        if index.column() == len(MAIN_PANEL_COLUMN_NAMES) - 1:
+                            alignment |= Qt.AlignmentFlag.AlignRight
+                    else:
+                        alignment = Qt.AlignmentFlag.AlignCenter
 
-            if index.column() == 1:
-                height = rect.height()
-                width = rect.width()
-                rect.setHeight(width)
-                rect.translate(0, (height - width) // 2)
+                    option.rect.setLeft(option.rect.left() + self.padding)
+                    option.rect.setRight(option.rect.right() - self.padding)
+                    painter.drawText(option.rect, alignment, elided_text)
 
-                pixmap = pixmap.scaled(width, width,
-                                       Qt.AspectRatioMode.KeepAspectRatio,
-                                       Qt.TransformationMode.SmoothTransformation)
-            painter.drawPixmap(rect, pixmap)
+                    self._cached_elided_texts[index] = f"{elided_text}"
+                    return
+                self._cached_elided_texts[index] = ""
+
+    @pyqtSlot(list)
+    def set_tracks(self, tracks: List[Track]) -> None:
+        self._tracks = tracks
+        self._cached_elided_texts = {}
+        self._cached_pixmaps = {}
 
 
 class TrackTableHeader(QHeaderView):

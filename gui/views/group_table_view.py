@@ -117,7 +117,6 @@ class GroupTableItemDelegate(QStyledItemDelegate):
         self._table_view: GroupTableView = parent
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
-        # set background color
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():

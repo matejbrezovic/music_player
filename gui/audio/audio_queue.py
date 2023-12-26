@@ -191,11 +191,12 @@ class AudioQueue(QObject, metaclass=QtSingleton):
         if track not in self.get_queue():
             raise TrackNotInQueueError
 
-        ind = self._tracks_to_play.index(track) - len(self._played_tracks)
+        if track in self._tracks_to_play:
+            ind = self._tracks_to_play.index(track) - len(self._played_tracks)
 
-        if not self.is_shuffled:
-            self._played_tracks.extend(self._tracks_to_play[:ind])
-            self._tracks_to_play = self._tracks_to_play[ind+1:]
-        else:
-            self._tracks_to_play.pop(ind)
+            if not self.is_shuffled:
+                self._played_tracks.extend(self._tracks_to_play[:ind])
+                self._tracks_to_play = self._tracks_to_play[ind+1:]
+            else:
+                self._tracks_to_play.pop(ind)
         self.update_currently_playing(track)

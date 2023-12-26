@@ -33,7 +33,6 @@ class TrackInfoWidget(QWidget):
         font.setBold(True)
         self.playing_track_title_label.setFont(font)
         self.playing_track_title_label.setContentsMargins(4, 0, 4, 0)
-        # self.currently_playing_track_title.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
         self.currently_playing_track_info = ElidedLabel("No Info")
         self.currently_playing_track_info.setContentsMargins(4, 0, 4, 0)
 

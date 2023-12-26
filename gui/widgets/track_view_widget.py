@@ -77,7 +77,7 @@ class TrackViewWidget(QWidget):
 
     @property
     def displayed_tracks(self) -> List[Track]:
-        return self.table_view.tracks
+        return self.table_view.displayed_tracks()
 
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
