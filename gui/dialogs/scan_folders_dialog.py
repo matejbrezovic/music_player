@@ -115,7 +115,7 @@ class ScanFoldersDialog(QDialog):
             tracks_removed += removed
 
         self.cached_tracks_repository.delete_cache()
-        self.cached_tracks_repository.cache_tracks()
+        self.cached_tracks_repository.load_cache()
 
         self.added_tracks.emit(tracks_added)
         self.removed_tracks.emit(tracks_removed)

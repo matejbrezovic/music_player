@@ -20,6 +20,6 @@ class AddFilesDialog(QFileDialog):
         tracks = TracksRepository.convert_file_paths_to_tracks(file_paths)
         CachedTracksRepository().add_new_tracks(tracks)
         self.cached_tracks_repository.delete_cache()
-        self.cached_tracks_repository.cache_tracks()
+        self.cached_tracks_repository.load_cache()
         self.added_tracks.emit(tracks)
         self.done(0)

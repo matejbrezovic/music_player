@@ -27,7 +27,7 @@ class MainWindow(QMainWindow):
         self.add_files_dialog = AddFilesDialog()
 
         self.cached_tracks_repository = CachedTracksRepository()
-        self.cached_tracks_repository.cache_tracks()
+        self.cached_tracks_repository.load_cache()
 
         self._setup_ui()
 
@@ -133,6 +133,7 @@ class MainWindow(QMainWindow):
             lambda tracks, key_value_tuple: (self.main_panel.display_tracks(tracks, key_value_tuple),
                                              self.status_bar.update_info(self.main_panel.displayed_tracks),
                                              self.audio_controller.set_queue(self.main_panel.displayed_tracks),
+                                             self.audio_queue.set_playing_track(self.main_panel.displayed_tracks[0]),
                                              self.audio_controller.play()))
 
         self.audio_queue.playing_track_updated.connect(

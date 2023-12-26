@@ -16,14 +16,12 @@ class AudioQueue(QObject, metaclass=QtSingleton):
     def __init__(self):
         super().__init__()
         self.is_shuffled = False
-        self.repeat_mode = RepeatMode.RepeatOff
         self.queue_ended = False
+        self.repeat_mode = RepeatMode.RepeatOff
 
         self._playing_track: Optional[Track] = None
-
-        self._played_tracks: List[Track] = []
         self._index_in_played_tracks: int = 0
-
+        self._played_tracks: List[Track] = []
         self._tracks_to_play: List[Track] = []
 
         # tracks added to queue manually by user
@@ -160,11 +158,10 @@ class AudioQueue(QObject, metaclass=QtSingleton):
 
         self.update_currently_playing(new_playing_track)
 
-    def set_prev(self) -> None:  # todo try to separate logic for shuffled and ordered queue
+    def set_prev(self) -> None:
         queue = self.get_queue()
         if (self._played_tracks.index(self.playing_track) == 0
                 or not self._played_tracks and self.is_shuffled):
-            print("ENDDD ", queue.index(self.playing_track))
             self.queue_ended = True
             return
 
@@ -173,7 +170,6 @@ class AudioQueue(QObject, metaclass=QtSingleton):
         if self.is_shuffled:
             new_playing_track = self._played_tracks[self._played_tracks.index(self.playing_track)]
         elif queue.index(self.playing_track) == 0:
-            print("AAAAA")
             self.queue_ended = True
             new_playing_track = self.playing_track
         else:
@@ -182,7 +178,6 @@ class AudioQueue(QObject, metaclass=QtSingleton):
         self.update_currently_playing(new_playing_track)
 
     def update_currently_playing(self, new_playing_track: Track) -> None:
-        print("NEW TRACK: ", new_playing_track)
         ind = self._played_tracks.index(self.playing_track) + 1 if (
                 self.playing_track in self._played_tracks) else len(self._played_tracks)
         if new_playing_track not in self._played_tracks:

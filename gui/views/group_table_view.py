@@ -32,8 +32,8 @@ class GroupTableView(QTableView):
         palette.setColor(QPalette.ColorGroup.All, QPalette.ColorRole.BrightText, QColor(79, 180, 242))
         self.setPalette(palette)
 
-        self.clicked.connect(self.single_click_action)
-        self.doubleClicked.connect(self.double_click_action)
+        self.clicked.connect(self._group_clicked)
+        self.doubleClicked.connect(self._group_double_clicked)
 
     @pyqtSlot(str)
     def set_group_key(self, key: str) -> None:
@@ -43,10 +43,9 @@ class GroupTableView(QTableView):
     def set_groups(self, groups: List[TrackGroup]) -> None:
         self.groups = groups
         self._table_model.set_groups(groups)
-        self._table_delegate.set_groups(groups)
 
     @pyqtSlot(QModelIndex)
-    def single_click_action(self, index: QModelIndex) -> None:
+    def _group_clicked(self, index: QModelIndex) -> None:
         if not self.groups:
             return
 
@@ -57,11 +56,11 @@ class GroupTableView(QTableView):
         self.group_clicked.emit(tracks, (self.group_key, self.last_group_title))
 
     def currentChanged(self, current: QModelIndex, previous: QModelIndex) -> None:
-        self.single_click_action(current)
+        self._group_clicked(current)
         super().currentChanged(current, previous)
 
     @pyqtSlot(QModelIndex)
-    def double_click_action(self, index: QModelIndex) -> None:
+    def _group_double_clicked(self, index: QModelIndex) -> None:
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
         if not tracks:
             return
@@ -80,7 +79,7 @@ class GroupTableView(QTableView):
 
 
 class GroupTableModel(QAbstractTableModel):
-    def __init__(self, parent: QTableView = None):
+    def __init__(self, parent: GroupTableView = None):
         super().__init__(parent)
         self.table_view = parent
         self._groups: List[TrackGroup] = []
@@ -94,11 +93,7 @@ class GroupTableModel(QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DecorationRole:
             if not index.column():
-                artwork_pixmap = self._groups[index.row()].pixmap
-                # artwork_pixmap = artwork_pixmap if artwork_pixmap else QPixmap(f"icons/album.png")
-                # icon = QIcon(artwork_pixmap)
-                # icon.addPixmap(artwork_pixmap, QtGui.QIcon.Mode.Selected)
-                return artwork_pixmap
+                return self._groups[index.row()].pixmap
 
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
         return len(self._groups)
@@ -117,10 +112,9 @@ class GroupTableModel(QAbstractTableModel):
 
 
 class GroupTableItemDelegate(QStyledItemDelegate):
-    def __init__(self, parent: QTableView = None):
+    def __init__(self, parent: GroupTableView = None):
         super().__init__(parent)
-        self._table_view: QTableView = parent
-        self._groups: List[TrackGroup] = []
+        self._table_view: GroupTableView = parent
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
         # set background color
@@ -148,7 +142,7 @@ class GroupTableItemDelegate(QStyledItemDelegate):
             painter.drawPixmap(rect, pixmap)
 
         if index.column() == 1:
-            navigation_group = self._groups[index.row()]
+            navigation_group = self._table_view.groups[index.row()]
             navigation_group_widget = GroupItemWidget(navigation_group.visual_title, navigation_group.tracks_num)
 
             navigation_group_widget.setGeometry(option.rect)
@@ -162,10 +156,6 @@ class GroupTableItemDelegate(QStyledItemDelegate):
 
             navigation_group_widget.render(painter)
             painter.restore()
-
-    @pyqtSlot(list)
-    def set_groups(self, groups: List[TrackGroup]) -> None:
-        self._groups = groups
 
 
 class GroupItemWidget(QWidget):

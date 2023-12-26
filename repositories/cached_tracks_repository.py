@@ -46,7 +46,7 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
         for group_key in GROUP_OPTIONS:
             self.get_track_counts_grouped_by(group_key)
 
-    def cache_tracks(self):
+    def load_cache(self):
         for group_key in GROUP_OPTIONS:
             for group_name, _ in self.get_track_counts_grouped_by(group_key):
                 self.get_tracks_by(group_key, group_name)

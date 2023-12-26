@@ -90,8 +90,8 @@ class GroupPanel(QFrame):
 
     @pyqtSlot(int)
     def group_key_changed(self, new_key: int) -> None:
-        self.group_table_view.selectionModel().clearSelection()
         self.group_table_view.scrollToTop()
+        self.group_table_view.selectionModel().clearSelection()
         self.group_table_view.set_group_key(GROUP_OPTIONS[new_key])
         self.view_key = new_key
         self._load_groups(new_key)

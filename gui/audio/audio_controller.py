@@ -22,8 +22,6 @@ from utils import (get_formatted_time, format_player_position_to_seconds, TrackN
 
 
 class AudioController(QFrame):
-    # playing_track_updated = pyqtSignal(Track, int)
-    # queue_updated = pyqtSignal(list)
     paused = pyqtSignal(Track)
     unpaused = pyqtSignal(Track)
     remaining_queue_time_changed = pyqtSignal(int)
