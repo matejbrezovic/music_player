@@ -47,6 +47,7 @@ class TrackTableView(QTableView):
         self._table_header.sectionClicked.connect(self.sort_by_column)
         self.clicked.connect(self.row_clicked)
         self.doubleClicked.connect(self.row_double_clicked)
+        self._table_header.sectionResized.connect(lambda: self._table_delegate.clear_cache())
 
         self._proxy_sort_model = TrackTableSortFilterProxyModel(self)
         self._proxy_sort_model.setSourceModel(self._table_model)
@@ -67,16 +68,19 @@ class TrackTableView(QTableView):
         self._setup_shortcuts()
 
     def row_double_clicked(self, model_index: QModelIndex) -> None:
+        # model_index = self._proxy_sort_model.mapToSource(model_index)
         playing_track_index = model_index.row()
         self.playing_track = self._table_model.tracks[playing_track_index]
         self.track_double_clicked.emit(self.playing_track, playing_track_index)
 
     def row_clicked(self, model_index: QModelIndex) -> None:
+        # model_index = self._proxy_sort_model.mapToSource(model_index)
         index = model_index.row()
         track = self._table_model.tracks[index]
         self.track_clicked.emit(track, index)
 
     def sort_by_column(self, logical_index: int, order: Optional[Qt.SortOrder] = None) -> None:
+        self._table_delegate.clear_cache()
         if logical_index not in {0, 1}:
             if self._sort_order == Qt.SortOrder.AscendingOrder:
                 self._sort_order = Qt.SortOrder.DescendingOrder
@@ -248,6 +252,9 @@ class TrackTableView(QTableView):
     # def added_tracks(self, tracks: List[Track]):
     #     ...
 
+    # def sort_key(self) -> str:
+    #     return self._proxy_sort_model.sort_key
+
     def displayed_tracks(self) -> List[Track]:
         return self._table_model.tracks
 
@@ -276,7 +283,7 @@ class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
     def __init__(self, table_view: TrackTableView):
         super().__init__(table_view)
         self._sort_order = Qt.SortOrder.AscendingOrder
-        self._sort_key = None
+        self.sort_key = None
         self._source_model: Optional[TrackTableModel] = None
         self._table_view = table_view
 
@@ -289,9 +296,9 @@ class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
 
     def sort(self, column: int, sort_order: Qt.SortOrder = Qt.SortOrder) -> None:
         if column not in (0, 1):
-            self._sort_key = MAIN_PANEL_COLUMN_NAMES[column].lower()
-            if self._sort_key == "time":
-                self._sort_key = "length"
+            self.sort_key = MAIN_PANEL_COLUMN_NAMES[column].lower()
+            if self.sort_key == "time":
+                self.sort_key = "length"
             self._source_model.layoutAboutToBeChanged.emit()
             if sort_order == Qt.SortOrder.AscendingOrder:
                 self._source_model.tracks.sort(key=self._sort_func)
@@ -305,12 +312,12 @@ class TrackTableSortFilterProxyModel(QSortFilterProxyModel):
         self.dataChanged.emit(QModelIndex(), QModelIndex())
 
     def _sort_func(self, track: Track) -> Any:
-        output = getattr(track, self._sort_key)
-        if output is None and self._sort_key not in ("year", "length"):
+        output = getattr(track, self.sort_key)
+        if output is None and self.sort_key not in ("year", "length"):
             return ""
         elif output is None:
             return 0
-        elif self._sort_key in ("year", "length"):
+        elif self.sort_key in ("year", "length"):
             if isinstance(output, str):
                 output = output.lower()
             return output
@@ -493,7 +500,6 @@ class TrackTableItemDelegate(QStyledItemDelegate):
                 painter.setPen(QColor(option.palette.highlightedText()))
             else:
                 painter.setPen(QColor(option.palette.text()))
-
             if (index in self._cached_elided_texts and
                     self._table_view.columnWidth(index.column()) == self._cached_column_widths[index.column()]):
                 if index.column():
@@ -533,9 +539,11 @@ class TrackTableItemDelegate(QStyledItemDelegate):
     @pyqtSlot(list)
     def set_tracks(self, tracks: List[Track]) -> None:
         self._tracks = tracks
+        self.clear_cache()
+
+    def clear_cache(self) -> None:
         self._cached_elided_texts = {}
         self._cached_pixmaps = {}
-
 
 class TrackTableHeader(QHeaderView):
     def __init__(self, orientation: Qt.Orientation, track_table_view: TrackTableView = None):
