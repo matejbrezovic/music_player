@@ -148,7 +148,6 @@ class MainWindow(QMainWindow):
                                              self.queue_panel.pause_playing_track()))
         self.audio_controller.unpaused.connect(lambda: (self.main_panel.unpause_playing_track(),
                                                self.queue_panel.unpause_playing_track()))
-        # self.audio_controller.queue_updated.connect(lambda tracks: self.queue_panel.update_queue(tracks))
         self.audio_controller.remaining_queue_time_changed.connect(self.status_bar.update_remaining_queue_time)
         self.audio_controller.player_stopped.connect(self._player_stopped)
 

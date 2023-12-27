@@ -1,7 +1,7 @@
 from typing import List
 
 from PIL import UnidentifiedImageError
-from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint, Qt, QThread, QTimer
+from PyQt6.QtCore import QUrl, pyqtSignal, pyqtSlot, QSize, QPoint, Qt, QThread
 from PyQt6.QtGui import QBrush, QPixmap, QPainter, QIcon, QFont, QPaintEvent, QWheelEvent, QColor, QImage
 from PyQt6.QtWidgets import QHBoxLayout, QLabel, QVBoxLayout, QSizePolicy, QFrame, QSpacerItem, QWidget
 
@@ -39,18 +39,14 @@ class AudioController(QFrame):
         self.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
         self._is_dark_mode_enabled = None
-        self._image_downloader_thread = QThread()
         self.image_downloader = ImageDownloader()
+        self.image_download_thread = QThread()
+        self.image_downloader.moveToThread(self.image_download_thread)
+        self.image_download_thread.started.connect(self.image_downloader.download_image)
         self.image_downloader.image_downloaded.connect(self._image_downloaded)
-        self.image_downloader.image_downloaded.connect(self._image_downloader_thread.quit)
-        self.image_downloader.moveToThread(self._image_downloader_thread)
-        self._image_downloader_thread.started.connect(self.image_downloader.get_image)
-        self._background_pixmap_update_timer = QTimer(self)
-        self._background_pixmap_update_timer.setTimerType(Qt.TimerType.PreciseTimer)
-        self._background_pixmap_update_timer.setSingleShot(True)
+        self.image_downloader.image_downloaded.connect(self.image_download_thread.quit)
 
         self.audio_queue = AudioQueue()
-        # self.queue.queue_updated.connect(self.queue_updated)
         self._playing_track = None
 
         self.total_queue_time = 0
@@ -68,6 +64,9 @@ class AudioController(QFrame):
         self.player.positionChanged.connect(self.player_position_changed)
         self.player.durationChanged.connect(self.player_duration_changed)
 
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
         self.play_button = HoverButton(self)
         self.prev_button = HoverButton(self)
         self.next_button = HoverButton(self)
@@ -196,7 +195,6 @@ class AudioController(QFrame):
         self.right_layout.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
         self.right_layout.addWidget(self.repeat_mode_button)
         self.right_layout.addWidget(self.audio_order_button)
-        # self.right_layout.addWidget(self.spectrum_equalizer_widget)
 
         self.right_part.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Preferred)
         self.right_part.setFixedSize(self.left_layout.sizeHint())
@@ -294,7 +292,7 @@ class AudioController(QFrame):
 
         self.star_widget.set_star_color(color)
 
-    def _set_to_default(self) -> None:
+    def _set_background_to_default(self) -> None:
         self.background_pixmap = None
         self.set_dark_mode_enabled(True)
         self.background_pixmap_updated.emit(get_default_artwork_pixmap("album"))
@@ -302,18 +300,18 @@ class AudioController(QFrame):
 
     def _set_custom_background_pixmap(self, pixmap: QPixmap) -> None:
         if pixmap.isNull():
-            self._set_to_default()
+            self._set_background_to_default()
+        else:
+            self.background_pixmap_updated.emit(pixmap)
 
-        self.background_pixmap_updated.emit(pixmap)
+            pixmap = get_blurred_pixmap(pixmap)
+            start_y = int(pixmap.height() // 1.5)
+            new_height = 60
+            pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
 
-        pixmap = get_blurred_pixmap(pixmap)
-        start_y = int(pixmap.height() // 1.5)
-        new_height = 60
-        pixmap = pixmap.copy(0, start_y, pixmap.width(), new_height)
-
-        self.background_pixmap = pixmap
-        self.set_dark_mode_enabled(False)
-        self.repaint()
+            self.background_pixmap = pixmap
+            self.set_dark_mode_enabled(False)
+            self.repaint()
 
     def _image_downloaded(self, qimage: QImage, track: Track = None) -> None:
         if track == self.get_playing_track():
@@ -325,28 +323,23 @@ class AudioController(QFrame):
 
     def update_background_pixmap(self, track: Track, reset_to_default: bool = False) -> None:
         if reset_to_default or not (track.artist and track.title):
-            self._set_to_default()
+            self._set_background_to_default()
             return
 
         pixmap = get_embedded_artwork_pixmap(track.file_path)
         if not pixmap:
-            self._set_to_default()
-            self._background_pixmap_update_timer.stop()
-            self.image_downloader.deleteLater()
-            self._image_downloader_thread.quit()
+            self._set_background_to_default()
 
-            self.image_downloader = ImageDownloader()
-            self.image_downloader.image_downloaded.connect(self._image_downloaded)
-            self.image_downloader.image_downloaded.connect(self._image_downloader_thread.quit)
-            self.image_downloader.set_track(track)
-            self.image_downloader.moveToThread(self._image_downloader_thread)
-            self._image_downloader_thread.started.connect(self.image_downloader.get_image)
-            self._background_pixmap_update_timer.timeout.connect(
-                lambda: self._image_downloader_thread.start())
-            self._background_pixmap_update_timer.start(2000)
-
+            self.start_download_thread(track)
         else:
             self._set_custom_background_pixmap(pixmap)
+
+    def start_download_thread(self, track: Track) -> None:
+        if self.image_download_thread.isRunning():
+            self.image_downloader.pending_track_requests.append(track)
+        else:
+            self.image_downloader.set_track(track)
+            self.image_download_thread.start()
 
     @pyqtSlot()
     def queue_ended(self):
@@ -359,7 +352,6 @@ class AudioController(QFrame):
     @pyqtSlot(list)
     def enqueue_next(self, tracks: List[Track]) -> None:
         self.audio_queue.enqueue_next(tracks)
-        # self.queue_updated.emit(self.queue.queue)
         self.next_button.setEnabled(True)
         self.update_total_queue_time(sum(track.length for track in self.audio_queue.get_queue()))
 
@@ -367,7 +359,6 @@ class AudioController(QFrame):
     def enqueue_last(self, tracks: List[Track]) -> None:
         self.audio_queue.enqueue_last(tracks)
         self.next_button.setEnabled(True)
-        # self.queue_updated.emit(self.queue.queue)
         self.update_total_queue_time(sum(track.length for track in self.audio_queue.get_queue()))
 
     @pyqtSlot(int)
@@ -386,7 +377,7 @@ class AudioController(QFrame):
             self.audio_order_button.setIcon(self.ordered_icon)
             self.prev_button.setEnabled(True)
 
-        self.update_total_queue_time(sum(track.length for track in self.audio_queue.queue))
+        self.update_total_queue_time(sum(track.length for track in self.audio_queue.get_queue()))
 
     @pyqtSlot()
     def change_repeat_mode(self) -> None:
@@ -419,14 +410,11 @@ class AudioController(QFrame):
         self.prev_button.setEnabled(True)
         self.next_button.setEnabled(True)
         self.audio_queue.set_queue(queue)
-
-        # self.queue_updated.emit(queue)
         self.update_total_queue_time(sum(track.length for track in queue))
 
     @pyqtSlot()
     def play(self) -> None:
         self._prev_stays_on_current_track = False
-        self._background_pixmap_update_timer.stop()
         if not self.get_playing_track():
             return
 
@@ -455,7 +443,6 @@ class AudioController(QFrame):
             self.play_button.setIcon(self.pause_icon)
             self.player.setSource(QUrl(new_playing_track.file_path))
             self.player.play()
-            # self.playing_track_updated.emit(new_playing_track, self.queue._playing_track_index)
             if self._playing_track != new_playing_track:
                 self._playing_track = new_playing_track
                 self.update_background_pixmap(new_playing_track)
@@ -616,7 +603,7 @@ class AudioController(QFrame):
     def get_playing_track(self) -> Track:
         return self.audio_queue.playing_track
 
-    def get_tracks(self) -> List[Track]:  # todo work
+    def get_tracks(self) -> List[Track]:
         return self.audio_queue.get_queue()
 
     @pyqtSlot(Track)

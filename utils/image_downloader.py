@@ -3,7 +3,7 @@ from time import sleep
 from typing import Optional
 
 import httpx
-from PyQt6.QtCore import QUrl, QObject, pyqtSignal, QRect
+from PyQt6.QtCore import QUrl, QObject, pyqtSignal, QRect, QThread
 from PyQt6.QtGui import QImage
 from PyQt6.QtNetwork import QNetworkReply, QNetworkRequest, QNetworkAccessManager
 from PyQt6.QtWidgets import QApplication
@@ -17,10 +17,15 @@ class ImageDownloader(QObject):
 
     def __init__(self):
         super().__init__()
-        self._image_num = 0
-        self._limit = 4
+        self._retry_count = 0
+        self._retry_limit = 4
         self.query = None
         self.track = None
+
+        self._network_access_manager = QNetworkAccessManager()
+        self._network_access_manager.finished.connect(self._handle_reply)
+
+        self.pending_track_requests = []  # used when playing track is changed before it's image was downloaded
 
     def set_query(self, query_string: str) -> None:
         self.query = query_string
@@ -31,17 +36,18 @@ class ImageDownloader(QObject):
 
     def _bing_image_search(self, query: str) -> Optional[str]:
         for _ in range(10):
-            urls = bing_image_urls(query, limit=self._limit, adult_filter_off=False)
+            urls = bing_image_urls(query, limit=self._retry_limit)
             if not urls:
                 sleep(0.5)
                 continue
-            img_url = urls[self._image_num]
+            img_url = urls[self._retry_count]
             return img_url
 
-    def get_image(self, init: bool = True) -> None:
-        if init:
-            self._network_access_manager = QNetworkAccessManager()
-            self._network_access_manager.finished.connect(self.handle_reply)
+    def download_image(self) -> None:
+        self._network_access_manager.deleteLater()
+        self._network_access_manager = QNetworkAccessManager(self)
+        self._network_access_manager.finished.connect(self._handle_reply)
+
         try:
             url = self._bing_image_search(self.query)
         except (httpx.ConnectError, httpx.HTTPStatusError, httpx.ConnectTimeout) as e:
@@ -53,8 +59,13 @@ class ImageDownloader(QObject):
         req = QNetworkRequest(QUrl(url))
         self._network_access_manager.get(req)
 
-    def handle_reply(self, reply: QNetworkReply) -> None:
+    def _handle_reply(self, reply: QNetworkReply) -> None:
         er = reply.error()
+        if self.pending_track_requests:
+            self.set_track(self.pending_track_requests[-1])
+            self.pending_track_requests = []
+            self.download_image()
+            return
 
         if er == QNetworkReply.NetworkError.NoError:
             bytes_string = reply.readAll()
@@ -63,19 +74,23 @@ class ImageDownloader(QObject):
             if qimg.height() > qimg.width():
                 qimg = qimg.copy(QRect(0, 0, qimg.width(), qimg.width()))
 
-            self._image_num = 0
+            self._retry_count = 0
             self.image_downloaded.emit(qimg, self.track)
 
         else:
-            self._image_num += 1
-            if self._image_num < self._limit:
-                self.get_image(init=False)
+            self._retry_count += 1
+            if self._retry_count < self._retry_limit:
+                self.download_image()
+
+    def moveToThread(self, thread: QThread) -> None:
+        self._network_access_manager.moveToThread(thread)
+        super().moveToThread(thread)
 
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
     i = ImageDownloader()
     i.set_query("Kygo Happy Now")
-    i.get_image()
+    i.download_image()
     app.quit()
     sys.exit(app.exec())
