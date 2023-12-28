@@ -1,5 +1,6 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+.idea/
 *.py[cod]
 *$py.class
 
@@ -30,9 +31,6 @@ venv/
 ENV/
 env.bak/
 venv.bak/
-
-
-.idea/
 
 *.zip
 *.pyc
