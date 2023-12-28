@@ -75,8 +75,8 @@ class MainWindow(QMainWindow):
         self.status_bar = StatusBar(self.audio_controller, self)
         self.header_menu = HeaderMenuWidget(self)
         self.horizontal_splitter = FixedHorizontalSplitter(self)
+        self.horizontal_splitter.setChildrenCollapsible(False)
         self.horizontal_splitter.sizes_changed.connect(self.header_menu.set_sizes)
-
         self.horizontal_splitter.addWidget(self.group_panel)
         self.horizontal_splitter.addWidget(self.main_panel)
         self.horizontal_splitter.addWidget(self.queue_panel)
@@ -88,8 +88,6 @@ class MainWindow(QMainWindow):
         self.horizontal_splitter.setStyleSheet("""
         QSplitter::handle {background-color: rgba(0, 0, 0, 0.2);}
         """)
-        self.horizontal_splitter.setChildrenCollapsible(False)
-        # self.horizontal_splitter.setOpaqueResize(False)
 
         self.central_widget_layout.addWidget(self.header_menu)
         self.central_widget_layout.addWidget(self.horizontal_splitter)
@@ -116,7 +114,7 @@ class MainWindow(QMainWindow):
         self.header_menu.information_panel_view_key_changed.connect(self.queue_panel.view_key_changed)
 
         self.main_panel.track_double_clicked.connect(
-            lambda track, _: (self.status_bar.update_info(self.main_panel.displayed_tracks),
+            lambda track: (self.status_bar.update_info(self.main_panel.displayed_tracks),
                               self.audio_queue.set_queue(self.main_panel.displayed_tracks),
                               self.audio_queue.set_playing_track(track),
                               self.audio_controller.play()))

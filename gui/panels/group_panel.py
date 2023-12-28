@@ -147,14 +147,6 @@ class GroupPanel(QFrame):
     def refresh_groups(self) -> None:
         self._load_groups(self.view_key)
 
-    @pyqtSlot(list)
-    def added_tracks(self) -> None:
-        return
-
-    @pyqtSlot(list)
-    def removed_tracks(self) -> None:
-        ...
-
     def get_last_selected_tracks(self) -> List[Track]:
         if not self.group_table_view.last_group_key or not self.group_table_view.last_group_title:
             return []

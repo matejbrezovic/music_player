@@ -10,8 +10,8 @@ from repositories.cached_tracks_repository import CachedTracksRepository
 
 
 class MainPanel(QFrame):
-    track_clicked = pyqtSignal(Track, int)
-    track_double_clicked = pyqtSignal(Track, int)
+    track_clicked = pyqtSignal(Track)
+    track_double_clicked = pyqtSignal(Track)
     play_now_triggered = pyqtSignal(list)
     output_to_triggered = pyqtSignal(str)
     queue_next_triggered = pyqtSignal(list)
@@ -21,7 +21,7 @@ class MainPanel(QFrame):
     def __init__(self, *args):
         super().__init__(*args)
         self.cached_tracks_repository = CachedTracksRepository()
-        self.setStyleSheet("MainPanel {background-color: rgba(0, 0, 0, 0.3)}")
+        self.setStyleSheet("MainPanel {background-color: rgb(240, 240, 240)}")
         self.setMinimumWidth(MAIN_PANEL_MIN_WIDTH)
         self.track_view_widget = TrackViewWidget(self)
         self.track_view_widget.track_clicked.connect(self.track_clicked.emit)

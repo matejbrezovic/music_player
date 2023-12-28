@@ -29,8 +29,8 @@ class TrackTableView(QTableView):
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
     tracks_deleted = pyqtSignal(list)
-    track_clicked = pyqtSignal(Track, int)
-    track_double_clicked = pyqtSignal(Track, int)
+    track_clicked = pyqtSignal(Track)
+    track_double_clicked = pyqtSignal(Track)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -68,14 +68,12 @@ class TrackTableView(QTableView):
         self._setup_shortcuts()
 
     def row_double_clicked(self, model_index: QModelIndex) -> None:
-        playing_track_index = model_index.row()
-        self.playing_track = self._table_model.tracks[playing_track_index]
-        self.track_double_clicked.emit(self.playing_track, playing_track_index)
+        self.playing_track = self._table_model.tracks[model_index.row()]
+        self.track_double_clicked.emit(self.playing_track)
 
     def row_clicked(self, model_index: QModelIndex) -> None:
-        index = model_index.row()
-        track = self._table_model.tracks[index]
-        self.track_clicked.emit(track, index)
+        track = self._table_model.tracks[model_index.row()]
+        self.track_clicked.emit(track)
 
     def sort_by_column(self, logical_index: int, order: Optional[Qt.SortOrder] = None) -> None:
         self._table_delegate.clear_cache()
@@ -548,7 +546,8 @@ class TrackTableItemDelegate(QStyledItemDelegate):
 class TrackTableHeader(QHeaderView):
     def __init__(self, orientation: Qt.Orientation, track_table_view: TrackTableView = None):
         super().__init__(orientation, track_table_view)
-        self.padding = track_table_view.padding
+        self._table_view = track_table_view
+        self.padding = self._table_view.padding
         self.setSectionsClickable(True)
         self.setSortIndicatorShown(True)
         self.setSectionsMovable(True)
@@ -557,38 +556,33 @@ class TrackTableHeader(QHeaderView):
         self.setStyle(HeaderProxyStyle(self.style()))
 
         self.sortIndicatorChanged.connect(self.sort_indicator_changed)
-        self.sectionMoved.connect(self.section_moved)
         self.sectionResized.connect(self.section_resized)
-        self.__section_moved_recursions = 0
+        self.section_texts = MAIN_PANEL_COLUMN_NAMES
 
-        self.section_text = MAIN_PANEL_COLUMN_NAMES
-
-        self.minimum_last_section_size = self.padding * 2 + self.fontMetrics().horizontalAdvance(self.section_text[-1])
+        self.minimum_last_section_size = self.padding * 2 + self.fontMetrics().horizontalAdvance(self.section_texts[-1])
 
         self.setStyleSheet("""
         QHeaderView {
-        border-bottom: 1px solid gray;
-        border-top: 0px;
-        border-right: 0px;
-        border-left: 0px;
+            border-bottom: 1px solid gray;
+            border-top: 0px;
+            border-right: 0px;
+            border-left: 0px;
         }
         """)
+
+    def mousePressEvent(self, e: QMouseEvent) -> None:
+        # prevents first 2 sections from moving
+        if (self._table_view.columnViewportPosition(0) <= e.pos().x() <=
+                self._table_view.columnViewportPosition(1) + self._table_view.columnWidth(1)):
+            return
+
+        super().mousePressEvent(e)
 
     @pyqtSlot(int, int, int)
     def section_resized(self, logical_index: int, _: int, new_size: int) -> None:
         """Sets minimum size for the last section."""
         if logical_index == self.count() - 1 and new_size < self.minimum_last_section_size:
             self.resizeSection(self.count() - 1, self.minimum_last_section_size)
-
-    @pyqtSlot(int, int, int)
-    def section_moved(self, _: int, old_visual_index: int, new_visual_index: int) -> None:
-        """Prevents section 1 from moving."""
-        if self.__section_moved_recursions:
-            self.__section_moved_recursions = 0
-            return
-        if {0, 1} & {old_visual_index, new_visual_index}:
-            self.__section_moved_recursions += 1
-            self.moveSection(new_visual_index, old_visual_index)
 
     @pyqtSlot(int, Qt.SortOrder)
     def sort_indicator_changed(self, logical_index: int, order: Qt.SortOrder) -> None:
@@ -597,7 +591,7 @@ class TrackTableHeader(QHeaderView):
 
     def text(self, section: int):
         if isinstance(self.model(), QAbstractItemModel):
-            return self.section_text[section]
+            return self.section_texts[section]
 
     def paintSection(self, painter: QPainter, rect: QRect, logical_index: int) -> None:
         if not self.rect().isValid():

@@ -10,8 +10,8 @@ from gui.views.track_table_view import TrackTableView
 
 
 class TrackViewWidget(QWidget):
-    track_double_clicked = pyqtSignal(Track, int)
-    track_clicked = pyqtSignal(Track, int)
+    track_double_clicked = pyqtSignal(Track)
+    track_clicked = pyqtSignal(Track)
     play_now_triggered = pyqtSignal(list)
     output_to_triggered = pyqtSignal(str)
     queue_next_triggered = pyqtSignal(list)
@@ -49,6 +49,8 @@ class TrackViewWidget(QWidget):
         self.track_table_view.setIconSize(QSize(22, 22))
         self.track_table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.track_table_view.setFrameShape(QFrame.Shape.NoFrame)
+        self.track_table_view.setAlternatingRowColors(True)
+        self.track_table_view.setCornerButtonEnabled(False)
         self.track_table_view.verticalScrollBar().setStyleSheet(
             f'''
             QScrollBar {{
@@ -69,29 +71,74 @@ class TrackViewWidget(QWidget):
                 width: 10px;
                 margin: 0px 0px 0px 0px;
             }}
-            QScrollBar::handle:vertical {{
+            QScrollBar::handle {{
                 background: rgb(230, 230, 230);
                 min-height: 25px;
             }}
-            QScrollBar::handle:vertical:hover {{
+            QScrollBar::handle:hover {{
                 background: rgb(220, 220, 220);
                 min-height: 25px;
             }}
-            QScrollBar::add-line:vertical {{
+            QScrollBar::add-line {{
                 background: white;
                 height: 0px;
                 subcontrol-position: bottom;
                 subcontrol-origin: margin;
             }}
-            QScrollBar::sub-line:vertical {{
-                padding-top: {self.track_table_view.horizontalHeader().height() - 2}px;
-                background: white;
-                height: 0 px;
+            QScrollBar::sub-line {{
+                padding-top: {self.track_table_view.horizontalHeader().height() - 1.5}px;
+                background: rgba(0, 0, 0, 0);
+                border-bottom: 1px solid gray;
+                height: 0px;
                 subcontrol-position: top;
                 subcontrol-origin: margin;
             }}
             QScrollBar::vertical {{
                 margin-top: {self.track_table_view.horizontalHeader().height() - 2}px;
+            }}
+            '''
+        )
+
+        self.track_table_view.horizontalScrollBar().setStyleSheet(
+            f'''
+            QScrollBar {{
+                border: 1px solid white;
+                background: white;
+                height: 10px;
+                margin: 0px 0px 0px 0px;
+            }}
+            QScrollBar::add-page {{
+                border: 1px solid white;
+                background: white;
+                height: 10px;
+                margin: 0px 0px 0px 0px;
+            }}
+            QScrollBar::sub-page {{
+                border: 1px solid white;
+                background: white;
+                height: 10px;
+                margin: 0px 0px 0px 0px;
+            }}
+            QScrollBar::handle {{
+                background: rgb(230, 230, 230);
+                min-width: 25px;
+            }}
+            QScrollBar::handle:hover {{
+                background: rgb(220, 220, 220);
+                min-width: 25px;
+            }}
+            QScrollBar::add-line {{
+                background: white;
+                width: 0px;
+                subcontrol-position: bottom;
+                subcontrol-origin: margin;
+            }}
+            QScrollBar::sub-line {{
+                background: rgba(0, 0, 0, 0);
+                border-bottom: 1px solid gray;
+                width: 0px;
+                subcontrol-position: top;
+                subcontrol-origin: margin;
             }}
             '''
         )
