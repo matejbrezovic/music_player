@@ -19,7 +19,7 @@ from gui.dialogs.delete_track_dialog import DeleteTracksDialog
 from gui.star.star_delegate import StarDelegate
 from gui.star.star_rating import StarRating
 from repositories.tracks_repository import TracksRepository
-from utils import get_formatted_time_in_mins
+from utils import get_formatted_time_in_mins, change_pixmap_color
 
 
 class TrackTableView(QTableView):
@@ -68,13 +68,11 @@ class TrackTableView(QTableView):
         self._setup_shortcuts()
 
     def row_double_clicked(self, model_index: QModelIndex) -> None:
-        # model_index = self._proxy_sort_model.mapToSource(model_index)
         playing_track_index = model_index.row()
         self.playing_track = self._table_model.tracks[playing_track_index]
         self.track_double_clicked.emit(self.playing_track, playing_track_index)
 
     def row_clicked(self, model_index: QModelIndex) -> None:
-        # model_index = self._proxy_sort_model.mapToSource(model_index)
         index = model_index.row()
         track = self._table_model.tracks[index]
         self.track_clicked.emit(track, index)
@@ -99,9 +97,6 @@ class TrackTableView(QTableView):
 
             self.clearSelection()
             self.sortByColumn(logical_index, self._sort_order)
-
-    # def get_selected_tracks(self) -> List[Track]:
-    #     return sorted([self._table_model.tracks[i.row()] for i in set(self.selectedIndexes())])
 
     def get_playing_track_index(self) -> Optional[int]:
         try:
@@ -248,13 +243,6 @@ class TrackTableView(QTableView):
     def set_unpaused(self) -> None:
         self._table_model.set_unpaused()
 
-    # @pyqtSlot(list)
-    # def added_tracks(self, tracks: List[Track]):
-    #     ...
-
-    # def sort_key(self) -> str:
-    #     return self._proxy_sort_model.sort_key
-
     def displayed_tracks(self) -> List[Track]:
         return self._table_model.tracks
 
@@ -338,8 +326,23 @@ class TrackTableModel(QAbstractTableModel):
         self.playing_track_index: Optional[int] = None
         self.playing_track: Optional[Track] = None
 
-        self.playing_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-playing.png")
-        self.muted_speaker_pixmap = QPixmap(f"{ROOT}/icons/speaker-not-playing.png")
+        self._speaker_pixmap_width = 16
+        self._speaker_pixmap_height = 12
+
+        self.speaker_playing_pixmap = QPixmap(f"{ROOT}/icons/speaker-playing.png")
+        self.speaker_paused_pixmap = QPixmap(f"{ROOT}/icons/speaker-paused.png")
+
+        self.speaker_playing_pixmap = change_pixmap_color(self.speaker_playing_pixmap, Qt.GlobalColor.red)
+        self.speaker_paused_pixmap = change_pixmap_color(self.speaker_paused_pixmap, Qt.GlobalColor.red)
+
+        self.speaker_playing_pixmap = self.speaker_playing_pixmap.scaled(
+            self._speaker_pixmap_width, self._speaker_pixmap_height,
+            Qt.AspectRatioMode.IgnoreAspectRatio,
+            Qt.TransformationMode.SmoothTransformation)
+        self.speaker_paused_pixmap = self.speaker_paused_pixmap.scaled(
+            self._speaker_pixmap_width, self._speaker_pixmap_height,
+            Qt.AspectRatioMode.IgnoreAspectRatio,
+            Qt.TransformationMode.SmoothTransformation)
 
         self.general_flags = Qt.ItemFlag.ItemIsEnabled | Qt.ItemFlag.ItemIsSelectable
 
@@ -368,12 +371,12 @@ class TrackTableModel(QAbstractTableModel):
                                              Qt.TransformationMode.SmoothTransformation)
             elif index.column() == 1:
                 if self.playing_track_index is None or self.is_stopped:
-                    return
+                    return None
                 if index.row() == self.playing_track_index:
                     if not self.is_paused:
-                        return self.playing_speaker_pixmap
+                        return self.speaker_playing_pixmap
                     elif self.is_paused:
-                        return self.muted_speaker_pixmap
+                        return self.speaker_paused_pixmap
 
         if role == Qt.ItemDataRole.DisplayRole and not index.data(Qt.ItemDataRole.DecorationRole):
             if not index.column():
@@ -459,7 +462,6 @@ class TrackTableItemDelegate(QStyledItemDelegate):
         self._cached_pixmaps: Dict[QModelIndex, QPixmap] = {}
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
-        # print('PAINTTT')
         painter.setPen(QPen(Qt.PenStyle.NoPen))
         if option.state & QStyle.StateFlag.State_Selected:
             if self._table_view.hasFocus():
@@ -479,19 +481,16 @@ class TrackTableItemDelegate(QStyledItemDelegate):
             rect.setRect(rect.left() + 1, rect.top() + 1,
                          rect.width() - 2, rect.height() - 2)
 
-            if index in self._cached_pixmaps:
+            if index in self._cached_pixmaps and index.column() != 1:
                 painter.drawPixmap(rect, self._cached_pixmaps[index])
             else:
                 pixmap = decoration_role
                 if index.column() == 1:
-                    height = rect.height()
-                    width = rect.width()
-                    rect.setHeight(width)
-                    rect.translate(0, (height - width) // 2)
+                    old_height = rect.height()
+                    rect.setHeight(pixmap.height())
+                    rect.setWidth(pixmap.width())
+                    rect.translate(0, (old_height - rect.height()) // 2)
 
-                    pixmap = pixmap.scaled(width, width,
-                                           Qt.AspectRatioMode.KeepAspectRatio,
-                                           Qt.TransformationMode.SmoothTransformation)
                 painter.drawPixmap(rect, pixmap)
                 self._cached_pixmaps[index] = pixmap
 
@@ -544,6 +543,7 @@ class TrackTableItemDelegate(QStyledItemDelegate):
     def clear_cache(self) -> None:
         self._cached_elided_texts = {}
         self._cached_pixmaps = {}
+
 
 class TrackTableHeader(QHeaderView):
     def __init__(self, orientation: Qt.Orientation, track_table_view: TrackTableView = None):

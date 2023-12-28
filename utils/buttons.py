@@ -48,12 +48,3 @@ def get_hover_icon(icon: QIcon, is_in_dark_mode: bool) -> QIcon:
     pixmap.setMask(mask)
     icon = QIcon(pixmap)
     return icon
-
-
-def change_icon_color(icon: QIcon, color: QColor) -> QIcon:
-    pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
-    mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
-    pixmap.fill(color)
-    pixmap.setMask(mask)
-    icon = QIcon(pixmap)
-    return icon

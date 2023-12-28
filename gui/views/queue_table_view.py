@@ -7,7 +7,8 @@ from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLab
 
 from constants import SELECTION_QCOLOR, LOST_FOCUS_QCOLOR, ROOT
 from data_models.track import Track
-from utils import ElidedLabel, get_embedded_artwork_pixmap, get_formatted_time_in_mins, get_default_artwork_pixmap
+from utils import (ElidedLabel, get_embedded_artwork_pixmap, get_formatted_time_in_mins, get_default_artwork_pixmap,
+                   change_pixmap_color)
 
 
 class QueueTableView(QTableView):
@@ -44,9 +45,7 @@ class QueueTableView(QTableView):
 
     def set_playing_track(self, track: Optional[Track]) -> None:
         self._table_delegate.is_paused = True if track is None else False
-
         self._playing_track_index = self._table_model.tracks.index(track) if track in self._table_model.tracks else None
-
         self._table_delegate.set_playing_track_index(self._playing_track_index)
         self._handle_scrolling()
 
@@ -125,15 +124,21 @@ class QueueTableItemDelegate(QStyledItemDelegate):
         self.is_stopped = True
         self.track_info_widgets_mapping = {}
 
-        self.pixmap_width = 16
-        self.pixmap_height = 16
+        self._speaker_pixmap_width = 16
+        self._speaker_pixmap_height = 12
 
-        self.playing_pixmap = QPixmap(f"{ROOT}/icons/speaker-playing.png").scaled(
-            self.pixmap_width, self.pixmap_height,
+        self.speaker_playing_pixmap = QPixmap(f"{ROOT}/icons/speaker-playing.png")
+        self.speaker_paused_pixmap = QPixmap(f"{ROOT}/icons/speaker-paused.png")
+
+        self.speaker_playing_pixmap = change_pixmap_color(self.speaker_playing_pixmap, Qt.GlobalColor.red)
+        self.speaker_paused_pixmap = change_pixmap_color(self.speaker_paused_pixmap, Qt.GlobalColor.red)
+
+        self.speaker_playing_pixmap = self.speaker_playing_pixmap.scaled(
+            self._speaker_pixmap_width, self._speaker_pixmap_height,
             Qt.AspectRatioMode.IgnoreAspectRatio,
             Qt.TransformationMode.SmoothTransformation)
-        self.paused_pixmap = QPixmap(f"{ROOT}/icons/speaker-not-playing.png").scaled(
-            self.pixmap_width, self.pixmap_height,
+        self.speaker_paused_pixmap = self.speaker_paused_pixmap.scaled(
+            self._speaker_pixmap_width, self._speaker_pixmap_height,
             Qt.AspectRatioMode.IgnoreAspectRatio,
             Qt.TransformationMode.SmoothTransformation)
 
@@ -175,15 +180,15 @@ class QueueTableItemDelegate(QStyledItemDelegate):
 
             if index.row() == self._playing_track_index and not self.is_stopped:
                 vertical_offset = 4
-                bottom_right = QPoint(main_part_rect.left() + self.pixmap_width, main_part_rect.top() +
-                                      self.pixmap_height + vertical_offset)
-                top_left = QPoint(main_part_rect.left(), main_part_rect.top() + vertical_offset)
+                bottom_right = QPoint(main_part_rect.left() + self._speaker_pixmap_width, main_part_rect.top() +
+                                      self._speaker_pixmap_height + vertical_offset)
+                top_left = QPoint(main_part_rect.left() + 2, main_part_rect.top() + vertical_offset)
                 pixmap_rect = QRect(top_left, bottom_right)
-                main_part_rect.setLeft(main_part_rect.left() + self.pixmap_width)
+                main_part_rect.setLeft(main_part_rect.left() + self._speaker_pixmap_width)
                 if not self.is_paused:
-                    painter.drawPixmap(pixmap_rect, self.playing_pixmap)
+                    painter.drawPixmap(pixmap_rect, self.speaker_playing_pixmap)
                 else:
-                    painter.drawPixmap(pixmap_rect, self.paused_pixmap)
+                    painter.drawPixmap(pixmap_rect, self.speaker_paused_pixmap)
 
             track_info_widget.setGeometry(main_part_rect)
 

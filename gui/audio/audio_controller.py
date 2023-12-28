@@ -329,7 +329,6 @@ class AudioController(QFrame):
         pixmap = get_embedded_artwork_pixmap(track.file_path)
         if not pixmap:
             self._set_background_to_default()
-
             self.start_download_thread(track)
         else:
             self._set_custom_background_pixmap(pixmap)

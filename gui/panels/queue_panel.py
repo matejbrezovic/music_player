@@ -3,7 +3,7 @@ from typing import List
 
 from PyQt6.QtCore import pyqtSlot, Qt, QSize
 from PyQt6.QtGui import QPixmap
-from PyQt6.QtWidgets import (QFrame, QVBoxLayout, QSplitter, QWidget, QHeaderView, QAbstractItemView)
+from PyQt6.QtWidgets import QFrame, QVBoxLayout, QSplitter, QWidget, QHeaderView, QAbstractItemView
 
 from constants import PANEL_MIN_WIDTH
 from data_models.track import Track

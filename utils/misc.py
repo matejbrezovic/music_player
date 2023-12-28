@@ -2,7 +2,7 @@ import os
 from typing import Union
 
 from PyQt6.QtCore import QModelIndex, Qt, pyqtSignal
-from PyQt6.QtGui import QColor
+from PyQt6.QtGui import QColor, QIcon, QPixmap
 from PyQt6.QtWidgets import QGridLayout, QLayout, QFrame, QCheckBox
 from PyQt6.sip import wrappertype as pyqt_wrapper_type
 
@@ -62,6 +62,18 @@ def combine_colors(color_a: Union[QColor, Qt.GlobalColor], color_b: Union[QColor
     rgb_b = (1 - part_a) * QColor(color_b).rgb()
 
     return QColor(int(rgb_a + rgb_b))
+
+
+def change_pixmap_color(pixmap: QPixmap, color: QColor | Qt.GlobalColor | int) -> QPixmap:
+    mask = pixmap.createMaskFromColor(QColor('transparent'), Qt.MaskMode.MaskInColor)
+    pixmap.fill(color)
+    pixmap.setMask(mask)
+    return pixmap
+
+
+def change_icon_color(icon: QIcon, color: QColor | Qt.GlobalColor | int) -> QIcon:
+    pixmap = icon.pixmap(60, 60, QIcon.Mode.Normal)
+    return QIcon(change_pixmap_color(pixmap, color))
 
 
 class Singleton(type):
