@@ -26,12 +26,12 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
             self.cached_counts[group_key] = super().get_track_counts_grouped_by(group_key)
         return self.cached_counts[group_key]
 
-    def drop_track_by(self, key: str, value: Union[int, float, str]) -> None:
-        super().drop_track_by(key, value)
+    def delete_track_by(self, key: str, value: Union[int, float, str]) -> None:
+        super().delete_track_by(key, value)
 
-    def drop_tracks(self, tracks: List[Track]) -> None:
+    def delete_tracks(self, tracks: List[Track]) -> None:
         for track in tracks:
-            self.drop_track_by("file_path", track.file_path)
+            self.delete_track_by("file_path", track.file_path)
 
         new = {}
         for key, value in self.cached_track_groups.items():

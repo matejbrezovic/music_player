@@ -76,10 +76,10 @@ class DeleteTracksDialog(QDialog):
     def delete_tracks(self) -> None:
         for track in self._tracks:
             if self.delete_from_library_button.isChecked():
-                self.cached_tracks_repository.drop_track_by("file_path", track.file_path)
+                self.cached_tracks_repository.delete_track_by("file_path", track.file_path)
 
             elif self.delete_from_computer_button.isChecked():
-                self.cached_tracks_repository.drop_track_by("file_path", track.file_path)
+                self.cached_tracks_repository.delete_track_by("file_path", track.file_path)
                 if os.path.isfile(track.file_path):
                     os.remove(track.file_path)
 

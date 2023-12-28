@@ -109,7 +109,7 @@ class MainWindow(QMainWindow):
         self.header_menu.information_panel_view_key_changed.connect(self.queue_panel.view_key_changed)
 
         self.main_panel.track_double_clicked.connect(
-            lambda track: (self.status_bar.update_info(self.main_panel.displayed_tracks),
+            lambda track: (self.status_bar.update_queue_info(self.main_panel.displayed_tracks),
                               self.audio_queue.set_queue(self.main_panel.displayed_tracks),
                               self.audio_queue.set_playing_track(track),
                               self.audio_controller.play()))
@@ -124,7 +124,7 @@ class MainWindow(QMainWindow):
 
         self.group_panel.group_double_clicked.connect(
             lambda tracks, key_value_tuple: (self.main_panel.display_tracks(tracks, key_value_tuple),
-                                             self.status_bar.update_info(self.main_panel.displayed_tracks),
+                                             self.status_bar.update_queue_info(self.main_panel.displayed_tracks),
                                              self.audio_controller.set_queue(self.main_panel.displayed_tracks),
                                              self.audio_queue.set_playing_track(self.main_panel.displayed_tracks[0]),
                                              self.audio_controller.play()))
@@ -153,11 +153,11 @@ class MainWindow(QMainWindow):
 
     def queue_next(self, tracks_to_queue: List[Track]) -> None:
         self.audio_controller.enqueue_next(tracks_to_queue)
-        self.status_bar.update_info(self.audio_controller.get_tracks())
+        self.status_bar.update_queue_info(self.audio_controller.get_tracks())
 
     def queue_last(self, tracks_to_queue: List[Track]) -> None:
         self.audio_controller.enqueue_last(tracks_to_queue)
-        self.status_bar.update_info(self.audio_controller.get_tracks())
+        self.status_bar.update_queue_info(self.audio_controller.get_tracks())
 
     def _added_tracks_to_database(self, _: List[Track] = None) -> None:
         tracks_from_last_selected_group = self.group_panel.get_last_selected_tracks()
@@ -165,7 +165,7 @@ class MainWindow(QMainWindow):
         self.main_panel.set_playing_track(self.audio_controller.get_playing_track())
 
     def tracks_deleted(self, deleted_tracks: List[Track]) -> None:
-        self.cached_tracks_repository.drop_tracks(deleted_tracks)
+        self.cached_tracks_repository.delete_tracks(deleted_tracks)
         self.group_panel.refresh_groups()
 
     def _removed_tracks_from_database(self, tracks: List[Track]) -> None:

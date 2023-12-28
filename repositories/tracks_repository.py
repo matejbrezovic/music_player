@@ -140,7 +140,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         track_count = cursor.execute("SELECT Count(track_id) FROM tracks").fetchone()[0]
         return track_count
 
-    def drop_track_by(self, key: str, value: Union[int, float, str]) -> None:
+    def delete_track_by(self, key: str, value: Union[int, float, str]) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
         cursor.execute(f"DELETE FROM tracks WHERE {key} = ?", (value, ))
@@ -183,7 +183,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
         self.add_tracks(tracks_to_add)
 
         for file_path_to_remove in to_remove:
-            self.drop_track_by("file_path", file_path_to_remove)
+            self.delete_track_by("file_path", file_path_to_remove)
 
         return tracks_to_add, tracks_to_remove
 

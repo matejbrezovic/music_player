@@ -44,9 +44,6 @@ class StatusBar(QFrame):
         QLabel {color: grey;}
         """)
 
-    def queue_next(self, tracks: List[Track]) -> None:
-        ...
-
     def _left_label_clicked(self):
         if not self.left_label.text():
             return
@@ -74,7 +71,7 @@ class StatusBar(QFrame):
         # else:
         #     self.right_label.setText(f"queued: {format_seconds(self.queue_length)}")
 
-    def update_info(self, tracks: List[Track]) -> None:
+    def update_queue_info(self, tracks: List[Track]) -> None:
         def get_size_text(size_in_bytes: int) -> str:
             size = size_in_bytes
             units = ("B", "KB", "MB", "GB", "TB")

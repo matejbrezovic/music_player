@@ -486,7 +486,7 @@ class TrackTableItemDelegate(QStyledItemDelegate):
                     old_height = rect.height()
                     rect.setHeight(pixmap.height())
                     rect.setWidth(pixmap.width())
-                    rect.translate(0, (old_height - rect.height()) // 2)
+                    rect.translate(2, (old_height - rect.height()) // 2)
 
                 painter.drawPixmap(rect, pixmap)
                 self._cached_pixmaps[index] = pixmap
