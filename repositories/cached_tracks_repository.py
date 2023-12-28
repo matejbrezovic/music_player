@@ -1,8 +1,8 @@
 from typing import Union, List, Tuple, Optional
 
 from constants import GROUP_OPTIONS
-from data_models.track import Track
-from repositories.tracks_repository import TracksRepository
+from data_models import Track
+from repositories import TracksRepository
 from utils import Singleton
 
 

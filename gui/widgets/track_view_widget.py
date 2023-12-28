@@ -5,8 +5,8 @@ from PyQt6 import QtWidgets
 from PyQt6.QtCore import pyqtSlot, pyqtSignal, Qt, QSize
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QAbstractItemView, QFrame, QHeaderView
 
-from data_models.track import Track
-from gui.views.track_table_view import TrackTableView
+from data_models import Track
+from gui.views import TrackTableView
 
 
 class TrackViewWidget(QWidget):

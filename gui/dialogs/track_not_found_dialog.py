@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt, QSize
 from PyQt6.QtWidgets import (QDialog, QApplication, QFrame, QHBoxLayout, QWidget, QLabel, QPushButton, QVBoxLayout,
                              QSpacerItem, QSizePolicy, QStyle)
 
-from data_models.track import Track
+from data_models import Track
 
 
 class TrackNotFoundDialog(QDialog):

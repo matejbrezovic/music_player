@@ -14,11 +14,10 @@ from PyQt6.QtWidgets import (QApplication, QTableView, QAbstractItemView, QHeade
                              QAbstractScrollArea, QDialog, QStyleOptionHeaderV2, QProxyStyle)
 
 from constants import MAIN_PANEL_COLUMN_NAMES, SELECTION_QCOLOR, LOST_FOCUS_QCOLOR, ROOT
-from data_models.track import Track
-from gui.dialogs.delete_track_dialog import DeleteTracksDialog
-from gui.star.star_delegate import StarDelegate
-from gui.star.star_rating import StarRating
-from repositories.tracks_repository import TracksRepository
+from data_models import Track
+from gui.dialogs import DeleteTracksDialog
+from gui.star import StarDelegate, StarRating
+from repositories import TracksRepository
 from utils import get_formatted_time_in_mins, change_pixmap_color
 
 

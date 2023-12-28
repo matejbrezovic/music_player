@@ -4,9 +4,9 @@ from PyQt6.QtCore import pyqtSignal, pyqtSlot, Qt
 from PyQt6.QtWidgets import QVBoxLayout, QFrame
 
 from constants import MAIN_PANEL_MIN_WIDTH
-from data_models.track import Track
-from gui.widgets.track_view_widget import TrackViewWidget
-from repositories.cached_tracks_repository import CachedTracksRepository
+from data_models import Track
+from gui.widgets import TrackViewWidget
+from repositories import CachedTracksRepository
 
 
 class MainPanel(QFrame):

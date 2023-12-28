@@ -6,7 +6,7 @@ import mutagen.mp3
 from PyQt6.QtWidgets import QApplication
 
 from data_models.track import Track
-from repositories.base_repository import BaseRepository
+from repositories import BaseRepository
 from utils import get_embedded_artwork_pixmap, Singleton, TagManager
 
 

@@ -4,7 +4,7 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import *
 
-from data_models.track import Track
+from data_models import Track
 from utils import (ElidedLabel, get_embedded_artwork_pixmap, get_default_artwork_pixmap, SquareImageLabel,
                    TransparentComboBox, TagManager, format_seconds)
 

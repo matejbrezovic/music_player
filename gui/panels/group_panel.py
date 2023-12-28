@@ -5,11 +5,10 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QVBoxLayout, QFrame, QHeaderView, QAbstractItemView
 
 from constants import PANEL_MIN_WIDTH, GROUP_OPTIONS
-from data_models.track_group import TrackGroup
-from data_models.track import Track
-from gui.views.group_table_view import GroupTableView
-from repositories.cached_tracks_repository import CachedTracksRepository
+from gui.views import GroupTableView
+from repositories import CachedTracksRepository
 from utils import get_embedded_artwork_pixmap, get_default_artwork_pixmap
+from data_models import Track, TrackGroup
 
 
 class GroupPanel(QFrame):
@@ -22,9 +21,6 @@ class GroupPanel(QFrame):
         self.setMinimumWidth(PANEL_MIN_WIDTH)
 
         self.cached_tracks_repository = CachedTracksRepository()
-
-        self._last_group_key = None
-        self._last_group_title = None
 
         self._setup_ui()
         self._setup_signals()

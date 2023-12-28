@@ -7,12 +7,11 @@ from PyQt6.QtGui import QPen, QColor, QPainter
 from PyQt6.QtWidgets import QStyle, QStyledItemDelegate, QWidget, QStyleOptionViewItem
 
 from constants import SELECTION_QCOLOR, LOST_FOCUS_QCOLOR
-from gui.star.star_editor import StarEditor
-from gui.star.star_rating import StarRating
+from gui.star import StarEditor, StarRating
 from utils import combine_colors, index_pos
 
 if TYPE_CHECKING:
-    from gui.views.track_table_view import TrackTableView
+    from gui.views import TrackTableView
 
 
 class StarDelegate(QStyledItemDelegate):

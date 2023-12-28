@@ -1,13 +1,13 @@
 from enum import Enum
 
 
-class UserAction(Enum):
+class AudioUserAction(Enum):
     Stopped = "stopped"
     Playing = "playing"
     Paused = "paused"
 
 
-class RepeatMode(Enum):
+class AudioRepeatMode(Enum):
     RepeatOn = "repeat_on"
     RepeatOff = "repeat_off"
     RepeatOne = "repeat_one"

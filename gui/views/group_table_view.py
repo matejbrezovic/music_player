@@ -6,8 +6,8 @@ from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QStyledItemDelega
                              QStyleOptionViewItem, QApplication, QAbstractItemView)
 
 from constants import SELECTION_QCOLOR, LOST_FOCUS_QCOLOR
-from data_models.track_group import TrackGroup
-from repositories.cached_tracks_repository import CachedTracksRepository
+from data_models import TrackGroup
+from repositories import CachedTracksRepository
 from utils import ElidedLabel
 
 

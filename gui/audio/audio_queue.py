@@ -4,8 +4,8 @@ from typing import List, Optional
 
 from PyQt6.QtCore import pyqtSignal, QObject
 
-from data_models.track import Track
-from gui.audio.enums import *
+from data_models import Track
+from gui.audio import AudioRepeatMode
 from utils import TrackNotInQueueError, QtSingleton
 
 
@@ -17,7 +17,7 @@ class AudioQueue(QObject, metaclass=QtSingleton):
         super().__init__()
         self.is_shuffled = False
         self.queue_ended = False
-        self.repeat_mode = RepeatMode.RepeatOff
+        self.repeat_mode = AudioRepeatMode.RepeatOff
 
         self._playing_track: Optional[Track] = None
         self._index_in_played_tracks: int = 0
@@ -104,16 +104,16 @@ class AudioQueue(QObject, metaclass=QtSingleton):
         self.queue_ended = False
 
     def set_repeat_on(self) -> None:
-        self.repeat_mode = RepeatMode.RepeatOn
+        self.repeat_mode = AudioRepeatMode.RepeatOn
 
     def set_repeat_off(self) -> None:
-        self.repeat_mode = RepeatMode.RepeatOff
+        self.repeat_mode = AudioRepeatMode.RepeatOff
 
     def set_repeat_one(self) -> None:
-        self.repeat_mode = RepeatMode.RepeatOne
+        self.repeat_mode = AudioRepeatMode.RepeatOne
 
     def set_next(self) -> None:
-        if len(self._tracks_to_play) == 0 and self.repeat_mode == RepeatMode.RepeatOff:
+        if len(self._tracks_to_play) == 0 and self.repeat_mode == AudioRepeatMode.RepeatOff:
             self.queue_ended = True
             return
 

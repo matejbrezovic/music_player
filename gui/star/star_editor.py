@@ -2,7 +2,7 @@ from PyQt6.QtCore import Qt, QEvent
 from PyQt6.QtGui import QPainter, QMoveEvent, QPalette, QMouseEvent, QPaintEvent
 from PyQt6.QtWidgets import QWidget
 
-from gui.star.star_rating import StarRating
+from gui.star import StarRating
 
 
 class StarEditor(QWidget):

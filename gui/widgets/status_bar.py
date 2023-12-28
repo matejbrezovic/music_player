@@ -1,16 +1,18 @@
-from typing import List
+from __future__ import annotations
+
+from typing import List, TYPE_CHECKING
 
 from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import QHBoxLayout, QSizePolicy, QFrame
 
-from data_models.track import Track
-from gui.audio.audio_controller import AudioController
+from data_models import Track
 from utils import ClickableLabel, format_seconds
+
+if TYPE_CHECKING:
+    from gui.audio import AudioController
 
 
 class StatusBar(QFrame):
-    # right_label_clicked = pyqtSignal()
-
     def __init__(self, audio_controller: AudioController, *args):
         super().__init__(*args)
         self.setFixedHeight(18)
@@ -22,7 +24,6 @@ class StatusBar(QFrame):
         self.horizontal_layout = QHBoxLayout(self)
         self.horizontal_layout.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.horizontal_layout.setContentsMargins(0, 0, 4, 0)
-        # self.setStyleSheet("background-color: red")
 
         self.left_label = ClickableLabel(self)
         self.left_label.clicked.connect(self._left_label_clicked)
@@ -31,7 +32,6 @@ class StatusBar(QFrame):
         self.is_left_label_in_detail_mode = True
 
         self.right_label = ClickableLabel(self)
-        # self.right_label.clicked.connect(self._right_label_clicked)
         self.right_label.setAlignment(Qt.AlignmentFlag.AlignRight)
         self.right_label.setSizePolicy(QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
         self.is_right_label_in_countdown_mode = False  # TODO deprecated for now

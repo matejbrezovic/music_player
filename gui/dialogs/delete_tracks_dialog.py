@@ -6,8 +6,8 @@ from PyQt6.QtCore import Qt
 from PyQt6.QtWidgets import (QDialog, QApplication, QVBoxLayout, QFrame, QLabel, QSizePolicy, QRadioButton, QWidget,
                              QPushButton, QHBoxLayout)
 
-from data_models.track import Track
-from repositories.cached_tracks_repository import CachedTracksRepository
+from data_models import Track
+from repositories import CachedTracksRepository
 
 
 class DeleteTracksDialog(QDialog):

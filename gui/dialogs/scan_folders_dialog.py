@@ -10,7 +10,7 @@ from PyQt6.QtWidgets import (QPushButton, QScrollArea, QTreeWidgetItem, QTreeWid
                              QVBoxLayout, QDialog, QFrame, QGridLayout, QWidget, QLabel, QSizePolicy, QApplication)
 
 from constants import DEFAULT_CONFIG_PATH, SUPPORTED_AUDIO_FORMATS
-from repositories.cached_tracks_repository import CachedTracksRepository
+from repositories import CachedTracksRepository
 from utils import delete_grid_layout_items, PathCheckbox, QHLine, Config
 
 

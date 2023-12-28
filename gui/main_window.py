@@ -6,17 +6,12 @@ from PyQt6.QtWidgets import QMenuBar, QWidget, QMenu, QMainWindow, QVBoxLayout
 
 from constants import (APPLICATION_NAME, MAIN_WINDOW_Y, MAIN_PANEL_MIN_WIDTH, PANEL_MIN_WIDTH, MAIN_WINDOW_X,
                        MAIN_WINDOW_WIDTH, MAIN_WINDOW_HEIGHT)
-from data_models.track import Track
-from gui.audio.audio_controller import AudioController
-from gui.audio.audio_queue import AudioQueue
-from gui.dialogs.add_files_dialog import AddFilesDialog
-from gui.dialogs.scan_folders_dialog import ScanFoldersDialog
-from gui.panels.queue_panel import QueuePanel
-from gui.panels.main_panel import MainPanel
-from gui.panels.group_panel import GroupPanel
-from gui.widgets.header_menu_widget import HeaderMenuWidget
-from gui.widgets.status_bar import StatusBar
-from repositories.cached_tracks_repository import CachedTracksRepository
+from data_models import Track
+from gui.audio import AudioController, AudioQueue
+from gui.dialogs import AddFilesDialog, ScanFoldersDialog
+from gui.panels import GroupPanel, MainPanel, QueuePanel
+from gui.widgets import HeaderMenuWidget, StatusBar
+from repositories import CachedTracksRepository
 from utils import FixedHorizontalSplitter
 
 

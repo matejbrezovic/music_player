@@ -6,7 +6,7 @@ from PyQt6.QtWidgets import (QTableView, QWidget, QVBoxLayout, QHBoxLayout, QLab
                              QStyle, QStyleOptionViewItem, QApplication, QAbstractItemView)
 
 from constants import SELECTION_QCOLOR, LOST_FOCUS_QCOLOR, ROOT
-from data_models.track import Track
+from data_models import Track
 from utils import (ElidedLabel, get_embedded_artwork_pixmap, get_formatted_time_in_mins, get_default_artwork_pixmap,
                    change_pixmap_color)
 

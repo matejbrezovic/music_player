@@ -6,10 +6,10 @@ from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import QFrame, QVBoxLayout, QSplitter, QWidget, QHeaderView, QAbstractItemView
 
 from constants import PANEL_MIN_WIDTH
-from data_models.track import Track
-from gui.audio.audio_queue import AudioQueue
-from gui.views.queue_table_view import QueueTableView
-from gui.widgets.track_info_widget import TrackInfoWidget
+from data_models import Track
+from gui.audio import AudioQueue
+from gui.views import QueueTableView
+from gui.widgets import TrackInfoWidget
 
 
 class QueuePanel(QFrame):
