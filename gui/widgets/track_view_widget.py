@@ -94,7 +94,7 @@ class TrackViewWidget(QWidget):
                 subcontrol-origin: margin;
             }}
             QScrollBar::vertical {{
-                margin-top: {self.track_table_view.horizontalHeader().height() - 2}px;
+                margin-top: {self.track_table_view.horizontalHeader().height()}px;
             }}
             '''
         )
