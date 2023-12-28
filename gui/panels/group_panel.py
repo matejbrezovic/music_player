@@ -34,7 +34,7 @@ class GroupPanel(QFrame):
 
     def _setup_ui(self) -> None:
         default_row_height = 56
-        self.group_table_view = GroupTableView()
+        self.group_table_view = GroupTableView(self)
         self.group_table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
         self.group_table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
         self.group_table_view.setShowGrid(False)
