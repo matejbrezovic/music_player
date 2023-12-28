@@ -7,7 +7,6 @@ from constants import MAIN_PANEL_MIN_WIDTH
 from data_models.track import Track
 from gui.widgets.track_view_widget import TrackViewWidget
 from repositories.cached_tracks_repository import CachedTracksRepository
-from utils import TagManager
 
 
 class MainPanel(QFrame):
@@ -21,11 +20,9 @@ class MainPanel(QFrame):
 
     def __init__(self, *args):
         super().__init__(*args)
-        # self._displayed_tracks = []
         self.cached_tracks_repository = CachedTracksRepository()
         self.setStyleSheet("MainPanel {background-color: rgba(0, 0, 0, 0.3)}")
         self.setMinimumWidth(MAIN_PANEL_MIN_WIDTH)
-        self.tag_manager = TagManager()
         self.track_view_widget = TrackViewWidget(self)
         self.track_view_widget.track_clicked.connect(self.track_clicked.emit)
         self.track_view_widget.track_double_clicked.connect(self.track_double_clicked.emit)
@@ -58,7 +55,6 @@ class MainPanel(QFrame):
             return
         self._display_key, self._display_value = key_value_tuple
         self.track_view_widget.set_tracks(tracks)
-        # self._displayed_tracks = tracks
 
     @pyqtSlot(Track)
     def set_playing_track(self, track: Track) -> None:

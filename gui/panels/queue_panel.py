@@ -21,6 +21,9 @@ class QueuePanel(QFrame):
         self.audio_queue = AudioQueue()
         self.audio_queue.queue_updated.connect(self.update_queue)
 
+        self._setup_ui()
+
+    def _setup_ui(self) -> None:
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setSpacing(0)
         self.main_layout.setContentsMargins(0, 0, 0, 0)
@@ -29,7 +32,6 @@ class QueuePanel(QFrame):
         self.vertical_splitter = QSplitter(Qt.Orientation.Vertical)
         self.vertical_splitter.setHandleWidth(0)
         self.playing_tracks_widget = QWidget(self)
-        # self.playing_tracks_widget.setStyleSheet("QWidget {border: none;}")
         self.playing_tracks_widget.setContentsMargins(0, 0, 0, 0)
         self.playing_tracks_widget_layout = QVBoxLayout(self.playing_tracks_widget)
         self.playing_tracks_widget_layout.setContentsMargins(0, 0, 0, 0)
@@ -51,6 +53,48 @@ class QueuePanel(QFrame):
         self.queue_table_view.horizontalHeader().setVisible(False)
         self.queue_table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.queue_table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.queue_table_view.verticalScrollBar().setStyleSheet(
+            f'''
+            QScrollBar {{
+                border: 1px solid white;
+                background: white;
+                width: 10px;
+                margin: 0px 0px 0px 0px;
+            }}
+            QScrollBar::add-page {{
+                border: 1px solid white;
+                background: white;
+                width: 10px;
+                margin: 0px 0px 0px 0px;
+            }}
+            QScrollBar::sub-page {{
+                border: 1px solid white;
+                background: white;
+                width: 10px;
+                margin: 0px 0px 0px 0px;
+            }}
+            QScrollBar::handle:vertical {{
+                background: rgb(230, 230, 230);
+                min-height: 25px;
+            }}
+            QScrollBar::handle:vertical:hover {{
+                background: rgb(220, 220, 220);
+                min-height: 25px;
+            }}
+            QScrollBar::add-line:vertical {{
+                background: white;
+                height: 0px;
+                subcontrol-position: bottom;
+                subcontrol-origin: margin;
+            }}
+            QScrollBar::sub-line:vertical {{
+                background: white;
+                height: 0 px;
+                subcontrol-position: top;
+                subcontrol-origin: margin;
+            }}
+            '''
+        )
 
         self.queue_table_view.track_double_clicked.connect(self.audio_queue.set_playing_track)
 

@@ -3,7 +3,7 @@ import music_tag as mt
 from utils import classify
 
 
-class TagManager(classify(mt)):
+class TagManager(classify(mt)):  # todo DEPRECATED
     def __init__(self):
         super().__init__()
 

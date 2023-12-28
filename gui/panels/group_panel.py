@@ -26,6 +26,13 @@ class GroupPanel(QFrame):
         self._last_group_key = None
         self._last_group_title = None
 
+        self._setup_ui()
+        self._setup_signals()
+
+        self.view_key = 0
+        self.group_key_changed(0)
+
+    def _setup_ui(self) -> None:
         default_row_height = 56
         self.group_table_view = GroupTableView()
         self.group_table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
@@ -42,9 +49,48 @@ class GroupPanel(QFrame):
         self.group_table_view.setFocusPolicy(Qt.FocusPolicy.ClickFocus)
         self.group_table_view.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.group_table_view.setFrameShape(QFrame.Shape.NoFrame)
-
-        self.group_table_view.group_clicked.connect(self.group_clicked.emit)
-        self.group_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
+        self.group_table_view.verticalScrollBar().setStyleSheet(
+            f'''
+            QScrollBar {{
+                border: 1px solid white;
+                background: white;
+                width: 10px;
+                margin: 0px 0px 0px 0px;
+            }}
+            QScrollBar::add-page {{
+                border: 1px solid white;
+                background: white;
+                width: 10px;
+                margin: 0px 0px 0px 0px;
+            }}
+            QScrollBar::sub-page {{
+                border: 1px solid white;
+                background: white;
+                width: 10px;
+                margin: 0px 0px 0px 0px;
+            }}
+            QScrollBar::handle:vertical {{
+                background: rgb(230, 230, 230);
+                min-height: 25px;
+            }}
+            QScrollBar::handle:vertical:hover {{
+                background: rgb(220, 220, 220);
+                min-height: 25px;
+            }}
+            QScrollBar::add-line:vertical {{
+                background: white;
+                height: 0px;
+                subcontrol-position: bottom;
+                subcontrol-origin: margin;
+            }}
+            QScrollBar::sub-line:vertical {{
+                background: white;
+                height: 0 px;
+                subcontrol-position: top;
+                subcontrol-origin: margin;
+            }}
+            '''
+        )
 
         self.vertical_layout = QVBoxLayout()
         self.vertical_layout.setSpacing(0)
@@ -53,8 +99,9 @@ class GroupPanel(QFrame):
         self.vertical_layout.addWidget(self.group_table_view)
         self.setLayout(self.vertical_layout)
 
-        self.view_key = 0
-        self.group_key_changed(0)
+    def _setup_signals(self) -> None:
+        self.group_table_view.group_clicked.connect(self.group_clicked.emit)
+        self.group_table_view.group_double_clicked.connect(self.group_double_clicked.emit)
 
     def _load_groups(self, key: int = 0) -> None:
         def get_group_pixmap(group_key: str, group_title: str) -> Optional[QPixmap]:
