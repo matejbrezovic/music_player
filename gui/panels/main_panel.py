@@ -17,6 +17,7 @@ class MainPanel(QFrame):
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
     tracks_deleted = pyqtSignal(list)
+    track_rating_updated = pyqtSignal(Track, float)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -31,6 +32,7 @@ class MainPanel(QFrame):
         self.track_view_widget.queue_last_triggered.connect(self.queue_last_triggered.emit)
         self.track_view_widget.output_to_triggered.connect(self.output_to_triggered.emit)
         self.track_view_widget.tracks_deleted.connect(self.tracks_deleted.emit)
+        self.track_view_widget.track_rating_updated.connect(self.track_rating_updated.emit)
 
         self.main_layout = QVBoxLayout(self)
         self.main_layout.setSpacing(0)
@@ -40,9 +42,6 @@ class MainPanel(QFrame):
 
         self._display_key = None
         self._display_value = None
-
-    def view_key_changed(self) -> None:
-        ...
 
     @property
     def displayed_tracks(self):
@@ -68,10 +67,10 @@ class MainPanel(QFrame):
     def unpause_playing_track(self) -> None:
         self.track_view_widget.unpause_playing_track()
 
-    @pyqtSlot(list)
-    def added_tracks(self, tracks: List[Track]) -> None:
-        self.track_view_widget.added_tracks(tracks)
-
     @pyqtSlot()
     def stop_playing(self) -> None:
         self.track_view_widget.stop_playing()
+
+    @pyqtSlot(Track, float)
+    def update_track_rating(self, track: Track, rating: float) -> None:
+        self.track_view_widget.update_track_rating(track, rating)

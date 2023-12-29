@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING, Dict, Tuple
 
-from PyQt6.QtCore import Qt, QModelIndex, QAbstractTableModel, QSize
+from PyQt6.QtCore import Qt, QModelIndex, QAbstractTableModel, QSize, pyqtSignal
 from PyQt6.QtGui import QPen, QColor, QPainter
 from PyQt6.QtWidgets import QStyle, QStyledItemDelegate, QWidget, QStyleOptionViewItem
 
@@ -15,13 +15,14 @@ if TYPE_CHECKING:
 
 
 class StarDelegate(QStyledItemDelegate):
+    track_rating_updated = pyqtSignal(int, float)  # track index, rating
+
     def __init__(self, parent: TrackTableView = None):
         super().__init__(parent)
         self.active_editors: Dict[Tuple[int, int], StarEditor] = {}
         self._table_view: TrackTableView = parent
 
     def paint(self, painter: QPainter, option: QStyleOptionViewItem, index: QModelIndex) -> None:
-        # print("STAR DELEGATE PAINT", index.row(), index.column(), self._table_view.hasFocus())
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
             painter.setPen(QPen(Qt.PenStyle.NoPen))
@@ -33,7 +34,6 @@ class StarDelegate(QStyledItemDelegate):
                 painter.setBrush(fill_color)
                 painter.drawRect(option.rect)
             if option.state & QStyle.StateFlag.State_Selected:
-                # painter.fillRect(option.rect, Qt.GlobalColor.red)
                 if self._table_view.hasFocus():
                     background_stars_color = combine_colors(SELECTION_QCOLOR, option.palette.base(), 0.8)
                     StarRating(5).paint(painter, option.rect, option.palette, StarRating.ReadOnly,
@@ -56,12 +56,12 @@ class StarDelegate(QStyledItemDelegate):
             return super().sizeHint(option, index)
 
     def createEditor(self, parent: QWidget, option: QStyleOptionViewItem, index: QModelIndex) -> StarEditor:
-        # print("Created editor:", index.row(), index.column())
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
             editor = StarEditor(parent, option.palette)
             editor.set_star_color(self._table_view.palette().highlightedText().color())
             editor.set_selected_star_count(star_rating.star_count())
+            editor.rating_changed.connect(lambda rating: self.track_rating_updated.emit(index.row(), rating))
         else:
             editor = super().createEditor(parent, option, index)
         self.active_editors[index_pos(index)] = editor
@@ -78,7 +78,6 @@ class StarDelegate(QStyledItemDelegate):
     def setModelData(self, editor: StarEditor, model: QAbstractTableModel, index: QModelIndex) -> None:
         star_rating = index.data()
         if isinstance(star_rating, StarRating):
-            # print(f"Set model data: {index.row(), index.column()}, rating: {editor.star_rating().star_count()}")
             model.setData(index, editor.star_rating())
         else:
             super().setModelData(editor, model, index)

@@ -200,3 +200,11 @@ class AudioQueue(QObject, metaclass=QtSingleton):
             else:
                 self._tracks_to_play.pop(ind)
         self.update_currently_playing(track)
+
+    def update_track_rating(self, track: Track, rating: float) -> None:
+        if self.playing_track and track.file_path == self.playing_track.file_path:
+            self.playing_track.rating = rating
+
+        for t in self.get_queue():
+            if t.file_path == track.file_path:
+                t.rating = rating

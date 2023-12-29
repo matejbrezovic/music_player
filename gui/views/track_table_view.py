@@ -30,6 +30,7 @@ class TrackTableView(QTableView):
     tracks_deleted = pyqtSignal(list)
     track_clicked = pyqtSignal(Track)
     track_double_clicked = pyqtSignal(Track)
+    track_rating_updated = pyqtSignal(Track, float)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -42,6 +43,8 @@ class TrackTableView(QTableView):
         self._table_model = TrackTableModel(self)
         self._table_delegate = TrackTableItemDelegate(self)
         self._star_delegate = StarDelegate(self)
+        self._star_delegate.track_rating_updated.connect(
+            lambda index, rating: self.track_rating_updated.emit(self._table_model.tracks[index], rating))
         self._table_header = TrackTableHeader(Qt.Orientation.Horizontal, self)
         self._table_header.sectionClicked.connect(self.sort_by_column)
         self.clicked.connect(self.row_clicked)
@@ -66,10 +69,12 @@ class TrackTableView(QTableView):
         self._setup_context_menu()
         self._setup_shortcuts()
 
+    @pyqtSlot(QModelIndex)
     def row_double_clicked(self, model_index: QModelIndex) -> None:
         self.playing_track = self._table_model.tracks[model_index.row()]
         self.track_double_clicked.emit(self.playing_track)
 
+    @pyqtSlot(QModelIndex)
     def row_clicked(self, model_index: QModelIndex) -> None:
         track = self._table_model.tracks[model_index.row()]
         self.track_clicked.emit(track)
@@ -187,6 +192,7 @@ class TrackTableView(QTableView):
         audio_output = self.sender().text()
         self.output_to_triggered.emit(audio_output)
 
+    @pyqtSlot()
     def play_now_action_triggered(self) -> None:
         if not self._table_model.tracks:
             return
@@ -194,12 +200,14 @@ class TrackTableView(QTableView):
         selected_track_indexes = sorted(set([i.row() for i in self.selectionModel().selection().indexes()]))
         self.play_now_triggered.emit([self._table_model.tracks[i] for i in selected_track_indexes])
 
+    @pyqtSlot()
     def queue_next_action_triggered(self) -> None:
         if not self._table_model.tracks:
             return
         selected_track_indexes = sorted(set([i.row() for i in self.selectionModel().selection().indexes()]))
         self.queue_next_triggered.emit([self._table_model.tracks[i] for i in selected_track_indexes])
 
+    @pyqtSlot()
     def queue_last_action_triggered(self) -> None:
         if not self._table_model.tracks:
             return
@@ -246,6 +254,10 @@ class TrackTableView(QTableView):
     @pyqtSlot()
     def set_stopped(self) -> None:
         self._table_model.set_stopped()
+
+    @pyqtSlot(Track, float)
+    def update_track_rating(self, track: Track, rating: float) -> None:
+        self._table_model.update_track_rating(track, rating)
 
     def focusInEvent(self, event: QFocusEvent) -> None:
         # It's important to clear selection for better visuals, but to do it before opening new editor
@@ -438,6 +450,7 @@ class TrackTableModel(QAbstractTableModel):
         self.playing_track_index = index
         self.dataChanged.emit(self.index(0, 1), self.index(self.rowCount(), 1))
 
+    @pyqtSlot(list)
     def delete_tracks(self, tracks: List[Track]) -> None:
         self.layoutAboutToBeChanged.emit()
         for track in self.tracks.copy():
@@ -445,6 +458,12 @@ class TrackTableModel(QAbstractTableModel):
                 self.tracks.remove(track)
         self.layoutChanged.emit()
         self.dataChanged.emit(self.index(0, 0), self.index(self.rowCount(), self.columnCount()))
+
+    @pyqtSlot(Track, float)
+    def update_track_rating(self, track: Track, _: float) -> None:
+        self.tracks[self.tracks.index(track)] = track
+        ind = self.tracks.index(track)
+        self.dataChanged.emit(self.index(ind, 0), self.index(ind, len(MAIN_PANEL_COLUMN_NAMES) - 1))
 
 
 class TrackTableItemDelegate(QStyledItemDelegate):

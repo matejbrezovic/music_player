@@ -1,4 +1,4 @@
-from typing import Union, List, Tuple, Optional
+from typing import Union, List, Tuple, Optional, Dict
 
 from constants import GROUP_OPTIONS
 from data_models import Track
@@ -10,8 +10,9 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
     def __init__(self):
         super().__init__()
 
-        self.cached_track_groups = {}
-        self.cached_counts = {}
+        self.cached_track_groups: Dict[Tuple[str, Optional[Union[str, int]]], List[Track]] = {}
+        self.cached_counts: Dict[str, List[Tuple[str, int]]] = {}
+        self.cached_tracks: Dict[int, Track] = {}  # track_id, track
 
     def get_tracks_by(self, key: str, value: Optional[Union[str, int]]) -> List[Track]:
         tuple_key = (key.lower(), value)
@@ -20,13 +21,23 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
 
         return self.cached_track_groups[tuple_key]
 
-    def get_track_counts_grouped_by(self, group_key: str) -> List[Tuple[str, int]]:
+    def get_track_counts_grouped_by_key(self, group_key: str) -> List[Tuple[str, int]]:
         group_key = group_key.lower()
         if group_key not in self.cached_counts:
-            self.cached_counts[group_key] = super().get_track_counts_grouped_by(group_key)
+            self.cached_counts[group_key] = super().get_track_counts_grouped_by_key(group_key)
         return self.cached_counts[group_key]
 
-    def delete_track_by(self, key: str, value: Union[int, float, str]) -> None:
+    def update_track(self, track: Track, column: str, value: Union[int, float, str]) -> None:
+        super().update_track(track, column, value)
+
+        if track.track_id in self.cached_tracks:
+            setattr(self.cached_tracks[track.track_id], column, value)
+
+        for group in self.cached_track_groups.values():
+            if track in group:
+                setattr(group[group.index(track)], column, value)
+
+    def delete_track_by(self, key: str, value: Union[int, float, str]) -> None:  # todo fix with cache
         super().delete_track_by(key, value)
 
     def delete_tracks(self, tracks: List[Track]) -> None:
@@ -44,14 +55,23 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
 
         self.cached_counts = {}
         for group_key in GROUP_OPTIONS:
-            self.get_track_counts_grouped_by(group_key)
+            self.get_track_counts_grouped_by_key(group_key)
+
+        for track in tracks:
+            if track.track_id in self.cached_tracks:
+                self.cached_tracks.pop(track.track_id)
 
     def load_cache(self):
         for group_key in GROUP_OPTIONS:
-            for group_name, _ in self.get_track_counts_grouped_by(group_key):
+            for group_name, _ in self.get_track_counts_grouped_by_key(group_key):
                 self.get_tracks_by(group_key, group_name)
             self.get_tracks_by(group_key, None)
+
+        for track in self.get_tracks():
+            if track.track_id not in self.cached_tracks:
+                self.cached_tracks[track.track_id] = track
 
     def delete_cache(self):
         self.cached_track_groups = {}
         self.cached_counts = {}
+        self.cached_tracks = {}

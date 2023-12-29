@@ -1,6 +1,6 @@
 from typing import List
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSlot
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMenuBar, QWidget, QMenu, QMainWindow, QVBoxLayout
 
@@ -92,7 +92,8 @@ class MainWindow(QMainWindow):
         self.audio_controller.setFocusPolicy(Qt.FocusPolicy.NoFocus)
 
     def _setup_signals(self) -> None:
-        def play_now_triggered(tracks: List[Track]) -> None:
+        @pyqtSlot(list)
+        def _play_now_triggered(tracks: List[Track]) -> None:
             if len(tracks) == 1:
                 if self.main_panel.displayed_tracks != self.audio_queue.get_queue():
                     self.audio_controller.set_queue(self.main_panel.displayed_tracks)
@@ -101,23 +102,30 @@ class MainWindow(QMainWindow):
                 self.audio_controller.set_queue(tracks)
                 self.audio_controller.set_playing_track(tracks[0])
 
+        @pyqtSlot(Track, float)
+        def _track_rating_updated_from_main_panel(track: Track, rating: float) -> None:
+            self.audio_queue.update_track_rating(track, rating),
+            if track == self.audio_queue.playing_track:
+                self.audio_controller.update_playing_track_rating(rating)
+            self.cached_tracks_repository.update_track(track, 'rating', rating)
+
         self.scan_folders_dialog.finished.connect(self.group_panel.refresh_groups)
         self.add_files_dialog.finished.connect(self.group_panel.refresh_groups)
 
         self.header_menu.navigation_panel_group_key_changed.connect(self.group_panel.group_key_changed)
-        self.header_menu.main_panel_view_key_changed.connect(self.main_panel.view_key_changed)
         self.header_menu.information_panel_view_key_changed.connect(self.queue_panel.view_key_changed)
 
         self.main_panel.track_double_clicked.connect(
             lambda track: (self.status_bar.update_queue_info(self.main_panel.displayed_tracks),
-                              self.audio_queue.set_queue(self.main_panel.displayed_tracks),
-                              self.audio_queue.set_playing_track(track),
-                              self.audio_controller.play()))
-        self.main_panel.play_now_triggered.connect(play_now_triggered)
+                           self.audio_queue.set_queue(self.main_panel.displayed_tracks),
+                           self.audio_queue.set_playing_track(track),
+                           self.audio_controller.play()))
+        self.main_panel.play_now_triggered.connect(_play_now_triggered)
         self.main_panel.queue_next_triggered.connect(self.queue_next)
         self.main_panel.queue_last_triggered.connect(self.queue_last)
         self.main_panel.output_to_triggered.connect(self.audio_controller.set_audio_output)
         self.main_panel.tracks_deleted.connect(self.tracks_deleted)
+        self.main_panel.track_rating_updated.connect(_track_rating_updated_from_main_panel)
 
         self.group_panel.group_clicked.connect(
             lambda tracks, key_value_tuple: (self.main_panel.display_tracks(tracks, key_value_tuple)))
@@ -143,6 +151,12 @@ class MainWindow(QMainWindow):
                                                self.queue_panel.unpause_playing_track()))
         self.audio_controller.remaining_queue_time_changed.connect(self.status_bar.update_remaining_queue_time)
         self.audio_controller.player_stopped.connect(self._player_stopped)
+        self.audio_controller.playing_track_rating_updated.connect(
+            lambda track, rating: (
+                self.main_panel.update_track_rating(track, rating),
+                self.audio_queue.update_track_rating(track, rating),
+                self.cached_tracks_repository.update_track(track, 'rating', rating)
+            ))
 
         self.scan_folders_dialog.added_tracks.connect(self._added_tracks_to_database)
         self.scan_folders_dialog.removed_tracks.connect(self._removed_tracks_from_database)

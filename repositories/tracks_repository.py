@@ -46,11 +46,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 tracks_to_add.append(track)
         self.add_tracks(tracks_to_add)
 
-    def set_tracks(self, tracks: Iterable[Track]) -> None:
-        self.reset_table("tracks")
-        self.add_tracks(tracks)
-
-    def get_track_counts_grouped_by(self, group_key: str) -> List[Tuple[str, int]]:
+    def get_track_counts_grouped_by_key(self, group_key: str) -> List[Tuple[str, int]]:
         conn = self.get_connection()
         cursor = conn.cursor()
 

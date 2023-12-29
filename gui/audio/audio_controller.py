@@ -24,6 +24,7 @@ class AudioController(QFrame):
     playback_error_encountered = pyqtSignal(Track)
     player_stopped = pyqtSignal()
     background_pixmap_updated = pyqtSignal(QPixmap)
+    playing_track_rating_updated = pyqtSignal(Track, float)
 
     default_stylesheet = "QFrame#audio_controller {background-color: rgba(0, 0, 0, 0.2)}"
 
@@ -43,7 +44,6 @@ class AudioController(QFrame):
         self.image_downloader.image_downloaded.connect(self.image_download_thread.quit)
 
         self.audio_queue = AudioQueue()
-        self._playing_track = None
 
         self.total_queue_time = 0
         self._rounded_remaining_queue_time = 0  # shouldn't update while track is playing
@@ -122,6 +122,9 @@ class AudioController(QFrame):
 
         self.star_widget = StarWidget(0, self)
         self.star_widget.setFixedWidth(90)
+        self.star_widget.rating_changed.connect(self.update_playing_track_rating)
+        self.star_widget.rating_changed.connect(
+            lambda rating: self.playing_track_rating_updated.emit(self.audio_queue.playing_track, rating))
 
         self.passed_time_label = QLabel("0:00/ 0:00")
         self.passed_time_label.setFixedWidth(90)
@@ -309,7 +312,8 @@ class AudioController(QFrame):
             self.set_dark_mode_enabled(False)
             self.repaint()
 
-    def _image_downloaded(self, qimage: QImage, track: Track = None) -> None:
+    @pyqtSlot(QImage, Track)
+    def _image_downloaded(self, qimage: QImage, track: Track) -> None:
         if track == self.get_playing_track():
             pixmap = QPixmap.fromImage(qimage)
             try:
@@ -325,19 +329,24 @@ class AudioController(QFrame):
         pixmap = get_embedded_artwork_pixmap(track.file_path)
         if not pixmap:
             self._set_background_to_default()
-            self.start_download_thread(track)
+            self.start_image_download_thread(track)
         else:
             self._set_custom_background_pixmap(pixmap)
 
-    def start_download_thread(self, track: Track) -> None:
+    def start_image_download_thread(self, track: Track) -> None:
         if self.image_download_thread.isRunning():
             self.image_downloader.pending_track_requests.append(track)
         else:
             self.image_downloader.set_track(track)
             self.image_download_thread.start()
 
+    @pyqtSlot(float)
+    def update_playing_track_rating(self, rating: float) -> None:
+        self.star_widget.set_selected_star_count(rating)
+        self.star_widget.repaint()
+
     @pyqtSlot()
-    def queue_ended(self):
+    def queue_ended(self) -> None:
         self.player.stop()
         self.play_button.setIcon(self.play_icon)
         self._user_action = AudioUserAction.Stopped
@@ -435,12 +444,11 @@ class AudioController(QFrame):
             self.star_widget.setEnabled(True)
             self.seek_slider.setEnabled(True)
 
+            self.star_widget.set_selected_star_count(self.audio_queue.playing_track.rating)
             self.play_button.setIcon(self.pause_icon)
             self.player.setSource(QUrl(new_playing_track.file_path))
             self.player.play()
-            if self._playing_track != new_playing_track:
-                self._playing_track = new_playing_track
-                self.update_background_pixmap(new_playing_track)
+            self.update_background_pixmap(new_playing_track)
             self.unpaused.emit(self.get_playing_track())
         else:
             self._user_action = AudioUserAction.Stopped

@@ -1,6 +1,6 @@
 import sys
 
-from PyQt6.QtCore import Qt
+from PyQt6.QtCore import Qt, pyqtSignal, QSignalBlocker
 from PyQt6.QtGui import QPaintEvent, QPainter, QPalette, QColor
 from PyQt6.QtWidgets import QWidget, QApplication, QMainWindow, QVBoxLayout, QPushButton
 
@@ -8,16 +8,18 @@ from gui.star import StarEditor, StarRating
 
 
 class StarWidget(QWidget):
+    rating_changed = pyqtSignal(float)
+
     def __init__(self, star_count: float = 0, *args):
         super().__init__(*args)
         self.background_stars = StarRating(5)
         self.background_stars.set_color(QColor(255, 255, 255, 70))
         self.setContentsMargins(0, 0, 0, 0)
 
-        self.star_count = star_count
-
         self.editor = StarEditor(self, self.palette())
         self.editor.set_selected_star_count(star_count)
+
+        self.editor.rating_changed.connect(self.rating_changed.emit)
 
     def paintEvent(self, event: QPaintEvent) -> None:
         painter = QPainter(self)
@@ -32,6 +34,10 @@ class StarWidget(QWidget):
 
     def set_star_color(self, color) -> None:
         self.editor.set_star_color(color)
+
+    def set_selected_star_count(self, star_count: float) -> None:
+        with QSignalBlocker(self.editor):
+            self.editor.set_selected_star_count(star_count)
 
 
 class TestWindow(QMainWindow):

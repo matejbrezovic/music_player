@@ -17,6 +17,7 @@ class TrackViewWidget(QWidget):
     queue_next_triggered = pyqtSignal(list)
     queue_last_triggered = pyqtSignal(list)
     tracks_deleted = pyqtSignal(list)
+    track_rating_updated = pyqtSignal(Track, float)
 
     def __init__(self, *args):
         super().__init__(*args)
@@ -165,6 +166,7 @@ class TrackViewWidget(QWidget):
         self.track_table_view.queue_last_triggered.connect(self.queue_last_triggered.emit)
         self.track_table_view.output_to_triggered.connect(self.output_to_triggered.emit)
         self.track_table_view.tracks_deleted.connect(self.tracks_deleted.emit)
+        self.track_table_view.track_rating_updated.connect(self.track_rating_updated.emit)
 
     @property
     def displayed_tracks(self) -> List[Track]:
@@ -199,10 +201,10 @@ class TrackViewWidget(QWidget):
     def unpause_playing_track(self) -> None:
         self.track_table_view.set_unpaused()
 
-    @pyqtSlot(list)
-    def added_tracks(self, tracks: List[Track]) -> None:
-        self.track_table_view.added_tracks(tracks)
-
     @pyqtSlot()
     def stop_playing(self):
         self.track_table_view.set_stopped()
+
+    @pyqtSlot(Track, float)
+    def update_track_rating(self, track: Track, rating: float) -> None:
+        self.track_table_view.update_track_rating(track, rating)

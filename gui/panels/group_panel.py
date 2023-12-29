@@ -115,7 +115,7 @@ class GroupPanel(QFrame):
                                                     get_default_artwork_pixmap(group_key)
                                                     )]
 
-        for title, count in self.cached_tracks_repository.get_track_counts_grouped_by(group_key):
+        for title, count in self.cached_tracks_repository.get_track_counts_grouped_by_key(group_key):
             pixmap = get_group_pixmap(group_key, title)
 
             if title is None and group_key == "album":
