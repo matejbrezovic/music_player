@@ -2,10 +2,10 @@ import os
 import sqlite3
 from typing import List, Union, Iterable, Tuple, Optional
 
-import music_tag
-import mutagen.mp3
+import eyed3
 from PyQt6.QtWidgets import QApplication
 
+from constants import SUPPORTED_AUDIO_FORMATS
 from data_models.track import Track
 from repositories import BaseRepository
 from utils import get_embedded_artwork_pixmap, Singleton
@@ -185,44 +185,60 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
     def convert_file_paths_to_tracks(file_paths: List[str]) -> List[Track]:
         converted_tracks = []
         for i, file_path in enumerate(file_paths):
-            try:
-                loaded_file = music_tag.load_file(file_path)
-
-                title = loaded_file["title"].first
-                artist = loaded_file["artist"].first
-                if not title and not artist:
-                    title = os.path.splitext(os.path.basename(file_path))[0]
-                    split = title.split(" - ", 1)
-                    if len(split) == 2:
-                        artist, title = split
-                    else:
-                        title = split[0]
-                    if artist:
-                        artist = artist.strip()
-                    title = title.strip()
-                elif not title:
-                    title = os.path.splitext(os.path.basename(file_path))[0]
-                elif not artist:
-                    pass
-
-                converted_tracks.append(Track(
-                    i,  # temporary id
-                    file_path,
-                    str(title),
-                    loaded_file["album"].first,
-                    artist,
-                    loaded_file["composer"].first,
-                    loaded_file["genre"].first,
-                    int(loaded_file["year"]) if int(loaded_file["year"]) else None,
-                    int(loaded_file["#length"].first),
-                    int(os.path.getsize(file_path)),
-                    0,
-                    get_embedded_artwork_pixmap(file_path)
-                ))
-            except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError) as e:
-                print(e)
-                # TODO cannot convert '2020-10-26T20:39:57-04:00' to int type for year so ValueError (can be improved)
+            if not os.path.splitext(file_path)[-1] in SUPPORTED_AUDIO_FORMATS:
                 continue
+
+            audio_file = eyed3.load(file_path)
+
+            title = audio_file.tag.title
+            artist = audio_file.tag.artist
+            if not title and not artist:
+                title = os.path.splitext(os.path.basename(file_path))[0]
+                split = title.split(" - ", 1)
+                if len(split) == 2:
+                    artist, title = split
+                else:
+                    title = split[0]
+                if artist:
+                    artist = artist.strip()
+                title = title.strip()
+            elif not title:
+                title = os.path.splitext(os.path.basename(file_path))[0]
+            elif not artist:
+                pass
+
+            rating = None
+            for popm in audio_file.tag.popularities:
+                if popm.rating:
+                    if popm.rating == 255:
+                        rating = 5
+                    elif popm.rating >= 186:
+                        rating = 4
+                    elif popm.rating >= 128:
+                        rating = 3
+                    elif popm.rating >= 64:
+                        rating = 2
+                    elif popm.rating >= 32:
+                        rating = 1
+                    else:
+                        rating = 0
+                    break
+
+            tr = Track(
+                i,  # temporary id
+                file_path,
+                str(title),
+                audio_file.tag.album,
+                artist,
+                audio_file.tag.composer,
+                audio_file.tag.genre,
+                audio_file.tag.recording_date.year if audio_file.tag.recording_date else None,
+                int(audio_file.info.time_secs),
+                int(audio_file.info.size_bytes),
+                rating,
+                None  # get_embedded_artwork_pixmap(file_path)
+            )
+            converted_tracks.append(tr)
 
         return converted_tracks
 
@@ -233,17 +249,20 @@ if __name__ == "__main__":
     def test():
         global t
         root = "C:\\home\\matey\\Music\\"
-        files = ["Nanatsu no Taizai OST - ELIEtheBEST.mp3",
-                 "My Hero Academia -You Say Run- (Orchestral Arrangement) - 10K SPECIAL.mp3",
-                 "y2mate.com - - - SAO II OST Track 01 - Gunland_OS-UjCmrJh0.mp3",
-                 "Eminem Rap God (Explicit).mp3",
-                 "Black Clover Rover & Catcher.mp3"]
+        # files = ["Nanatsu no Taizai OST - ELIEtheBEST.mp3",
+        #          "My Hero Academia -You Say Run- (Orchestral Arrangement) - 10K SPECIAL.mp3",
+        #          "y2mate.com - - - SAO II OST Track 01 - Gunland_OS-UjCmrJh0.mp3",
+        #          "Eminem Rap God (Explicit).mp3",
+        #          "Black Clover Rover & Catcher.mp3"]
+
+        files = os.listdir(root)
 
         file_paths = [root + file for file in files]
 
         tracks = t.convert_file_paths_to_tracks(file_paths)
 
-        for track in tracks:
-            print(f"{track.artist} ||| {track.title}")
+        # for track in tracks:
+        #     print(f"{track.artist} ||| {track.title}")
 
-    print(t.get_track_count())
+    # print(t.get_track_count())
+    test()
