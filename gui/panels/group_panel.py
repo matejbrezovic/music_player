@@ -104,7 +104,7 @@ class GroupPanel(QFrame):
             tracks = self.cached_tracks_repository.get_tracks_by(group_key, group_title)  # TODO should be optimized
             artwork_pixmap = get_embedded_artwork_pixmap(tracks[0].file_path)
 
-            if not artwork_pixmap:
+            if not artwork_pixmap or artwork_pixmap.isNull():
                 artwork_pixmap = get_default_artwork_pixmap(group_key)
             return artwork_pixmap
 
