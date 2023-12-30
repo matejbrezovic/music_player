@@ -6,6 +6,5 @@ from .improved_slider import ImprovedSlider
 from .labels import *
 from .misc import *
 from .pixmaps import *
-from .tag_manager import TagManager
 from .time_formatting import *
 from .transparent_combo_box import TransparentComboBox

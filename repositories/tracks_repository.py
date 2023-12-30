@@ -2,18 +2,16 @@ import os
 import sqlite3
 from typing import List, Union, Iterable, Tuple, Optional
 
+import music_tag
 import mutagen.mp3
 from PyQt6.QtWidgets import QApplication
 
 from data_models.track import Track
 from repositories import BaseRepository
-from utils import get_embedded_artwork_pixmap, Singleton, TagManager
+from utils import get_embedded_artwork_pixmap, Singleton
 
 
 class TracksRepository(BaseRepository, metaclass=Singleton):
-    def __init__(self):
-        super().__init__()
-
     def add_track(self, track: Track) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -92,7 +90,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 year=row["year"],
                 length=row["length"],
                 size=row["size"],
-                rating=0,
+                rating=row["rating"],
                 artwork_pixmap=get_embedded_artwork_pixmap(row["file_path"])
             )
 
@@ -118,7 +116,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 year=row["year"],
                 length=row["length"],
                 size=row["size"],
-                rating=0,
+                rating=row["rating"],
                 artwork_pixmap=get_embedded_artwork_pixmap(row["file_path"])
                 )
             )
@@ -186,10 +184,9 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
     @staticmethod
     def convert_file_paths_to_tracks(file_paths: List[str]) -> List[Track]:
         converted_tracks = []
-        tag_manager = TagManager()
         for i, file_path in enumerate(file_paths):
             try:
-                loaded_file = tag_manager.load_file(file_path)
+                loaded_file = music_tag.load_file(file_path)
 
                 title = loaded_file["title"].first
                 artist = loaded_file["artist"].first

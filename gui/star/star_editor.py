@@ -26,6 +26,9 @@ class StarEditor(QWidget):
             self._star_rating.set_color(self.color)
 
     def set_selected_star_count(self, star_count: float) -> None:
+        if star_count == self.selected_star_count:
+            return
+
         self.selected_star_count = star_count
         self._star_rating.set_star_count(self.selected_star_count)
         self.rating_changed.emit(self.selected_star_count)

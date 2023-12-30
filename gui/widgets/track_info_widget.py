@@ -1,12 +1,13 @@
 import math
 
+import music_tag
 from PyQt6.QtCore import Qt
 from PyQt6.QtGui import QPixmap
 from PyQt6.QtWidgets import *
 
 from data_models import Track
 from utils import (ElidedLabel, get_embedded_artwork_pixmap, get_default_artwork_pixmap, SquareImageLabel,
-                   TransparentComboBox, TagManager, format_seconds)
+                   TransparentComboBox, format_seconds)
 
 
 class TrackInfoWidget(QWidget):
@@ -78,7 +79,7 @@ class TrackInfoWidget(QWidget):
 
     @staticmethod
     def _get_track_info(t: Track) -> str:
-        f = TagManager().load_file(t.file_path)
+        f = music_tag.load_file(t.file_path)
         extension = t.file_path.split(".")[-1].upper()
         sample_rate = f'{str(round(f["#samplerate"].first / 1000, 1))} kHz'
         bitrate = f'{str(math.floor(f["#bitrate"].first / 1000))}k'

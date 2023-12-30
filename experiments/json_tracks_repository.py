@@ -1,12 +1,11 @@
 import json
-from typing import List
+from typing import List, Optional
 
 import mutagen.mp3
 from PyQt6 import QtWidgets
 
 from constants import ROOT
 from data_models.track import Track
-from utils import TagManager
 
 DEFAULT_LOADED_TRACKS_FILE_PATH = f"{ROOT}/tracks.txt"
 
@@ -50,10 +49,9 @@ class JsonTracksRepository:
     @staticmethod
     def convert_file_paths_to_tracks(file_paths: List[str]) -> List[Track]:
         tracks = []
-        tag_manager = TagManager()
         for i, file_path in enumerate(file_paths):
             try:
-                loaded_file = tag_manager.load_file(file_path)
+                loaded_file = music_tag.load_file(file_path)
                 tracks.append(Track(
                     i,
                     file_path,
@@ -64,7 +62,7 @@ class JsonTracksRepository:
                     loaded_file["genre"].first,
                     int(loaded_file["year"]) if int(loaded_file["year"]) else None,
                     int(loaded_file["#length"].first),
-                    5 # placeholder for rating
+                    5  # placeholder for rating
                 ))
             except (mutagen.mp3.HeaderNotFoundError, NotImplementedError, ValueError):
                 # TODO cannot convert '2020-10-26T20:39:57-04:00' to int type for year so ValueError (can be improved)
