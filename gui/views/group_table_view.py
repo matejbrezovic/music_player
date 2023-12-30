@@ -1,4 +1,4 @@
-from typing import List, Any, Union, Dict, Tuple, Optional
+from typing import List, Any, Union, Optional
 
 from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QAbstractTableModel, Qt
 from PyQt6.QtGui import QPen, QBrush, QPainter, QFont, QFocusEvent, QPalette, QColor
