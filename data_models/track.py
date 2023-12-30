@@ -1,5 +1,5 @@
 import os
-from copy import deepcopy, copy
+from copy import deepcopy
 from dataclasses import dataclass, field
 from typing import Any
 
@@ -10,13 +10,13 @@ class Track:
     file_path: str = field(repr=False)
     title: str
     album: str = field(repr=False)
-    artist: str = field(repr=True)
-    composer: str = field(repr=True)
+    artist: str = field(repr=False)
+    composer: str = field(repr=False)
     genre: str = field(repr=False)
-    year: int = field(repr=True)
-    length: int = field(repr=True)
-    size: int = field(repr=True)
-    rating: int = field(repr=True, default=0)
+    year: int = field(repr=False)
+    length: int = field(repr=False)
+    size: int = field(repr=False)
+    rating: int = field(repr=False, default=0)
     # artwork_path: str = field(repr=False)
     artwork_pixmap: Any = field(repr=False, default=None)
     queue_id: int = field(repr=True, default=0)
@@ -29,10 +29,6 @@ class Track:
             return False
 
         return self.file_path == other.file_path and self.queue_id == other.queue_id
-
-    # def __hash__(self):
-    #     return hash((self.track_id, self.file_path, self.title, self.album,
-    #                 self.artist, self.composer, self.size, self.queue_id))
 
     def __deepcopy__(self, memo):
         cls = self.__class__
