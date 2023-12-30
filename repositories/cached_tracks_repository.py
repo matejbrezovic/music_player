@@ -66,6 +66,7 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
             for group_name, _ in self.get_track_counts_grouped_by_key(group_key):
                 self.get_tracks_by(group_key, group_name)
             self.get_tracks_by(group_key, None)
+            self.get_tracks_by(group_key, 'all')
 
         for track in self.get_tracks():
             if track.track_id not in self.cached_tracks:

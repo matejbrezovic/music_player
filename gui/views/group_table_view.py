@@ -1,4 +1,4 @@
-from typing import List, Any, Union
+from typing import List, Any, Union, Dict, Tuple, Optional
 
 from PyQt6.QtCore import QModelIndex, pyqtSignal, pyqtSlot, QAbstractTableModel, Qt
 from PyQt6.QtGui import QPen, QBrush, QPainter, QFont, QFocusEvent, QPalette, QColor
@@ -18,8 +18,7 @@ class GroupTableView(QTableView):
 
     def __init__(self, *args):
         super().__init__(*args)
-        self.groups: List[TrackGroup] = []
-        self.group_key = None
+        self.group_key: Optional[str] = None
         self.last_group_key = self.group_key
         self.last_group_title = None
         self._table_model = GroupTableModel(self)
@@ -41,16 +40,19 @@ class GroupTableView(QTableView):
 
     @pyqtSlot(list)
     def set_groups(self, groups: List[TrackGroup]) -> None:
-        self.groups = groups
         self._table_model.set_groups(groups)
+
+    @property
+    def groups(self) -> List[TrackGroup]:
+        return self._table_model.groups
 
     @pyqtSlot(QModelIndex)
     def _group_clicked(self, index: QModelIndex) -> None:
-        if not self.groups:
+        if not self._table_model.groups:
             return
 
         self.last_group_key = self.group_key
-        self.last_group_title = self.groups[index.row()].title
+        self.last_group_title = self._table_model.groups[index.row()].title
         tracks = CachedTracksRepository().get_tracks_by(self.group_key, self.last_group_title)
 
         self.group_clicked.emit(tracks, (self.group_key, self.last_group_title))
@@ -66,7 +68,7 @@ class GroupTableView(QTableView):
             return
 
         self.last_group_key = self.group_key
-        self.last_group_title = self.groups[index.row()].title
+        self.last_group_title = self._table_model.groups[index.row()].title
         self.group_double_clicked.emit(tracks, (self.group_key, self.last_group_title))
 
     def focusInEvent(self, event: QFocusEvent) -> None:
@@ -82,10 +84,10 @@ class GroupTableModel(QAbstractTableModel):
     def __init__(self, parent: GroupTableView = None):
         super().__init__(parent)
         self.table_view = parent
-        self._groups: List[TrackGroup] = []
+        self.groups: List[TrackGroup] = []
 
     def data(self, index: QModelIndex, role: Qt.ItemDataRole = Qt.ItemDataRole.DisplayRole) -> Any:
-        if not self._groups:
+        if not self.groups:
             return None
 
         if role == Qt.ItemDataRole.TextAlignmentRole:
@@ -93,10 +95,10 @@ class GroupTableModel(QAbstractTableModel):
 
         if role == Qt.ItemDataRole.DecorationRole:
             if not index.column():
-                return self._groups[index.row()].pixmap
+                return self.groups[index.row()].pixmap
 
     def rowCount(self, index: QModelIndex = QModelIndex) -> int:
-        return len(self._groups)
+        return len(self.groups)
 
     def columnCount(self, parent: QModelIndex = QModelIndex) -> int:
         return 2
@@ -104,7 +106,7 @@ class GroupTableModel(QAbstractTableModel):
     @pyqtSlot(list)
     def set_groups(self, groups: List[TrackGroup]) -> None:
         self.layoutAboutToBeChanged.emit()
-        self._groups = groups
+        self.groups = groups
         self.layoutChanged.emit()
         self.dataChanged.emit(self.createIndex(0, 0),
                               self.createIndex(self.rowCount(),
@@ -141,19 +143,19 @@ class GroupTableItemDelegate(QStyledItemDelegate):
             painter.drawPixmap(rect, pixmap)
 
         if index.column() == 1:
-            navigation_group = self._table_view.groups[index.row()]
-            navigation_group_widget = GroupItemWidget(navigation_group.visual_title, navigation_group.tracks_num)
+            track_group = self._table_view.groups[index.row()]
+            group_widget = GroupItemWidget(track_group.visual_title, track_group.tracks_num)
 
-            navigation_group_widget.setGeometry(option.rect)
+            group_widget.setGeometry(option.rect)
 
             painter.save()
             painter.translate(option.rect.x(), option.rect.y())
             if option.state & QStyle.StateFlag.State_Selected and self._table_view.hasFocus():
-                navigation_group_widget.set_text_colors(option.palette.highlightedText(), option.palette.brightText())
+                group_widget.set_text_colors(option.palette.highlightedText(), option.palette.brightText())
             else:
-                navigation_group_widget.set_text_colors(Qt.GlobalColor.black, Qt.GlobalColor.darkGray)
+                group_widget.set_text_colors(Qt.GlobalColor.black, Qt.GlobalColor.darkGray)
 
-            navigation_group_widget.render(painter)
+            group_widget.render(painter)
             painter.restore()
 
 

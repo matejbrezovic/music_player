@@ -236,7 +236,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 int(audio_file.info.time_secs),
                 int(audio_file.info.size_bytes),
                 rating,
-                None  # get_embedded_artwork_pixmap(file_path)
+                get_embedded_artwork_pixmap(file_path) if QApplication.instance() else None
             )
             converted_tracks.append(tr)
 
