@@ -721,15 +721,11 @@ class TestMainWindow(QMainWindow):
 
         self.table_view.horizontalHeader().setMinimumSectionSize(20)
         self.table_view.verticalHeader().setVisible(False)
-        # self.table_view.horizontalHeader().setVisible(False)
 
         self.table_view.setShowGrid(False)
         self.table_view.horizontalHeader().setMinimumSectionSize(4)
         self.table_view.horizontalHeader().setDefaultAlignment(Qt.AlignmentFlag.AlignLeft)
-        # self.table_view.verticalHeader().setOffset(-20)
-        # print(self.table_view.verticalOffset())
         self.table_view.verticalHeader().setVisible(False)
-        # self.table_view.horizontalHeader().setVisible(False)
         self.table_view.setShowGrid(False)
         self.table_view.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.table_view.setVerticalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOn)
@@ -775,8 +771,6 @@ class TestMainWindow(QMainWindow):
         self.table_view.set_tracks(self.tracks[:self.counter * 30])
         self.table_view.scrollToTop()
         self.counter += 1
-        # print(self.counter)
-        # print("Refreshed!")
 
 
 if __name__ == '__main__':

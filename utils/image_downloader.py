@@ -87,7 +87,7 @@ class ImageDownloader(QObject):
         super().moveToThread(thread)
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     i = ImageDownloader()
     i.set_query("Kygo Happy Now")

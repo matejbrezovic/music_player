@@ -245,28 +245,3 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
             converted_tracks.append(tr)
 
         return converted_tracks
-
-
-if __name__ == "__main__":
-    t = TracksRepository()
-
-    def test():
-        global t
-        root = "C:\\home\\matey\\Music\\"
-        # files = ["Nanatsu no Taizai OST - ELIEtheBEST.mp3",
-        #          "My Hero Academia -You Say Run- (Orchestral Arrangement) - 10K SPECIAL.mp3",
-        #          "y2mate.com - - - SAO II OST Track 01 - Gunland_OS-UjCmrJh0.mp3",
-        #          "Eminem Rap God (Explicit).mp3",
-        #          "Black Clover Rover & Catcher.mp3"]
-
-        files = os.listdir(root)
-
-        file_paths = [root + file for file in files]
-
-        tracks = t.convert_file_paths_to_tracks(file_paths)
-
-        # for track in tracks:
-        #     print(f"{track.artist} ||| {track.title}")
-
-    # print(t.get_track_count())
-    test()

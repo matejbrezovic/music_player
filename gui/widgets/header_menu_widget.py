@@ -16,14 +16,12 @@ class HeaderMenuWidget(QWidget):
         super().__init__(*args, **kwargs)
 
         self.setFixedHeight(24)
-        # self.setStyleSheet("background-color: rgba(0, 0, 0, 0.2);")
         self.setContentsMargins(0, 0, 0, 0)
 
         self.main_splitter = QSplitter(Qt.Orientation.Horizontal, self)
         self.main_splitter.setContentsMargins(0, 0, 0, 0)
         self.main_splitter.setChildrenCollapsible(False)
         self.main_splitter.setHandleWidth(0)
-        # self.main_splitter.setStyleSheet("background-color: rgba(0, 0, 0, 0.2);")
 
         self.main_panel_view_options_combo_box = TransparentComboBox(self)
         self.main_panel_view_options_combo_box.setFixedSize(150, 24)

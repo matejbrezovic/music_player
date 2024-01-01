@@ -58,9 +58,3 @@ class VolumeSlider(ImprovedSlider):
 
         x = self.value() / self.maximum() * self.width()
         QToolTip.showText(self.mapToGlobal(QPoint(x, self.y())), self.toolTip())
-
-    # def mouseMoveEvent(self, event: QMouseEvent) -> None:
-    #     super().mouseMoveEvent(event)
-    #
-    #     x = self.value() / self.maximum() * self.width()
-    #     QToolTip.showText(self.mapToGlobal(QPoint(x, self.y())), self.toolTip())

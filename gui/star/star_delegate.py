@@ -87,7 +87,6 @@ class StarDelegate(QStyledItemDelegate):
             return
 
         editor = self.active_editors[index_pos(index)]
-        # print(f"Commit and close editor: {index.row(), index.column(), editor}")
         self.commitData.emit(editor)
         self.closeEditor.emit(editor)
         editor.deleteLater()

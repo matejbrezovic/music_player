@@ -360,7 +360,7 @@ class PlaceholderItem(DirectoryItem):
         super().__init__(parent, ["/"])
 
 
-if __name__ == "__main__":
+if __name__ == '__main__':
     app = QApplication(sys.argv)
     dialog = ScanFoldersDialog()
     dialog.show()
