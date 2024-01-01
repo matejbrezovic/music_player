@@ -12,6 +12,10 @@ from utils import get_embedded_artwork_pixmap, Singleton
 
 
 class TracksRepository(BaseRepository, metaclass=Singleton):
+    def __init__(self):
+        super().__init__()
+        self._cached_pixmaps = {}  # track_id, QPixmap
+
     def add_track(self, track: Track) -> None:
         conn = self.get_connection()
         cursor = conn.cursor()
@@ -90,9 +94,13 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 year=row["year"],
                 length=row["length"],
                 size=row["size"],
-                rating=row["rating"] if row["rating"] else 0,
-                artwork_pixmap=get_embedded_artwork_pixmap(row["file_path"])
+                rating=row["rating"] if row["rating"] else 0
             )
+            if track.track_id in self._cached_pixmaps:
+                track.artwork_pixmap = self._cached_pixmaps[track.track_id]
+            else:
+                track.artwork_pixmap = get_embedded_artwork_pixmap(track.file_path)
+                self._cached_pixmaps[track.track_id] = track.artwork_pixmap
 
             tracks.append(track)
         return tracks
@@ -105,7 +113,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
 
         tracks: List[Track] = []
         for row in cursor.fetchall():
-            tracks.append(Track(
+            track = Track(
                 track_id=row["track_id"],
                 file_path=row["file_path"],
                 title=row["title"],
@@ -116,14 +124,16 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 year=row["year"],
                 length=row["length"],
                 size=row["size"],
-                rating=row["rating"] if row["rating"] else 0,
-                artwork_pixmap=get_embedded_artwork_pixmap(row["file_path"])
+                rating=row["rating"] if row["rating"] else 0
                 )
-            )
 
-        if QApplication.instance() is not None:
-            for track in tracks:
+            if track.track_id in self._cached_pixmaps:
+                track.artwork_pixmap = self._cached_pixmaps[track.track_id]
+            else:
                 track.artwork_pixmap = get_embedded_artwork_pixmap(track.file_path)
+                self._cached_pixmaps[track.track_id] = track.artwork_pixmap
+
+            tracks.append(track)
 
         return tracks
 

@@ -5,10 +5,11 @@ from typing import Optional
 import mutagen
 import mutagen.id3
 import mutagen.mp4
-from PIL import UnidentifiedImageError, Image, ImageFilter
+from PIL import Image, ImageFilter
 from PIL.ImageQt import ImageQt
-from PyQt6.QtCore import QBuffer, QThread
+from PyQt6.QtCore import QBuffer
 from PyQt6.QtGui import QPixmap, QImage
+from PyQt6.QtWidgets import QApplication
 
 from utils import get_project_root
 
@@ -16,6 +17,10 @@ from utils import get_project_root
 def get_embedded_artwork_pixmap(file_path: str) -> Optional[QPixmap]:
     class NoArtworkError(Exception):
         pass
+
+    if not QApplication.instance():
+        return
+
     pixmap = QPixmap()
     try:
         try:
