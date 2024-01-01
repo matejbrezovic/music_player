@@ -1,5 +1,4 @@
 from .buttons import *
-from .config import Config
 from .fixed_horizontal_splitter import FixedHorizontalSplitter
 from .image_downloader import ImageDownloader
 from .improved_slider import ImprovedSlider

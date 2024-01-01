@@ -37,8 +37,8 @@ class CachedTracksRepository(TracksRepository, metaclass=Singleton):
             if track in group:
                 setattr(group[group.index(track)], column, value)
 
-    def delete_track_by(self, key: str, value: Union[int, float, str]) -> None:  # todo fix with cache
-        super().delete_track_by(key, value)
+    # def delete_track_by(self, key: str, value: Union[int, float, str]) -> None:  # todo fix with cache
+    #     super().delete_track_by(key, value)
 
     def delete_tracks(self, tracks: List[Track]) -> None:
         for track in tracks:

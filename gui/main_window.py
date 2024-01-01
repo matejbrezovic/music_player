@@ -176,7 +176,8 @@ class MainWindow(QMainWindow):
     def _added_tracks_to_database(self, _: List[Track] = None) -> None:
         tracks_from_last_selected_group = self.group_panel.get_last_selected_tracks()
         self.main_panel.display_tracks(tracks_from_last_selected_group)
-        self.main_panel.set_playing_track(self.audio_controller.get_playing_track())
+        if t := self.audio_controller.get_playing_track():
+            self.main_panel.set_playing_track(t)
 
     def tracks_deleted(self, deleted_tracks: List[Track]) -> None:
         self.cached_tracks_repository.delete_tracks(deleted_tracks)

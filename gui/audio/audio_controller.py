@@ -56,6 +56,9 @@ class AudioController(QFrame):
         self._prev_stays_on_current_track = False
         self._prev_time = 20  # seconds
 
+        self.volume_slider_position = STARTING_AUDIO_VOLUME
+        self.volume_slider_position_backup = STARTING_AUDIO_VOLUME
+
         self.player = AudioPlayer(self)
         self.player.positionChanged.connect(self.player_position_changed)
         self.player.durationChanged.connect(self.player_duration_changed)
@@ -101,8 +104,6 @@ class AudioController(QFrame):
         self.volume_slider = VolumeSlider(Qt.Orientation.Horizontal)
         self.volume_slider.setMaximumWidth(100)
         self.volume_slider.setMinimumWidth(50)
-        self.volume_slider_position = STARTING_AUDIO_VOLUME
-        self.volume_slider_position_backup = STARTING_AUDIO_VOLUME
         self.volume_slider.setSliderPosition(self.volume_slider_position)
         self.volume_slider.valueChanged.connect(self.volume_changed)
 
@@ -419,7 +420,7 @@ class AudioController(QFrame):
         self.update_total_queue_time(sum(track.length for track in queue))
 
     @pyqtSlot()
-    def play(self) -> None:
+    def play(self, update_background_pixmap: bool = True) -> None:
         self._prev_stays_on_current_track = False
         if not self.get_playing_track():
             return
@@ -451,7 +452,8 @@ class AudioController(QFrame):
             self.play_button.setIcon(self.pause_icon)
             self.player.setSource(QUrl(new_playing_track.file_path))
             self.player.play()
-            self.update_background_pixmap(new_playing_track)
+            if update_background_pixmap:
+                self.update_background_pixmap(new_playing_track)
             self.unpaused.emit(self.get_playing_track())
         else:
             self.audio_queue.queue_ended = True
@@ -542,6 +544,9 @@ class AudioController(QFrame):
         # if it's not manually clicked and repeat mode is RepeatOne it will repeat the current playing track
         if manually_clicked or (not manually_clicked and self.audio_queue.repeat_mode != AudioRepeatMode.RepeatOne):
             self.audio_queue.set_next()
+            update_background_pixmap = True
+        else:
+            update_background_pixmap = False
 
         if self.audio_queue.queue_ended:
             self.queue_ended()
@@ -558,7 +563,7 @@ class AudioController(QFrame):
             self.playback_error_encountered.emit(self.get_playing_track())
             self.play_next()
         else:
-            self.play()
+            self.play(update_background_pixmap)
 
     @pyqtSlot()
     def play_prev(self) -> None:

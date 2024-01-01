@@ -9,9 +9,10 @@ from PyQt6.QtCore import pyqtSignal, Qt
 from PyQt6.QtWidgets import (QPushButton, QScrollArea, QTreeWidgetItem, QTreeWidget, QSpacerItem, QHBoxLayout,
                              QVBoxLayout, QDialog, QFrame, QGridLayout, QWidget, QLabel, QSizePolicy, QApplication)
 
+from config import Config
 from constants import DEFAULT_CONFIG_PATH, SUPPORTED_AUDIO_FORMATS
 from repositories import CachedTracksRepository
-from utils import delete_grid_layout_items, PathCheckbox, QHLine, Config
+from utils import delete_grid_layout_items, PathCheckbox, QHLine
 
 
 class ScanFoldersDialog(QDialog):

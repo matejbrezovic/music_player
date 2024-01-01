@@ -90,7 +90,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 year=row["year"],
                 length=row["length"],
                 size=row["size"],
-                rating=row["rating"],
+                rating=row["rating"] if row["rating"] else 0,
                 artwork_pixmap=get_embedded_artwork_pixmap(row["file_path"])
             )
 
@@ -116,7 +116,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 year=row["year"],
                 length=row["length"],
                 size=row["size"],
-                rating=row["rating"],
+                rating=row["rating"] if row["rating"] else 0,
                 artwork_pixmap=get_embedded_artwork_pixmap(row["file_path"])
                 )
             )
@@ -185,10 +185,14 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
     def convert_file_paths_to_tracks(file_paths: List[str]) -> List[Track]:
         converted_tracks = []
         for i, file_path in enumerate(file_paths):
+            print(file_path)
             if not os.path.splitext(file_path)[-1] in SUPPORTED_AUDIO_FORMATS:
                 continue
 
             audio_file = eyed3.load(file_path)
+
+            if not audio_file.tag:
+                audio_file.initTag()
 
             title = audio_file.tag.title
             artist = audio_file.tag.artist
@@ -235,7 +239,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
                 audio_file.tag.recording_date.year if audio_file.tag.recording_date else None,
                 int(audio_file.info.time_secs),
                 int(audio_file.info.size_bytes),
-                rating,
+                rating if rating else 0,
                 get_embedded_artwork_pixmap(file_path) if QApplication.instance() else None
             )
             converted_tracks.append(tr)
