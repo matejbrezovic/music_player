@@ -1,17 +1,18 @@
 import json
 import os.path
+from typing import Any
 
 from constants import DEFAULT_CONFIG_PATH
 
 
 class Config:
     def __init__(self):
-        self.__settings: dict[str, ...] = {}
+        self.__settings: dict[str, Any] = {}
 
-    def set_setting(self, key: str, value: ...) -> None:
+    def set_setting(self, key: str, value: Any) -> None:
         self.__settings[key] = value
 
-    def get_setting(self, key: str, default_val: ... = None) -> ...:
+    def get_setting(self, key: str, default_val: Any = None) -> Any:
         return self.__settings[key] if key in self.__settings else default_val
 
     def save(self, file_path: str = DEFAULT_CONFIG_PATH) -> None:
@@ -22,7 +23,7 @@ class Config:
                       separators=(',', ': '),
                       ensure_ascii=False)
 
-    def load(self, file_path: str = DEFAULT_CONFIG_PATH) -> dict[str, ...]:
+    def load(self, file_path: str = DEFAULT_CONFIG_PATH) -> dict[str, Any]:
         if not os.path.exists(os.path.dirname(file_path)):
             os.mkdir(os.path.dirname(file_path))
 

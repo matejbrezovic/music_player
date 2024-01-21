@@ -36,3 +36,4 @@ venv.bak/
 *.pyc
 *.pyo
 experiments/
+settings/
