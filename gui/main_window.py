@@ -1,6 +1,6 @@
 from typing import List
 
-from PyQt6.QtCore import Qt, pyqtSlot
+from PyQt6.QtCore import Qt, pyqtSlot, QSignalBlocker
 from PyQt6.QtGui import QAction
 from PyQt6.QtWidgets import QMenuBar, QWidget, QMenu, QMainWindow, QVBoxLayout
 
@@ -104,10 +104,18 @@ class MainWindow(QMainWindow):
 
         @pyqtSlot(Track, float)
         def _track_rating_updated_from_main_panel(track: Track, rating: float) -> None:
-            self.audio_queue.update_track_rating(track, rating),
-            if track == self.audio_queue.playing_track:
-                self.audio_controller.update_playing_track_rating(rating)
+            self.audio_queue.update_track_rating(track, rating)
             self.cached_tracks_repository.update_track(track, 'rating', rating)
+            if track == self.audio_queue.playing_track:
+                with QSignalBlocker(self.audio_controller):
+                    self.audio_controller.update_playing_track_rating(rating)
+
+        @pyqtSlot(Track, float)
+        def _track_rating_updated_from_audio_controller(track: Track, rating: float) -> None:
+            self.audio_queue.update_track_rating(track, rating)
+            self.cached_tracks_repository.update_track(track, 'rating', rating)
+            with QSignalBlocker(self.main_panel):
+                self.main_panel.update_track_rating(track, rating)
 
         self.scan_folders_dialog.finished.connect(self.group_panel.refresh_groups)
         self.add_files_dialog.finished.connect(self.group_panel.refresh_groups)
@@ -151,12 +159,7 @@ class MainWindow(QMainWindow):
                                                self.queue_panel.unpause_playing_track()))
         self.audio_controller.remaining_queue_time_changed.connect(self.status_bar.update_remaining_queue_time)
         self.audio_controller.player_stopped.connect(self._player_stopped)
-        self.audio_controller.playing_track_rating_updated.connect(
-            lambda track, rating: (
-                self.main_panel.update_track_rating(track, rating),
-                self.audio_queue.update_track_rating(track, rating),
-                self.cached_tracks_repository.update_track(track, 'rating', rating)
-            ))
+        self.audio_controller.playing_track_rating_updated.connect(_track_rating_updated_from_audio_controller)
 
         self.scan_folders_dialog.added_tracks.connect(self._added_tracks_to_database)
         self.scan_folders_dialog.removed_tracks.connect(self._removed_tracks_from_database)
