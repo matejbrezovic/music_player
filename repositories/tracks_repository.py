@@ -199,7 +199,7 @@ class TracksRepository(BaseRepository, metaclass=Singleton):
             if not os.path.splitext(file_path)[-1] in SUPPORTED_AUDIO_FORMATS:
                 continue
 
-            audio_file = eyed3.load(file_path)
+            audio_file: eyed3.AudioFile = eyed3.load(file_path)
 
             if not audio_file.tag:
                 audio_file.initTag()

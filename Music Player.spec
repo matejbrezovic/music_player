@@ -1,4 +1,19 @@
 # -*- mode: python ; coding: utf-8 -*-
+from PyInstaller.utils.hooks import collect_submodules
+from PyInstaller.utils.hooks import collect_all
+
+datas = [('C:/My Files/Programming/My Projects/music_player/icons', 'icons/')]
+binaries = []
+hiddenimports = ['eyeD3', 'pkg_resources']
+hiddenimports += collect_submodules('Pillow')
+hiddenimports += collect_submodules('bing-image-urls')
+hiddenimports += collect_submodules('music-tag')
+tmp_ret = collect_all('eyed3')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+tmp_ret = collect_all('mutagen')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
+tmp_ret = collect_all('PyQt6')
+datas += tmp_ret[0]; binaries += tmp_ret[1]; hiddenimports += tmp_ret[2]
 
 
 block_cipher = None
@@ -6,10 +21,10 @@ block_cipher = None
 
 a = Analysis(
     ['C:/My Files/Programming/My Projects/music_player/main.py'],
-    pathex=[],
-    binaries=[],
-    datas=[('C:/My Files/Programming/My Projects/music_player/icons', 'icons/'), ('C:/My Files/Programming/My Projects/music_player/database', 'database/')],
-    hiddenimports=[],
+    pathex=['C:/My Files/Programming/My Projects/venvs/music_player3.10/Lib/site-packages'],
+    binaries=binaries,
+    datas=datas,
+    hiddenimports=hiddenimports,
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],
@@ -31,7 +46,7 @@ exe = EXE(
     bootloader_ignore_signals=False,
     strip=False,
     upx=True,
-    console=True,
+    console=False,
     disable_windowed_traceback=False,
     argv_emulation=False,
     target_arch=None,

@@ -15,7 +15,7 @@ def classify(module):
 
 
 def get_project_root(file_path: str) -> str:
-    anchor_files = ("main.py", "Qt6Widgets.dll")
+    anchor_files = ("main.py", "python3.dll", "sqlite3.dll")
     dir_path = os.path.dirname(file_path)
     while dir_path != '/' and not any([os.path.exists(os.path.join(dir_path, a)) for a in anchor_files]):
         dir_path = os.path.dirname(dir_path)
