@@ -1,14 +1,19 @@
+import os.path
 import sqlite3
 from sqlite3 import Connection
 from typing import List, Any
 
 from constants import DATABASE_PATH
+from database.database_manipulation import setup_database
 
 
 class BaseRepository:
 
     @staticmethod
     def get_connection() -> Connection:
+        if not os.path.exists(DATABASE_PATH):
+            setup_database()
+
         return sqlite3.connect(DATABASE_PATH)
 
     def get_all_table_names(self) -> List[str]:
