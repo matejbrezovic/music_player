@@ -6,5 +6,3 @@ User can add songs to database, edit playing queue, edit song's rating as well a
 User can also view embedded album covers and if they aren't present in the file they get downloaded.
 
 GUI is heavily inspired by MusicBee.
-
-
