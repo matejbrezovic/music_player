@@ -13,6 +13,6 @@ User can:
 
 GUI is heavily inspired by MusicBee.
 
-[screenshot_play](https://github.com/matejbrezovic/music_player/blob/master/screenshots/music_player_play.png)
+![screenshot_play](https://github.com/matejbrezovic/music_player/blob/master/screenshots/music_player_play.png)
 
-[screenshot_selection](https://github.com/matejbrezovic/music_player/blob/master/screenshots/music_player_selection.png)
+![screenshot_selection](https://github.com/matejbrezovic/music_player/blob/master/screenshots/music_player_selection.png)
