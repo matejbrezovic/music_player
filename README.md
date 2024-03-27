@@ -1,4 +1,4 @@
-# MusicBee inspired music player
+# Music player inspired by MusicBee
 
 Made for a school project as well as my introduction to PyQt. 
 
